@@ -39,6 +39,14 @@ ting=(empty) ClusterDispatchCacheConfig.Enabled=true ClusterDispatc
 8:28PM INF telemetry reporter scheduled endpoint=https://telemetry.authzed.com interval=1h0m0s next=5m14s
 ```
 
+## Learning Summary
+
+- [x] In this module you installed and launched an instance of SpiceDB locally
+
+## Navigation
+
+Proceed to this Jupyter Notebook.
+
 ### Troubleshooting
 
 
