@@ -42,7 +42,7 @@ ting=(empty) ClusterDispatchCacheConfig.Enabled=true ClusterDispatc
 #### Download the Jupyter Notebook
 
 Clone the `workshops` repository to your system and type `cd secure-rag-pipelines` to enter the working directory. 
-Start the `01-rag.ipynb` Notebook locally by typing `jupyter 01-rag.ipynb` (or `python3 -m notebook`). 
+Start the `01-rag.ipynb` Notebook locally by typing `jupyter 01-rag.ipynb` (or `python3 -m notebook`) in your terminal. 
 
 ## Learning Summary
 
