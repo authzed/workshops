@@ -17,19 +17,24 @@ Add the following details;
 - Name: rag-permissions 
 - Description: Secure your RAG pipeline with fine-grained authorization
 
-ADD IMAGE
+![create new](https://github.com/authzed/workshops/blob/google-colab/secure-rag-pipelines/assets/create-new.png)
 
 Once the Permissions System is created, click on it and navigate to the "API Access Permissions" tab. 
+
+![API Access Permissions](https://github.com/authzed/workshops/blob/google-colab/secure-rag-pipelines/assets/dashboard.png)
+
 Click on the default client that has already been created for you and then the Create Token button. Add the following details:
 
 - Token Title: workshop
 - Token Note: A token granting access to the cloud notebook
 
+![create new token](https://github.com/authzed/workshops/blob/google-colab/secure-rag-pipelines/assets/create-token.png)
+
 Copy the token that is generated as it will not be displayed again. 
 
 ## Navigation
 
-Proceed to [this Google Colab notebook] (https://colab.research.google.com/drive/1933-bS7TqEVSOFVg-BHSC1lGuHO3IOy5?usp=sharing) to start the workshop.  
+Proceed to [this Google Colab notebook](https://colab.research.google.com/drive/1933-bS7TqEVSOFVg-BHSC1lGuHO3IOy5?usp=sharing) to start the workshop.  
 
 ### Troubleshooting
 
