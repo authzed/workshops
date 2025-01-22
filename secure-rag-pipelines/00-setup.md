@@ -39,6 +39,11 @@ ting=(empty) ClusterDispatchCacheConfig.Enabled=true ClusterDispatc
 8:28PM INF telemetry reporter scheduled endpoint=https://telemetry.authzed.com interval=1h0m0s next=5m14s
 ```
 
+#### Download the Jupyter Notebook
+
+Clone the `workshops` repository to your system and type `cd secure-rag-pipelines` to enter the working directory. 
+Start the `01-rag.ipynb` Notebook locally by typing `jupyter 01-rag.ipynb` (or `python3 -m notebook`). 
+
 ## Learning Summary
 
 - [x] In this module you installed and launched an instance of SpiceDB locally
