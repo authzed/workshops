@@ -50,7 +50,7 @@ Start the `01-rag.ipynb` Notebook locally by typing `jupyter 01-rag.ipynb` (or `
 
 ## Navigation
 
-Proceed to [this Jupyter Notebook for the workshop](https://github.com/authzed/workshops/blob/main/secure-rag-pipelines/01-rag.ipynb)
+Proceed to [this Jupyter Notebook for the workshop](https://github.com/authzed/workshops/blob/jupyter/secure-rag-pipelines/01-rag.ipynb)
 
 ### Troubleshooting
 
