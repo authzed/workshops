@@ -1,6 +1,6 @@
 ## Secure Your RAG Pipelines With Fine Grained Authorization
 
-This workshop gives you hands-on knowledge on using ReBAC to safeguard sensitive data in RAG pipelines. You will learn how to pre-filter and post-filter vector database queries with a list of authorized object IDs to improve security and efficiency. This workshop uses Open AI, Pinecone, Langchain, Google Colab, and SpiceDB running on AuthZed Serverless.
+This workshop gives you hands-on knowledge on using ReBAC to safeguard sensitive data in RAG pipelines. You will learn how to pre-filter and post-filter vector database queries with a list of authorized object IDs to improve security and efficiency. This workshop uses OpenAI, Pinecone, Langchain, Google Colab, and SpiceDB running on AuthZed Serverless.
 
 ### Why is this important? 
 
@@ -8,7 +8,7 @@ Building enterprise-ready AI poses challenges around data security, accuracy, sc
 
 To enable precise guardrails, one must implement permissions systems with advanced fine grained authorization capabilities such as returning lists of authorized subjects and accessible resources. Such systems ensure timely access to authorized data while preventing exfiltration of sensitive information, making RAGs more efficient and improving performance at scale
 
-**Last Updated**: Jan 22, 2025
+**Last Updated**: Jan 23, 2025
 
 ### Workshop Modules
 
