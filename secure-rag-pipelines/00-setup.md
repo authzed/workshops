@@ -32,6 +32,7 @@ Click on the default client that has already been created for you and then the C
 
 Copy the token that is generated as it will not be displayed again. 
 
+
 ## Navigation
 
 Proceed to [this Google Colab notebook](https://colab.research.google.com/drive/1933-bS7TqEVSOFVg-BHSC1lGuHO3IOy5?usp=sharing) to start the workshop.  
