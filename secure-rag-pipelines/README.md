@@ -10,9 +10,9 @@ Building enterprise-ready AI poses challenges around data security, accuracy, sc
 
 To enable precise guardrails, one must implement permissions systems with advanced fine grained authorization capabilities such as returning lists of authorized subjects and accessible resources. Such systems ensure timely access to authorized data while preventing exfiltration of sensitive information, making RAGs more efficient and improving performance at scale
 
-**Last Updated**: Jan 16, 2025
+**Last Updated**: Jan 29, 2025
 
 ### Workshop Modules
 
-0. [Setup](https://github.com/authzed/workshops/blob/jupyter/secure-rag-pipelines/00-setup.md)
-1. [Secure Your RAG Pipelines With Fine Grained Authorization](https://github.com/authzed/workshops/blob/jupyter/secure-rag-pipelines/01-rag.ipynb)
+0. [Setup](https://github.com/authzed/workshops/blob/deepseek/secure-rag-pipelines/00-setup.md)
+1. [Secure Your RAG Pipelines With Fine Grained Authorization](https://github.com/authzed/workshops/blob/deepseek/secure-rag-pipelines/01-rag.ipynb)
