@@ -5,6 +5,7 @@ Lets start with the setup for this workshop.
 - Access to a [SpiceDB](https://authzed.com/spicedb) instance.  You can find instructions for installing SpiceDB [here](https://authzed.com/docs/spicedb/getting-started/install/macos)
 - A [Pinecone account](https://www.pinecone.io/) and API key
 - An [OpenAI Platform account](https://platform.openai.com/docs/overview) and API key
+- An account with [OpenRouter](https://openrouter.ai/) and API key. You get ~$1 worth of free API calls for testing purposes
 - [Jupyter Notebook](https://jupyter.org/) running locally
 
 #### Running SpiceDB
@@ -50,7 +51,7 @@ Start the `01-rag.ipynb` Notebook locally by typing `jupyter 01-rag.ipynb` (or `
 
 ## Navigation
 
-Proceed to [this Jupyter Notebook for the workshop](https://github.com/authzed/workshops/blob/jupyter/secure-rag-pipelines/01-rag.ipynb)
+Proceed to [this Jupyter Notebook for the workshop](https://github.com/authzed/workshops/blob/deepseek/secure-rag-pipelines/01-rag.ipynb)
 
 ### Troubleshooting
 
