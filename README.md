@@ -4,12 +4,13 @@ Here's the hub for all self-guided AuthZed workshops.
 
 ### Workshops
 
-- [Secure Your RAG Pipelines With Fine Grained Authorization](https://github.com/authzed/workshops/tree/google-colab/secure-rag-pipelines)
-    - Use Relationship-Based Access Control (ReBAC) to safeguard sensitive data in RAG pipelines.
-    - This workshop uses OpenAI, Pinecone, Langchain, Google Colab and a SpiceDB instance running on AuthZed Serverless
+- **Secure Your RAG Pipelines With Fine Grained Authorization**: 
+This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in your RAG pipelines. There are different branches for this workshop:
 
-Note: This workshop uses a cloud notebook in favour of running a Jupyter notebook locally. 
-Since the notebook is running in the cloud we use a Serverless version of SpiceDB to store our permission sets. 
+1. (recommended) Using the OpenAI API, Pinecone, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/main/secure-rag-pipelines)
+2. Using the Deepseek R1 LLM (via OpenRouter), Pinecone, OpenAI Embeddings, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/deepseek/secure-rag-pipelines)
+3. Using OpenAI, Pinecone, Langchain, Google Colab and a SpiceDB instance running on AuthZed Serverless. [Link](https://github.com/authzed/workshops/tree/google-colab/secure-rag-pipelines)
+
 
 ## Contributing
 
