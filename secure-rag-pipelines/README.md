@@ -12,5 +12,5 @@ To enable precise guardrails, one must implement permissions systems with advanc
 
 ### Workshop Modules
 
-0. [Setup](https://github.com/authzed/workshops/blob/jupyter/secure-rag-pipelines/00-setup.md)
-1. [Secure Your RAG Pipelines With Fine Grained Authorization](https://github.com/authzed/workshops/blob/jupyter/secure-rag-pipelines/01-rag.ipynb)
+0. [Setup](https://github.com/authzed/workshops/blob/main/secure-rag-pipelines/00-setup.md)
+1. [Secure Your RAG Pipelines With Fine Grained Authorization](https://github.com/authzed/workshops/blob/main/secure-rag-pipelines/01-rag.ipynb)
