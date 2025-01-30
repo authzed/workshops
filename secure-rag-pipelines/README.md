@@ -1,6 +1,6 @@
 ## Secure Your RAG Pipelines With Fine Grained Authorization - DeepSeek R1 version
 
-This workshop gives you hands-on knowledge on using ReBAC to safeguard sensitive data in RAG pipelines. You will learn how to pre-filter and post-filter vector database queries with a list of authorized object IDs to improve security and efficiency. 
+This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in RAG pipelines. You will learn how to pre-filter and post-filter vector database queries with a list of authorized object IDs to improve security and efficiency. 
 
 This workshop uses DeepSeek R1 LLM (via OpenRouter), OpenAI for Embeddings, Pinecone as a Vector Database, Langchain, Jupyter Notebook and SpiceDB
 
