@@ -1,6 +1,6 @@
-## Update A View Based on Permissions 
+## Update A Web View Based on Permissions 
 
-This workshop will illustrate how you can update a view based on what permissions the user has. The workshop uses a NextJS template by Vercel for an admin dashboard, written in TypeScript. The software and frameworks used are: 
+This workshop will illustrate how you can update a view based on what permissions the user has. The workshop uses a NextJS template by Vercel for an admin dashboard, written in TypeScript. The software and frameworks used in the tutorial are: 
 
 - NextJS 
 - Tailwind CSS
@@ -18,9 +18,9 @@ A common pattern in a web app is to show a user only the options that they are a
 - How to write relationships between objects and subjects. For ex: A user and a product
 - How to check for permissions. Ex: Does user Alice have 'delete' permissions on Product XYZ.
 
-At the end of this tutorial, we'll have an admin dashboard that checks a user's permissions and shows a user the 'delete' button for a product only if they have admin access to do so. 
+At the end of this tutorial, we'll have an admin dashboard that checks a user's permissions and shows a user the 'delete' button for a product only if they have admin access to do so. This tutorial is meant for learning purposes only. Please follow best practices when deploying to production. 
 
-**Last Updated**: Feb 20, 2025
+**Last Updated**: Feb 24, 2025
 
 ## Tutorial
 
@@ -36,13 +36,15 @@ For this tutorial we'll use this [open source Admin Dashboard template](https://
 
 4. Uncomment out the code in `route.ts` and go to `localhost:3000/api/seed` to populate the Products table. Ensure that the `return` statement is at the end of the code. 
 
-5. Rename the `.env.example` file to `.env` and add the required variables. You can find `POSTGRES_URL` in your Vercel dashboard. Run the app locally should now should you a dashboard of products with Prices, Status etc. displayed. 
+5. Rename the `.env.example` file to `.env` and add the required variables. You can find `POSTGRES_URL` in your Vercel dashboard. 
+
+Running the app locally should now show you a dashboard of products with Prices, Status etc. displayed. 
 
 Congrats your Admin Dashboard is now setup
 
 #### Adding SpiceDB
 
-Let's add SpiceDB into this project and start a local instance of SpiceDB as our database for write permissions. 
+Let's add some SpiceDB into the mix and start a local instance of SpiceDB as our database for write permissions. 
 
 1. Run `npm i @authzed/authzed-node` to add the Authzed package into your project
 
@@ -59,7 +61,7 @@ SPICEDB_ENDPOINT=localhost:50051
 
 We'll write our schema and relationships to this local instance of SpiceDB. 
 
-Note: This is just for learning purposes so the permissions are written to the local datastore which is ephemeral. Also we will use insecure connections and not TLS to communicate with SpiceDB. 
+**Note:** This instance of SpiceDB uses in-memory datastore which is ephemeral. Also, we will use insecure connections and not TLS to communicate with SpiceDB. 
 
 #### Adding a Schema
 
@@ -78,7 +80,11 @@ definition product {
     permission view = admin + viewer
 }
 ```
-We need to write this schema to the instance of SpiceDB when the app starts. In our `actions.ts` file import the following files:
+
+`relation viewer: user` and `relation admin: user` indicate that `viewer` and `admin` are related to `user`. 
+We add `relation viewer: user | user:*` as a wildcard. Wildcard support allows relations to include all subjects of a particular type, allowing a relation or permission to become public for checks. A relationship can now be written between your resource and *all* users
+
+Let's write this schema to the instance of SpiceDB when the app starts. In our `actions.ts` file import the following files:
 
 ```
 import { v1 } from '@authzed/authzed-node';
@@ -92,7 +98,7 @@ import {
 
 Define the schema in your code. (You can also write this to a separate `.zed` file)
 
-```
+```s
 const schema = `
 definition user {}
 
@@ -278,7 +284,7 @@ export async function setupApp() {
     if (error instanceof Error && error.message.includes('UNAVAILABLE')) {
       return { 
         isRunning: false, 
-        error: `SpiceDB server is not running. Please start the server using 'docker-compose up -d' and try again.` 
+        error: `SpiceDB server is not running.` 
       };
     }
     return { 
@@ -295,7 +301,7 @@ Run `npm run dev` and check the console for messages about this relationship wri
 
 Now that we've written a relationship to SpiceDB, we can perform permission checks as well. 
 
-First, go to the `product.tsx` file and add this method as the form action for the delete button. The form action sends the `id` of the product to the method
+First, go to the `product.tsx` file and add this method as the form action for the delete button. The form action sends the Product `id` to the method
 
 ```
 <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -367,14 +373,14 @@ For our usecase we'll use `LookupResources`.
 
 #### Lookup Resources
 
-This API provides the ability to find all the resources for a particular subject and permission. For example: What products can the user delete? To perform this check via [Zed](https://authzed.com/docs/spicedb/getting-started/installing-zed) the command is `zed permission lookup-resources product delete user:1`
+This API provides the ability to find all the resources for a particular subject and permission. For example: What products can the user with User id = 1 delete? To perform this check via [Zed](https://authzed.com/docs/spicedb/getting-started/installing-zed) the command is `zed permission lookup-resources product delete user:1`
 
 This is what it looks like in code:
 
 ```
 export async function getDeletableProductIds(userId: string | undefined): Promise<string[]> {
   
-  // create SpiceDB client and validate user ID first
+  // create SpiceDB client
 
   const lookupRequest = v1.LookupResourcesRequest.create({
     consistency: v1.Consistency.create({
@@ -430,6 +436,7 @@ export async function getDeletableProductIds(userId: string | undefined): Promis
 }
 ```
 
+Now that we have the list of Products that the user can delete, we need to update the dashboard. 
 Let's modify the code in the `products-table.tsx` to get a list of Product IDs that are delete-able. We can perform this once when the app is mounted:
 
 ```
@@ -484,7 +491,9 @@ Add the logic in the component:
 </DropdownMenuItem>
 ```
 
-We can finish up by writing code to perform the deletion from the database. It's good practice to perform another permission check before deletion in case the permissions have changed. Let's modify our `deleteProduct()` method in `actions.ts`
+We can finish up by writing code to perform the deletion from the database. It's good practice to perform another permission check before deletion in case the permissions have changed. This is a benefit of a centralized authorization approach. 
+
+Let's modify our `deleteProduct()` method in `actions.ts`
 
 ```
 export async function deleteProduct(formData: FormData) {
@@ -502,7 +511,7 @@ export async function deleteProduct(formData: FormData) {
   const loggedInUser = v1.SubjectReference.create({
     object: v1.ObjectReference.create({
       objectType: 'user',
-      objectId: '1', // ✅ Hardcoded user ID
+      objectId: '1', // Hardcoded user ID
     }),
   });
 
@@ -522,20 +531,20 @@ export async function deleteProduct(formData: FormData) {
   console.log("User has permission to delete product");
 
   try {
-    console.log("🟡 Deleting product ID:", id);
+    console.log("Deleting product ID:", id);
     await deleteProductById(Number(id));
-    console.log("✅ Product deleted successfully");
+    console.log("Product deleted successfully");
     revalidatePath('/');
     return { success: true }; // Return success message
     
   } catch (error) {
-    console.error("🚨 Error deleting product:", error);
+    console.error("Error deleting product:", error);
     return { success: false, message: "Failed to delete product." };
   }
 }
 ```
 
-That's it! When you run the app, you'll see that only Product id=1 displays the 'Delete' button. Try adding 'delete' permissions to other products and see for yourself. The code for the entire project is in this folder. 
+That's it! When you run the app, you'll see that only Product id=1 displays the 'Delete' button. Try adding 'delete' permissions to other products and see for yourself. The code for the entire project is available in this folder. 
 
 #### Troubleshooting
 
