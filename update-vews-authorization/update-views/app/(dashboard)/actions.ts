@@ -3,21 +3,13 @@
 import { deleteProductById } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { v1 } from '@authzed/authzed-node';
-import {
-  CheckPermissionResponse_Permissionship,
-  ClientSecurity,
-  RelationshipUpdate_Operation,
-  Relationship as SpiceDBRelationship
-} from '@authzed/authzed-node/dist/src/v1';
-
-let client: ReturnType<typeof v1.NewClient> | null = null;
-let promiseClient: ReturnType<typeof v1.NewClient>['promises'] | null = null;
 
 function ensureClientInitialized(): ReturnType<typeof v1.NewClient>['promises'] {
-  if (!client || !promiseClient) {
-    throw new Error("SpiceDB client not initialized. Please initialize the app first.");
-  }
-  return promiseClient;
+  return v1.NewClient(
+    process.env.SPICEDB_TOKEN!,
+    process.env.SPICEDB_ENDPOINT!,
+    v1.ClientSecurity.INSECURE_LOCALHOST_ALLOWED
+  ).promises;
 }
 
 const schema = `
@@ -32,48 +24,58 @@ definition product {
 }
 `;
 
-export async function setupApp() {  
+setupApp();
+
+export async function setupApp() {
   try {
     const apiCalls: { method: string, description: string }[] = [];
 
-    if (!process.env.SPICEDB_TOKEN || !process.env.SPICEDB_ENDPOINT) {
-      throw new Error("SPICEDB_TOKEN or SPICEDB_ENDPOINT is missing.");
-    }
+    // Create a temporary client just to test the connection
+    const testClient = v1.NewClient(
+      process.env.SPICEDB_TOKEN!,
+      process.env.SPICEDB_ENDPOINT!,
+      v1.ClientSecurity.INSECURE_LOCALHOST_ALLOWED
+    );
+    const promiseClient = testClient.promises;
 
-    // 🔹 Lazy initialization: Only create the client if it doesn't exist
-    if (!client) {
-      console.log("🔹 Initializing SpiceDB client...");
-      client = v1.NewClient(
-        process.env.SPICEDB_TOKEN!,
-        process.env.SPICEDB_ENDPOINT!,
-        ClientSecurity.INSECURE_LOCALHOST_ALLOWED
-      );
-      promiseClient = client.promises;
-    }
-
-    console.log("✅ SpiceDB client initialized");
-
-    const schemaRequest = v1.WriteSchemaRequest.create({ schema });
-
+    // Write the schema to SpiceDB
     try {
-      apiCalls.push({ method: 'WriteSchema', description: 'Writing schema to SpiceDB...' });
+      apiCalls.push({
+        method: 'WriteSchema',
+        description: 'Writing schema to SpiceDB...'
+      });
 
       await promiseClient.writeSchema(v1.WriteSchemaRequest.create({ schema }));
-      apiCalls.push({ method: 'WriteSchema', description: `Schema written successfully:\n${schema}` });
+      apiCalls.push({
+        method: 'WriteSchema',
+        description: `Schema written successfully:\n${schema}`
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      apiCalls.push({ method: 'WriteSchema', description: `Failed to write schema: ${errorMessage}` });
+      apiCalls.push({
+        method: 'WriteSchema',
+        description: `Failed to write schema: ${errorMessage}`
+      });
       throw new Error(`Failed to write schema to SpiceDB. Error: ${errorMessage}`);
     }
 
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Write initial relationships
-    const resource = v1.ObjectReference.create({ objectType: 'product', objectId: '1' });
-    const loggedInUser = v1.ObjectReference.create({ objectType: 'user', objectId: '1' });
+    // Write first relationship
+
+    const resource = v1.ObjectReference.create({
+      objectType: 'product',
+      objectId: '1',
+    });
+
+    const loggedInUser = v1.ObjectReference.create({
+      objectType: 'user',
+      objectId: '1',
+    });
 
     const writeRequest = v1.WriteRelationshipsRequest.create({
       updates: [
+        // User is an Admin on Product with ID 1
         v1.RelationshipUpdate.create({
           relationship: v1.Relationship.create({
             resource: resource,
@@ -85,24 +87,30 @@ export async function setupApp() {
       ],
     });
 
-    const response = await promiseClient.writeRelationships(writeRequest);
-    apiCalls.push({ method: 'WriteRelationships', description: `Relationship written successfully` });
+    const response = await promiseClient.writeRelationships(writeRequest)
+    apiCalls.push({
+      method: 'WriteRelationships',
+      description: `Relationship written successfully:`
+    });
 
-    console.log(response);
+    console.log(response)
 
     return apiCalls;
 
   } catch (error) {
     console.error('SpiceDB connection check failed:', error);
-    return { 
-      isRunning: false, 
-      error: `Failed to connect to SpiceDB: ${error instanceof Error ? error.message : String(error)}` 
+    if (error instanceof Error && error.message.includes('UNAVAILABLE')) {
+      return {
+        isRunning: false,
+        error: `SpiceDB server is not running.`
+      };
+    }
+    return {
+      isRunning: false,
+      error: `Failed to connect to SpiceDB: ${error instanceof Error ? error.message : String(error)}`
     };
   }
 }
-
-// 🔹 Ensure `setupApp` runs before using SpiceDB
-await setupApp();
 
 export async function deleteProduct(formData: FormData) {
   let id = String(formData.get('id'));
@@ -119,7 +127,7 @@ export async function deleteProduct(formData: FormData) {
   const loggedInUser = v1.SubjectReference.create({
     object: v1.ObjectReference.create({
       objectType: 'user',
-      objectId: '1', // ✅ Hardcoded user ID
+      objectId: '1', // Hardcoded user ID
     }),
   });
 
@@ -152,15 +160,8 @@ export async function deleteProduct(formData: FormData) {
 }
 
 export async function getDeletableProductIds(userId: string | undefined): Promise<string[]> {
-  const promiseClient = await ensureClientInitialized();
 
-  // 🔹 Validate userId before using it in the request
-  if (!userId || typeof userId !== "string") {
-    console.error("🚨 Invalid userId received:", userId);
-    throw new Error("User ID is missing or invalid.");
-  }
-
-  console.log(`Fetching deletable product IDs for user ${userId}...`);
+  const promiseClient = ensureClientInitialized();
 
   const lookupRequest = v1.LookupResourcesRequest.create({
     consistency: v1.Consistency.create({
@@ -174,7 +175,7 @@ export async function getDeletableProductIds(userId: string | undefined): Promis
     subject: v1.SubjectReference.create({
       object: v1.ObjectReference.create({
         objectType: "user",
-        objectId: userId,  
+        objectId: userId,
       }),
     }),
   });
@@ -190,4 +191,3 @@ export async function getDeletableProductIds(userId: string | undefined): Promis
     throw new Error("Failed to fetch deletable product IDs.");
   }
 }
-
