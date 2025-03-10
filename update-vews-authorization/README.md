@@ -28,17 +28,15 @@ At the end of this tutorial, we'll have an admin dashboard that checks a user's 
 
 For this tutorial we'll use this [open source Admin Dashboard template](https://next-admin-dash.vercel.app/) created by Vercel. The install instructions are on the Vercel page. but here's a TL;DR:
 
-1. Create an OAuth app on GitHub (enter an application name, Homepage URL: http://localhost:3000, Callback URL: http://localhost:3000/api/auth/callback/github) and note down the client ID and Secret.
+1. Deploy the template [from here](https://vercel.com/templates/next.js/admin-dashboard-tailwind-postgres-react-nextjs). You will need a Vercel account for the automated deployment. You can bypass this by cloning the repo, but will have to manually setup the Postgres database. 
 
-2. Get your AUTH_SECRET generated from here: https://generate-secret.vercel.app/32 . 
+2. Create an OAuth app on GitHub and note down the client ID and Secret. Get your AUTH_SECRET generated from here: https://generate-secret.vercel.app/32 . 
 
-3. Deploy the template [from here](https://vercel.com/templates/next.js/admin-dashboard-tailwind-postgres-react-nextjs). You will need a Vercel account for the automated deployment. (You can bypass this by cloning the repo, but will have to manually setup the Postgres database.)
+3. Once deployed to GitHub, clone the app locally and run `npm install` and `npm run dev`. Follow the instructions on the page to create Postgres tables for Products & Users. Also, create a user which we will use later as our Admin user. 
 
-4. Once deployed to GitHub, clone the app locally and run `pnpm install` and `pnpm dev`. Follow the instructions on the page to create Postgres tables for Products & Users. Also, create a user which we will use later as our Admin user. 
+4. Uncomment out the code in `route.ts` and go to `localhost:3000/api/seed` to populate the Products table. Ensure that the `return` statement is at the end of the code. 
 
-5. Uncomment out the code in `route.ts` and go to `localhost:3000/api/seed` to populate the Products table. Ensure that the `return` statement is at the end of the code. 
-
-6. Rename the `.env.example` file to `.env` and add the required variables. You can find `POSTGRES_URL` in your Vercel dashboard. 
+5. Rename the `.env.example` file to `.env` and add the required variables. You can find `POSTGRES_URL` in your Vercel dashboard. 
 
 Running the app locally should now show you a dashboard of products with Prices, Status etc. displayed. 
 
@@ -48,7 +46,7 @@ Congrats your Admin Dashboard is now setup
 
 Let's add some SpiceDB into the mix and start a local instance of SpiceDB as our database for write permissions. 
 
-1. Run `pnpm i @authzed/authzed-node` to add the Authzed package into your project
+1. Run `npm i @authzed/authzed-node` to add the Authzed package into your project
 
 2. This guide assumes you've [installed SpiceDB](https://authzed.com/docs/spicedb/getting-started/installing-spicedb). Start a local instance of SpiceDB with the command `spicedb serve --grpc-preshared-key "sometoken"`
 
@@ -90,6 +88,12 @@ Let's write this schema to the instance of SpiceDB when the app starts. In our `
 
 ```
 import { v1 } from '@authzed/authzed-node';
+import {
+  CheckPermissionResponse_Permissionship,
+  ClientSecurity,
+  RelationshipUpdate_Operation,
+  Relationship as SpiceDBRelationship
+} from '@authzed/authzed-node/dist/src/v1';
 ```
 
 Define the schema in your code. (You can also write this to a separate `.zed` file)
@@ -118,9 +122,9 @@ export async function setupApp() {
     const testClient = v1.NewClient(
       process.env.SPICEDB_TOKEN!,
       process.env.SPICEDB_ENDPOINT!,
-      v1.ClientSecurity.INSECURE_LOCALHOST_ALLOWED
+      ClientSecurity.INSECURE_LOCALHOST_ALLOWED
     );
-    const promiseClient = testClient.promises;
+    promiseClient = testClient.promises;
 
     const schemaRequest = v1.WriteSchemaRequest.create({
       schema: schema,
@@ -165,13 +169,30 @@ export async function setupApp() {
 }
 ```
 
-Now we've to ensure this method is called when the app starts - add a call to the method at the top of actions.tx
+Now we've to ensure this method is called when the app starts. Go to the `db.ts` file
+
+`import { setupApp } from 'app/(dashboard)/actions';`
+
+Let's add a function that calls the setupApp() method when the app starts.
 
 ```
-setupApp();
+async function initiateAppSetup () {
+  try {
+    const result = await setupApp();
+    console.log('Setup successful:', result);
+    return true;
+  } catch (error) {
+    console.error('Setup failed:', error);
+    return false;
+  }
+}
+
+(async () => {
+  await initiateAppSetup();
+})();
 ```
 
-Run `pnpm dev` in the Terminal (ensure the local instance of SpiceDB is running). You should see a message on the terminal and in SpiceDB that the schema is written. 
+Run `npm run dev` in the Terminal (ensure the local instance of SpiceDB is running). You should see a message on the terminal and in SpiceDB that the schema is written. 
 
 #### Write Relationships
 
@@ -191,9 +212,13 @@ export async function setupApp() {
     const testClient = v1.NewClient(
       process.env.SPICEDB_TOKEN!,
       process.env.SPICEDB_ENDPOINT!,
-      v1.ClientSecurity.INSECURE_LOCALHOST_ALLOWED
+      ClientSecurity.INSECURE_LOCALHOST_ALLOWED
     );
-    const promiseClient = testClient.promises;
+    promiseClient = testClient.promises;
+
+    const schemaRequest = v1.WriteSchemaRequest.create({
+      schema: schema,
+    });
      
     // Write the schema to SpiceDB
     try {
@@ -298,9 +323,9 @@ export async function deleteProduct(formData: FormData) {
   const client = v1.NewClient(
     process.env.SPICEDB_TOKEN!,
     process.env.SPICEDB_ENDPOINT!,
-    v1.ClientSecurity.INSECURE_LOCALHOST_ALLOWED
+    ClientSecurity.INSECURE_LOCALHOST_ALLOWED
   );
-  const promiseClient = client.promises;
+  promiseClient = client.promises;
 
   const resource = v1.ObjectReference.create({
     objectType: 'product',
@@ -389,46 +414,53 @@ export async function getDeletableProductIds(userId: string | undefined): Promis
 
   This method returns a list of Product IDs that the user has 'delete' permissions on. 
 
+  Let's modify the `db.ts` file to filter products from the database based on which ones are delete-able
+
+  ```
+  export async function fetchProducts(userId: string): Promise<SelectProduct[]> {
+  const deletableIds = await getDeletableProductIds(userId);
+
+  console.log(`Filtering products by deletable IDs:`, deletableIds);
+
+  if (deletableIds.length === 0) {
+    return []; // Return an empty list if no deletable products
+  }
+
+  // Fetch only products the user has permission to delete
+  const authorizedProducts = await db
+    .select()
+    .from(products)
+    .where(inArray(products.id, deletableIds.map(id => Number(id))));
+
+  return authorizedProducts;
+}
+```
 
 Now that we have the list of Products that the user can delete, we need to update the dashboard. 
-Let's modify the code in the `db.ts`.  First, lets add a new field to the product object called `isDeletable` e.g.
+Let's modify the code in the `products-table.tsx` to get a list of Product IDs that are delete-able. We can perform this once when the app is mounted:
 
 ```
-export const products = pgTable('products', {
-  id: serial('id').primaryKey(),
-  imageUrl: text('image_url').notNull(),
-  name: text('name').notNull(),
-  status: statusEnum('status').notNull(),
-  price: numeric('price', { precision: 10, scale: 2 }).notNull(),
-  stock: integer('stock').notNull(),
-  availableAt: timestamp('available_at').notNull(),
-  isDeleteable: boolean('is_deleteable').notNull().default(false),
-});
+import { getDeletableProductIds } from 'app/(dashboard)/actions';
+const HARDCODED_USER_ID = "1"; 
+
+  useEffect(() => {
+    async function fetchDeletableIds() {
+      const ids = await getDeletableProductIds(HARDCODED_USER_ID);
+      setDeletableProductIds(ids);
+    }
+    fetchDeletableIds();
+  }, []); // Only run once on component mount
+  ```
+
+  Also, modify the `<TableBody>` code to include this:
+
+  ```
+  <TableBody>
+    {products.map((product) => (
+        <Product key={product.id} product={product} deletableProductIds={deletableProductIds} />
+    ))}
+  </TableBody>
 ```
-
-Add a new function to enrich the products returned from the database with authorization info from SpiceDB, based on what products the current user is allowed to delete:
-
-```
-async function enrichWithAuthInfo(products: SelectProduct[]) {
-  const HARDCODED_USER_ID = "1"; // ✅ Hardcoded user ID
-
-  const ids = await getDeletableProductIds(HARDCODED_USER_ID);
-  products.forEach((product) => {
-    product.isDeleteable = ids.includes(product.id.toString());
-  });
-
-  return products;
-}
-  ```
-
-  Before we return the products from the main `getProducts` function, call our new `enrichWithAuthInfo` function like this:
-  ```
-  return {
-    products: await enrichWithAuthInfo(moreProducts),
-    newOffset,
-    totalProducts: totalProducts[0].count
-  };
-  ```
 
 Now we've to modify the `product.tsx` component so that it shows the delete button only for the products it's authorized to. 
 
@@ -440,28 +472,23 @@ export function Product({ product, deletableProductIds }: { product: SelectProdu
 Add the logic in the component:
 
 ```
-<DropdownMenuContent align="end">
-  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-  <DropdownMenuItem>Edit</DropdownMenuItem>
-  {/* 🔹 Show Delete button only if user has permission */}
-  {product.isDeleteable && (
-    <DropdownMenuItem>
-      <form
-        action={async (formData) => {
-          const response = await deleteProduct(formData);
+<DropdownMenuItem>Edit</DropdownMenuItem>
+    {/* Show Delete button only if user has permission */}
+    {canDelete && (
+        <DropdownMenuItem>
+        <form
+            action={async (formData) => {
+            const response = await deleteProduct(formData);
 
-          if (!response.success) {
-            alert(response.message); // Show error message in UI
-          }
-        }}
-      >
-        <input type="hidden" name="id" value={product.id} />
-        <button type="submit">Delete</button>
-      </form>
-    </DropdownMenuItem>
-  )}
-</DropdownMenuContent>
-
+            if (!response.success) {
+                alert(response.message); // Show error message in UI
+            }
+            }}
+        >
+            <input type="hidden" name="id" value={product.id} />
+            <button type="submit">Delete</button>
+        </form>
+</DropdownMenuItem>
 ```
 
 We can finish up by writing code to perform the deletion from the database. It's good practice to perform another permission check before deletion in case the permissions have changed. This is a benefit of a centralized authorization approach. 
