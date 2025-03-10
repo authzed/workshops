@@ -23,7 +23,13 @@ export async function User() {
           size="icon"
           className="overflow-hidden rounded-full"
         >
-          button
+          <Image
+            src={user?.image ?? '/placeholder-user.jpg'}
+            width={36}
+            height={36}
+            alt="Avatar"
+            className="overflow-hidden rounded-full"
+          />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
