@@ -17,13 +17,9 @@ import {
 } from '@/components/ui/card';
 import { Product } from './product';
 import { SelectProduct } from '@/lib/db';
-import { getDeletableProductIds } from 'app/(dashboard)/actions';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
-
-const HARDCODED_USER_ID = "1"; // ✅ Hardcoded user ID
 
 export function ProductsTable({
   products,
@@ -36,16 +32,6 @@ export function ProductsTable({
 }) {
   let router = useRouter();
   let productsPerPage = 5;
-
-  const [deletableProductIds, setDeletableProductIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    async function fetchDeletableIds() {
-      const ids = await getDeletableProductIds(HARDCODED_USER_ID);
-      setDeletableProductIds(ids);
-    }
-    fetchDeletableIds();
-  }, []); // ✅ Only run once on component mount
 
   function prevPage() {
     router.back();
@@ -84,7 +70,7 @@ export function ProductsTable({
           </TableHeader>
           <TableBody>
             {products.map((product) => (
-              <Product key={product.id} product={product} deletableProductIds={deletableProductIds} />
+              <Product key={product.id} product={product} />
             ))}
           </TableBody>
         </Table>

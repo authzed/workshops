@@ -9,11 +9,13 @@ import {
   integer,
   timestamp,
   pgEnum,
-  serial
+  serial,
+  boolean
 } from 'drizzle-orm/pg-core';
 import { count, eq, ilike, inArray } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { setupApp, getDeletableProductIds } from 'app/(dashboard)/actions'; 
+import { getDeletableProductIds, setupApp } from 'app/(dashboard)/actions';
+
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
@@ -26,19 +28,9 @@ export const products = pgTable('products', {
   status: statusEnum('status').notNull(),
   price: numeric('price', { precision: 10, scale: 2 }).notNull(),
   stock: integer('stock').notNull(),
-  availableAt: timestamp('available_at').notNull()
+  availableAt: timestamp('available_at').notNull(),
+  isDeleteable: boolean('is_deleteable').notNull().default(false),
 });
-
-async function initiateAppSetup () {
-  try {
-    const result = await setupApp();
-    console.log('Setup successful:', result);
-    return true;
-  } catch (error) {
-    console.error('Setup failed:', error);
-    return false;
-  }
-}
 
 export type SelectProduct = typeof products.$inferSelect;
 export const insertProductSchema = createInsertSchema(products);
@@ -73,37 +65,23 @@ export async function getProducts(
   let newOffset = moreProducts.length >= 5 ? offset + 5 : null;
 
   return {
-    products: moreProducts,
+    products: await enrichWithAuthInfo(moreProducts),
     newOffset,
     totalProducts: totalProducts[0].count
   };
 }
 
+async function enrichWithAuthInfo(products: SelectProduct[]) {
+  const HARDCODED_USER_ID = "1"; // ✅ Hardcoded user ID
+
+  const ids = await getDeletableProductIds(HARDCODED_USER_ID);
+  products.forEach((product) => {
+    product.isDeleteable = ids.includes(product.id.toString());
+  });
+
+  return products;
+}
+
 export async function deleteProductById(id: number) {
   await db.delete(products).where(eq(products.id, id));
 }
-
-/**
- * 🔹 Fetch only products the user is authorized to delete
- */
-export async function fetchProducts(userId: string): Promise<SelectProduct[]> {
-  const deletableIds = await getDeletableProductIds(userId);
-
-  console.log(`Filtering products by deletable IDs:`, deletableIds);
-
-  if (deletableIds.length === 0) {
-    return []; // Return an empty list if no deletable products
-  }
-
-  // Fetch only products the user has permission to delete
-  const authorizedProducts = await db
-    .select()
-    .from(products)
-    .where(inArray(products.id, deletableIds.map(id => Number(id))));
-
-  return authorizedProducts;
-}
-
-(async () => {
-  await initiateAppSetup();
-})();

@@ -13,9 +13,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { SelectProduct } from '@/lib/db';
 import { deleteProduct } from './actions';
 
-export function Product({ product, deletableProductIds }: { product: SelectProduct, deletableProductIds: string[] }) {
-  const canDelete = deletableProductIds.includes(String(product.id));
-
+export function Product({ product }: { product: SelectProduct }) {
   return (
     <TableRow>
       <TableCell className="hidden sm:table-cell">
@@ -49,9 +47,8 @@ export function Product({ product, deletableProductIds }: { product: SelectProdu
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem>Edit</DropdownMenuItem>
-
             {/* 🔹 Show Delete button only if user has permission */}
-            {canDelete && (
+            {product.isDeleteable && (
               <DropdownMenuItem>
                 <form
                   action={async (formData) => {
