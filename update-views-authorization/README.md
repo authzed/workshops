@@ -19,7 +19,7 @@ A common pattern in a web app is to show a user only the options that they are a
 - How to check for permissions. Ex: Does user Alice have 'delete' permissions on Product XYZ.
 - How to update a user interface based on what permissions the user has. 
 
-At the end of this tutorial, we'll have an admin dashboard that checks a user's permissions and shows a user the 'delete' button for a product only if they have admin access to do so. The working solution for this tutorial is this folder. 
+At the end of this tutorial, we'll have an admin dashboard that checks a user's permissions and shows a user the 'delete' button for a product only if they have admin access to do so. Here's [the working solution for this tutorial](https://github.com/authzed/workshops/tree/main/update-views-authorization/working-solution). 
 
 This tutorial is meant for learning purposes only. Please follow best practices when deploying to production. 
 
