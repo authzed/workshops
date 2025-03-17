@@ -17,10 +17,13 @@ A common pattern in a web app is to show a user only the options that they are a
 - How to model a schema based on a use case
 - How to write relationships between objects and subjects. For ex: A user and a product
 - How to check for permissions. Ex: Does user Alice have 'delete' permissions on Product XYZ.
+- How to update a user interface based on what permissions the user has. 
 
-At the end of this tutorial, we'll have an admin dashboard that checks a user's permissions and shows a user the 'delete' button for a product only if they have admin access to do so. This tutorial is meant for learning purposes only. Please follow best practices when deploying to production. 
+At the end of this tutorial, we'll have an admin dashboard that checks a user's permissions and shows a user the 'delete' button for a product only if they have admin access to do so. The working solution for this tutorial is this folder. 
 
-**Last Updated**: Feb 24, 2025
+This tutorial is meant for learning purposes only. Please follow best practices when deploying to production. 
+
+**Last Updated**: Mar 17, 2025
 
 ## Tutorial
 
@@ -38,11 +41,18 @@ For this tutorial we'll use this [open source Admin Dashboard template](https://
 
 5. Uncomment out the code in `route.ts` and go to `localhost:3000/api/seed` to populate the Products table. Ensure that the `return` statement is at the end of the code. 
 
-6. Rename the `.env.example` file to `.env` and add the required variables. You can find `POSTGRES_URL` in your Vercel dashboard. 
+6. Add a column to the `products` table that we'll use to determine if a product is delete-able or not. Run this command in your SQL Editor in Neon. You can also manually add the column to the table in the Neon UI.
+
+```
+ALTER TABLE "public"."products" 
+ADD COLUMN "is_deleteable" boolean NOT NULL DEFAULT false
+```
+
+7. Rename the `.env.example` file to `.env` and add the required variables. You can find `POSTGRES_URL` in your Vercel dashboard. 
 
 Running the app locally should now show you a dashboard of products with Prices, Status etc. displayed. 
 
-Congrats your Admin Dashboard is now setup
+Congrats! The Admin Dashboard is now setup.
 
 #### Adding SpiceDB
 
@@ -443,7 +453,7 @@ Add the logic in the component:
 <DropdownMenuContent align="end">
   <DropdownMenuLabel>Actions</DropdownMenuLabel>
   <DropdownMenuItem>Edit</DropdownMenuItem>
-  {/* 🔹 Show Delete button only if user has permission */}
+  {/* Show Delete button only if user has permission */}
   {product.isDeleteable && (
     <DropdownMenuItem>
       <form
@@ -521,4 +531,4 @@ That's it! When you run the app, you'll see that only Product id=1 displays the 
 
 #### Troubleshooting
 
-// TBA
+// TBD
