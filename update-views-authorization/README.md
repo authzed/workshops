@@ -15,7 +15,7 @@ A common pattern in a web app is to show a user only the options that they are a
 ### What you will learn
 
 - How to model a schema based on a use case
-- How to write relationships between objects and subjects. For ex: A user and a product
+- How to write relationships between subjects and resources. For ex: A user and a product
 - How to check for permissions. Ex: Does user Alice have 'delete' permissions on Product XYZ.
 - How to update a user interface based on what permissions the user has. 
 
@@ -23,38 +23,81 @@ At the end of this tutorial, we'll have an admin dashboard that checks a user's 
 
 This tutorial is meant for learning purposes only. Please follow best practices when deploying to production. 
 
-**Last Updated**: Mar 17, 2025
+**Last Updated**: Mar 24, 2025
 
 ## Tutorial
 
-#### Setup 
+### Setup 
 
 For this tutorial we'll use this [open source Admin Dashboard template](https://next-admin-dash.vercel.app/) created by Vercel. The install instructions are on the Vercel page. but here's a TL;DR:
 
-1. Create an OAuth app on GitHub (enter an application name, Homepage URL: http://localhost:3000, Callback URL: http://localhost:3000/api/auth/callback/github) and note down the client ID and Secret.
+1. Create an OAuth app on GitHub [with these instructions](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app).
+    * Enter an application name
+    * Homepage URL: http://localhost:3000
+    * Callback URL: http://localhost:3000/api/auth/callback/github
+    * Generate a Client Secret
+    * Note down both the Client ID and Client Secret.  You will need these later when configuring `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` environment variables.
 
-2. Get your AUTH_SECRET generated from here: https://generate-secret.vercel.app/32 . 
+2. Get a Vercel secret `AUTH_SECRET`
+    *  Generate from here: https://generate-secret.vercel.app/32.  Note it down. 
 
-3. Deploy the template [from here](https://vercel.com/templates/next.js/admin-dashboard-tailwind-postgres-react-nextjs). You will need a Vercel account for the automated deployment. (You can bypass this by cloning the repo, but will have to manually setup the Postgres database.)
+3. Deploy the Vercel template [from here](https://vercel.com/templates/next.js/admin-dashboard-tailwind-postgres-react-nextjs). You will need a Vercel account for the automated deployment.
+      * Add Neon Storage -> Serverless Postgres when prompted.
+      * Choose a region and 'Development' environmnet when prompted by Neon.
+      * Enter the three `Environment Variables` when prompted, using the values from steps 1 and 2 above.
+      * You might get an error: `[cause]: Error: No database connection string was provided to neon(). Perhaps an environment variable has not been set?`.  Don't fret - you can trigger a re-deploy in the Vercel -> Deployments tab, making sure to choose `Preview` instead of production
+         
+      (Note: You could bypass the Vercel deployment but you would have to manually setup the Postgres database.)
 
-4. Once deployed to GitHub, clone the app locally and run `pnpm install` and `pnpm dev`. Follow the instructions on the page to create Postgres tables for Products & Users. Also, create a user which we will use later as our Admin user. 
+4. In the Neon Console (Vercel Dashboard -> Storage) run the following commands to create your database tables:
 
-5. Uncomment out the code in `route.ts` and go to `localhost:3000/api/seed` to populate the Products table. Ensure that the `return` statement is at the end of the code. 
+```SQL
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
+  username VARCHAR(255)
+);
 
-6. Add a column to the `products` table that we'll use to determine if a product is delete-able or not. Run this command in your SQL Editor in Neon. You can also manually add the column to the table in the Neon UI.
+CREATE TYPE status AS ENUM ('active', 'inactive', 'archived');
 
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  image_url TEXT NOT NULL,
+  name TEXT NOT NULL,
+  status status NOT NULL,
+  price NUMERIC(10, 2) NOT NULL,
+  stock INTEGER NOT NULL
+);
+
+INSERT INTO users (id, email, name, username) VALUES (1, 'me@test.com', 'Me', 'username');
 ```
-ALTER TABLE "public"."products" 
-ADD COLUMN "is_deleteable" boolean NOT NULL DEFAULT false
-```
 
-7. Rename the `.env.example` file to `.env` and add the required variables. You can find `POSTGRES_URL` in your Vercel dashboard. 
+
+5. Now, clone the repo that was generated as part of the Vercel deployment flow, so we can run it locally.
+
+6. Inside the new repo, pull the environment configuration from Vercel to your local repo with these commands:
+     ```bash
+    npm i -g vercel
+    vercel link
+    vercel env pull
+    ```
+    This step will create a file called `.env.local` locally with the correct environment variables created as part of Vercel templated deployment.
+
+6. Install and run the app:
+    ```bash
+    pnpm install
+    pnpm dev
+    ```
+    Now, you will have application running locally, and navigating to http://localhost:3000/ should show you an empty Products page.
+
+7. Uncomment out the code in `route.ts` and go to `localhost:3000/api/seed` to populate the Products table. Ensure that the `return` statement is at the end of the code. 
 
 Running the app locally should now show you a dashboard of products with Prices, Status etc. displayed. 
 
 Congrats! The Admin Dashboard is now setup.
 
-#### Adding SpiceDB
+### Adding SpiceDB
 
 Let's add some SpiceDB into the mix and start a local instance of SpiceDB as our database for write permissions. 
 
@@ -62,7 +105,7 @@ Let's add some SpiceDB into the mix and start a local instance of SpiceDB as our
 
 2. This guide assumes you've [installed SpiceDB](https://authzed.com/docs/spicedb/getting-started/installing-spicedb). Start a local instance of SpiceDB with the command `spicedb serve --grpc-preshared-key "sometoken"`
 
-3. Add the following variables to the `.env` file:
+3. Add the following variables to the `.env.local` file:
 
 ```
 # Same value set for --grpc-preshared-key
@@ -79,7 +122,7 @@ We'll write our schema and relationships to this local instance of SpiceDB.
 
 A [SpiceDB schema](https://authzed.com/docs/spicedb/concepts/schema) defines the types of objects found, how those objects relate to one another, and the permissions that can be computed off of those relations. In this project we have a user and we have products. Currently the user can view, edit and delete all the products. We're going to build permission checks in such a way that the user can view all the products, but can delete a product only if they are authorized to do so. 
 
-In our usecase the subject and the object is a `user` and a `product`. Also the permissions are to `view` and `delete`. Our schema looks something like this:
+In our usecase the subject and the resource is a `user` and a `product`. Also the permissions are to `view` and `delete`. Our schema looks something like this:
 
 ```
 definition user {}
@@ -94,7 +137,7 @@ definition product {
 ```
 
 `relation viewer: user` and `relation admin: user` indicate that `viewer` and `admin` are related to `user`. 
-We add `relation viewer: user | user:*` as a wildcard. Wildcard support allows relations to include all subjects of a particular type, allowing a relation or permission to become public for checks. A relationship can now be written between your resource and *all* users
+We add `relation viewer: user | user:*` as a wildcard. Wildcard support allows relations to include all subjects of a particular type, allowing a relation or permission to become public for checks. A relationship can now be written between your resource and *all* users.
 
 Let's write this schema to the instance of SpiceDB when the app starts. In our `actions.ts` file import the following files:
 
@@ -157,6 +200,7 @@ export async function setupApp() {
       throw new Error(`Failed to write schema to SpiceDB. Error: ${errorMessage}`);
     }
     await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log(apiCalls);
     return apiCalls;
 
   } catch (error) {
@@ -175,7 +219,7 @@ export async function setupApp() {
 }
 ```
 
-Now we've to ensure this method is called when the app starts - add a call to the method at the top of actions.tx
+Now we've to ensure this method is called when the app starts - add a call to the method at the top of actions.ts
 
 ```
 setupApp();
@@ -260,6 +304,7 @@ export async function setupApp() {
       description: `Relationship written successfully:`
     }); 
 
+    console.log(apiCalls)
     console.log(response)
 
     return apiCalls;
@@ -299,7 +344,7 @@ First, go to the `product.tsx` file and add this method as the form action for t
     </DropdownMenuItem>
 ```
 
-In the `actions.ts` file add a method called `deleteProduct`. For now we'll see the result of this check only in the terminal:
+In the `actions.ts` file replace the existing method called `deleteProduct`. For now we'll see the result of this check only in the terminal:
 
 ```
 export async function deleteProduct(formData: FormData) {
@@ -416,6 +461,14 @@ export const products = pgTable('products', {
 });
 ```
 
+Since the list of fields above is tightly coupled to our database table we need to add a column to the `products` table to keep thiings working (even though we won't read/write this column in the database, it's easier for this workshop just to edit the existing `products` object). Run this command in your SQL Editor in Neon. You can also manually add the column to the table in the Neon UI.
+
+```
+ALTER TABLE "public"."products" 
+ADD COLUMN "is_deleteable" boolean NOT NULL DEFAULT false
+```
+
+
 Add a new function to enrich the products returned from the database with authorization info from SpiceDB, based on what products the current user is allowed to delete:
 
 ```
@@ -431,6 +484,8 @@ async function enrichWithAuthInfo(products: SelectProduct[]) {
 }
   ```
 
+  You'll have to update your imports to pull in the `boolean` and `getDeletableProductIds` references.
+
   Before we return the products from the main `getProducts` function, call our new `enrichWithAuthInfo` function like this:
   ```
   return {
@@ -442,12 +497,7 @@ async function enrichWithAuthInfo(products: SelectProduct[]) {
 
 Now we've to modify the `product.tsx` component so that it shows the delete button only for the products it's authorized to. 
 
-```
-export function Product({ product, deletableProductIds }: { product: SelectProduct, deletableProductIds: string[] }) {
-  const canDelete = deletableProductIds.includes(String(product.id));
-```
-
-Add the logic in the component:
+Add the `product.isDeleteable` logic in the component like this:
 
 ```
 <DropdownMenuContent align="end">
@@ -531,4 +581,23 @@ That's it! When you run the app, you'll see that only Product id=1 displays the 
 
 #### Troubleshooting
 
-// TBD
+If you see issues related to loading your Avatar, when you log in via the GitHub app, updated your `next.config.ts` to have this content (see the `pathname` field):
+
+```
+export default {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+        search: ''
+      }
+    ]
+  }
+};
+```
