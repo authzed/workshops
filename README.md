@@ -2,14 +2,14 @@
 
 Here's the hub for all self-guided AuthZed workshops.  
 
-### Workshops
-
-- **Secure Your RAG Pipelines With Fine Grained Authorization**: 
+#### 1. Secure Your RAG Pipelines With Fine Grained Authorization
 This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in your RAG pipelines. There are different branches for this workshop:
 
-1. (recommended) Using the OpenAI API, Pinecone, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/main/secure-rag-pipelines)
-2. Using the Deepseek R1 LLM (via OpenRouter), Pinecone, OpenAI Embeddings, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/deepseek/secure-rag-pipelines)
-3. Using OpenAI, Pinecone, Langchain, Google Colab and a SpiceDB instance running on AuthZed Serverless. [Link](https://github.com/authzed/workshops/tree/google-colab/secure-rag-pipelines)
+- (recommended) Using the OpenAI API, Pinecone, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/main/secure-rag-pipelines)
+- Using the Deepseek R1 LLM (via OpenRouter), Pinecone, OpenAI Embeddings, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/deepseek/secure-rag-pipelines)
+
+#### 2. Update A Web View Based on Permissions
+This workshop will illustrate how you can update a view based on what permissions the user has. The workshop uses a NextJS template by Vercel for an admin dashboard, written in TypeScript. [Link](https://github.com/authzed/workshops/tree/main/update-views-authorization)
 
 
 ## Contributing
