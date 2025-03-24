@@ -577,7 +577,7 @@ export async function deleteProduct(formData: FormData) {
 }
 ```
 
-That's it! When you run the app, you'll see that only Product id=1 displays the 'Delete' button. Try adding 'delete' permissions to other products and see for yourself. The code for the entire project is available in this folder. 
+That's it! When you run the app, you'll see that only Product id=1 displays the 'Delete' button. Try adding 'delete' permissions to other products and see for yourself. The code for the entire project is available in [this folder](https://github.com/authzed/workshops/tree/main/update-views-authorization/working-solution) 
 
 #### Troubleshooting
 
