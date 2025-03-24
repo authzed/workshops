@@ -93,7 +93,8 @@ export async function setupApp() {
       description: `Relationship written successfully:`
     });
 
-    console.log(response)
+    console.log(response);
+    console.log(apiCalls);
 
     return apiCalls;
 
