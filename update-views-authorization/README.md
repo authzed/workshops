@@ -68,6 +68,7 @@ CREATE TABLE products (
   status status NOT NULL,
   price NUMERIC(10, 2) NOT NULL,
   stock INTEGER NOT NULL
+  available_at TIMESTAMP NOT NULL
 );
 
 INSERT INTO users (id, email, name, username) VALUES (1, 'me@test.com', 'Me', 'username');
