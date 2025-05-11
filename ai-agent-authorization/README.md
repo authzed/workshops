@@ -1,4 +1,4 @@
-# AI Agent Authorization Demo using SpiceDB, Pinecone, and OpenAI
+# AI Agent Authorization Workshop using SpiceDB, Pinecone, and OpenAI
 
 This demo shows how to build a secure Retrieval-Augmented Generation (RAG) pipeline where AI Agents can only access documents they are authorized for. Authorization decisions are enforced by SpiceDB.
 
