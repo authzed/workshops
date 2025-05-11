@@ -38,7 +38,7 @@ OPENAI_API_KEY=<your-openai-api-key>
 
 3. Open the Jupyter notebook and run all cells
 
-## 📖 How it works
+## How it works
 
 1. **Schema setup:**
 
@@ -55,19 +55,19 @@ OPENAI_API_KEY=<your-openai-api-key>
    * Filter documents by SpiceDB permission checks
    * Send only authorized document content to OpenAI for response generation
 
-## ✅ Example usage
+## Example usage
 
 ```python
 await query_rag_with_authz("agent-007", "What is the content of project doc-2?")
 ```
 
-## 🎯 Demo scenario
+## Demo scenario
 
 * `agent-007` can view `doc-1`, `doc-2`
 * `agent-042` can view `doc-3`
 * Unauthorized document mentions are blocked with clear feedback
 
-## 📝 Notes
+## Notes
 
 * This demo is built for educational and prototype purposes
 * In production, always secure your keys and consider rate limits & latency
