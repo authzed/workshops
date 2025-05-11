@@ -11,6 +11,9 @@ This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensiti
 #### 2. Update A Web View Based on Permissions
 This workshop will illustrate how you can update a view based on what permissions the user has. The workshop uses a NextJS template by Vercel for an admin dashboard, written in TypeScript. [Link](https://github.com/authzed/workshops/tree/main/update-views-authorization)
 
+#### 3. Prevent AI Agents from Accessing Unauthorization Data
+This workshop shows how to build a secure Retrieval-Augmented Generation (RAG) pipeline where AI Agents can only access documents they are authorized for. Authorization decisions are enforced by SpiceDB in a post-filter approach. [Link](https://github.com/authzed/workshops/tree/main/ai-agent-authorization)
+
 
 ## Contributing
 
