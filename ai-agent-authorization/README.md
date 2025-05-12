@@ -19,7 +19,7 @@ This demo shows how to build a secure Retrieval-Augmented Generation (RAG) pipel
 
 ## Prerequisites
 
-* Python 3.8+
+* Python 3.x
 * API keys and accounts for:
   * Pinecone
   * OpenAI
@@ -74,12 +74,14 @@ await query_rag_with_authz("agent-007", "What is the content of project doc-2?")
 
 ## TO DO
 
-This snippet does a substring match and not an exact document ID match. 
+1. This snippet does a substring match and not an exact document ID match. 
 
 ```
 for doc_id in unauthorized_docs:
     if doc_id in user_query:
         return f"You are not authorized to view the contents of document '{doc_id}'."
 ```
+
+2. For the demo it would perhaps be nicer to call the agents 'agent-sales' and 'agent-hr' or something to that effect. 
 
 
