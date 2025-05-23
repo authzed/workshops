@@ -27,6 +27,10 @@ This tutorial is meant for learning purposes only. Please follow best practices 
 
 ## Tutorial
 
+Here's a livestream video that goes through this tutorial step-by-step. The text version can be found below.
+
+[![YouTube thumb](https://github.com/authzed/workshops/tree/main/update-views-authorization/assets/youtube-thumb.png)](http://www.youtube.com/watch?v=ooWQ903blZo "Updating A Web View Based on Permissions")
+
 ### Setup 
 
 For this tutorial we'll use this [open source Admin Dashboard template](https://next-admin-dash.vercel.app/) created by Vercel. The install instructions are on the Vercel page. but here's a TL;DR:
