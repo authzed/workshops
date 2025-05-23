@@ -29,7 +29,7 @@ This tutorial is meant for learning purposes only. Please follow best practices 
 
 Here's a livestream video that goes through this tutorial step-by-step. The text version can be found below.
 
-[![YouTube thumb](https://github.com/authzed/workshops/tree/main/update-views-authorization/assets/youtube-thumb.png)](http://www.youtube.com/watch?v=ooWQ903blZo "Updating A Web View Based on Permissions")
+[![YouTube thumb](assets/youtube-thumb.png)](http://www.youtube.com/watch?v=ooWQ903blZo "Updating A Web View Based on Permissions")
 
 ### Setup 
 
