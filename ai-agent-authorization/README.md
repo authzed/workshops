@@ -73,7 +73,7 @@ await query_rag_with_authz("sales-agent", "What is the content of project doc-2?
 ## Architecture Diagram
 
 Here is a high-level architecture diagram of this demo
-![architecture diagram](/pre-filter-authz.png)
+![architecture diagram](/ai-agent-authorization/pre-filter-authz.png)
 
 ## Notes
 
