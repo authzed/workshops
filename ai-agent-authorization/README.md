@@ -39,7 +39,11 @@ PINECONE_API_KEY=<your-pinecone-api-key>
 OPENAI_API_KEY=<your-openai-api-key>
 ```
 
-3. Open the Jupyter notebook and run all cells
+3. Start SpiceDB locally by running the command
+
+`spicedb serve --grpc-preshared-key "<SPICEDB_API_KEY>"`
+
+4. Open the Jupyter notebook and run all cells
 
 ## How it works
 
