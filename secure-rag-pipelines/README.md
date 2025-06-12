@@ -8,7 +8,12 @@ Building enterprise-ready AI poses challenges around data security, accuracy, sc
 
 To enable precise guardrails, one must implement permissions systems with advanced fine grained authorization capabilities such as returning lists of authorized subjects and accessible resources. Such systems ensure timely access to authorized data while preventing exfiltration of sensitive information, making RAGs more efficient and improving performance at scale
 
-**Last Updated**: Jan 16, 2025
+## Architecture Diagram
+
+Here is a high-level architecture diagram of this demo
+![architecture diagram](/secure-rag-pipelines/secure-rag.png)
+
+**Last Updated**: Jun 12, 2025
 
 ### Workshop Modules
 
