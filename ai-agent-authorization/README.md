@@ -2,7 +2,7 @@
 
 This demo shows how to build a secure Retrieval-Augmented Generation (RAG) pipeline where AI Agents can only access documents they are authorized for. Authorization decisions are enforced by SpiceDB.
 
-**Last updated**: Jun 11, 2025
+**Last updated**: Jun 16, 2025
 
 ## Features
 
@@ -10,6 +10,7 @@ This demo shows how to build a secure Retrieval-Augmented Generation (RAG) pipel
 * Assign document read permissions to specific agents
 * Store documents and embeddings in Pinecone
 * Secure RAG pipeline: filter document retrievals based on real-time SpiceDB checks
+* Get a summary of only authorized documents
 * Prevent unauthorized data from ever reaching the AI model
 
 ## Stack
@@ -66,6 +67,7 @@ OPENAI_API_KEY=<your-openai-api-key>
 
 ```python
 await query_rag_with_authz("sales-agent", "What is the content of project doc-2?")
+summary = await summarize_accessible_docs("hr-agent")
 ```
 
 ## Demo scenario
