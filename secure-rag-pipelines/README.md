@@ -1,19 +1,31 @@
 ## Secure Your RAG Pipelines With Fine Grained Authorization
 
-This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in RAG pipelines. You will learn how to pre-filter and post-filter vector database queries with a list of authorized object IDs to improve security and efficiency. This workshop uses OpenAI, Pinecone, Langchain, Jupyter Notebook and SpiceDB
+This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in RAG pipelines. You will learn how to pre-filter a vector database queries with a list of authorized object IDs to improve security and efficiency. This workshop uses OpenAI, Pinecone, Langchain, Jupyter Notebook and SpiceDB
 
 ### Why is this important? 
 
-Building enterprise-ready AI poses challenges around data security, accuracy, scalability, and integration, especially in compliance-regulated industries like healthcare and finance. Firms are increasing efforts to mitigate risks associated with LLMs, particularly regarding sensitive data exfiltration of personally identifiable information and/or sensitive company data. The primary mitigation strategy is to build guardrails around Retrieval-Augmented Generation (RAG) to safeguard data while also optimizing query response quality and efficiency. 
+Building enterprise-ready AI requires ensuring users can only augment prompts with data they're authorized to access. Fine-grained authorization in Retrieval-Augmented Generation (RAG) can be achieved with Relationship-based Access Control (ReBAC). ReBAC enables decisions based on relationships between objects, offering more precise control compared to traditional models like RBAC and ABAC.
 
-To enable precise guardrails, one must implement permissions systems with advanced fine grained authorization capabilities such as returning lists of authorized subjects and accessible resources. Such systems ensure timely access to authorized data while preventing exfiltration of sensitive information, making RAGs more efficient and improving performance at scale
+This workshop gives you hands-on knowledge on using ReBAC to safeguard sensitive data in RAG pipelines using Pinecone, Langchain, OpenAI, and SpiceDB. 
+The pre-requisites are: 
+
+
+- Access to a SpiceDB instance and API key
+- A Pinecone account and API key
+- An OpenAI account and API key
+- Jupyter Notebook and Python installed
+
 
 ## Architecture Diagram
 
 Here is a high-level architecture diagram of this demo
 ![architecture diagram](/secure-rag-pipelines/secure-rag.png)
 
-**Last Updated**: Jun 12, 2025
+Check out this conference talk that explains all of the concepts in this workshop
+
+[![DevConf talk](/secure-rag-pipelines/youtube.png)](https://youtu.be/aeace8MDlhk "Secure RAG Pipelines")
+
+**Last Updated**: Jul 23, 2025
 
 ### Workshop Modules
 
