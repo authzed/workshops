@@ -83,13 +83,10 @@ Here is a high-level architecture diagram of this demo
 
 Check out this YouTube video that explains the concepts in this workshop
 
-[![AI Agent Authorization](ai-agent-authorization/yt-screen.png)](https://youtu.be/UjKa5T1dIVw "AI Agent Authorization")
+[![AI Agent Authorization](/ai-agent-authorization/yt-screen.png)](https://youtu.be/UjKa5T1dIVw "AI Agent Authorization")
+
 
 ## Notes
 
 * This demo is built for educational and prototype purposes
 * In production, always secure your keys and consider rate limits & latency
-
-
-
-
