@@ -81,6 +81,10 @@ summary = await summarize_accessible_docs("hr-agent")
 Here is a high-level architecture diagram of this demo
 ![architecture diagram](/ai-agent-authorization/pre-filter-authz.png)
 
+Check out this YouTube video that explains the concepts in this workshop
+
+[![AI Agent Authorization](ai-agent-authorization/yt-screen.png)](https://youtu.be/UjKa5T1dIVw "AI Agent Authorization")
+
 ## Notes
 
 * This demo is built for educational and prototype purposes
