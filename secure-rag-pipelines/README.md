@@ -25,7 +25,7 @@ Check out this conference talk that explains all of the concepts in this worksho
 
 [![DevConf talk](/secure-rag-pipelines/youtube.png)](https://youtu.be/aeace8MDlhk "Secure RAG Pipelines")
 
-**Last Updated**: Jul 23, 2025
+**Last Updated**: Aug 28, 2025
 
 ### Workshop Modules
 
