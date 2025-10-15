@@ -23,11 +23,11 @@ The pre-requisites for the workshop:
 ## Architecture Diagram
 
 Here is a high-level architecture diagram of a typical RAG pipeline. Notice the lack of authorization
-![architecture diagram](/secure-rag-pipelines/RAG_pipelines.png)
+![architecture diagram](/secure-rag-pipelines/images/RAG_pipelines.png)
 
 Check out this conference talk that explains all of the concepts in this workshop
 
-[![DevConf talk](/secure-rag-pipelines/youtube.png)](https://youtu.be/aeace8MDlhk "Secure RAG Pipelines")
+[![DevConf talk](/secure-rag-pipelines/images/youtube.png)](https://youtu.be/aeace8MDlhk "Secure RAG Pipelines")
 
 **Last Updated**: Oct 15, 2025
 
