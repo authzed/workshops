@@ -1,13 +1,17 @@
-## Secure Your RAG Pipelines With Fine Grained Authorization
+## Secure Your RAG Pipelines With Fine Grained Authorization (Pre-Filter & Post-Filter)
 
-This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in RAG pipelines. You will learn how to pre-filter a vector database queries with a list of authorized object IDs to improve security and efficiency. This workshop uses OpenAI, Pinecone, Langchain, Jupyter Notebook and SpiceDB
+This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in RAG pipelines. You will learn two techniques
+
+1. How to pre-filter a vector database queries with a list of authorized object IDs
+2. How to retrieve relevant documents and then check for permissions using post-filter
+
+Using fine-grained authorization in RAG improves security and efficiency. This workshop uses OpenAI, Pinecone, Langchain, Jupyter Notebook and SpiceDB.
 
 ### Why is this important? 
 
 Building enterprise-ready AI requires ensuring users can only augment prompts with data they're authorized to access. Fine-grained authorization in Retrieval-Augmented Generation (RAG) can be achieved with Relationship-based Access Control (ReBAC). ReBAC enables decisions based on relationships between objects, offering more precise control compared to traditional models like RBAC and ABAC.
 
-This workshop gives you hands-on knowledge on using ReBAC to safeguard sensitive data in RAG pipelines using Pinecone, Langchain, OpenAI, and SpiceDB. 
-The pre-requisites are: 
+The pre-requisites for the workshop: 
 
 
 - Access to a SpiceDB instance and API key
@@ -18,14 +22,14 @@ The pre-requisites are:
 
 ## Architecture Diagram
 
-Here is a high-level architecture diagram of this demo
-![architecture diagram](/secure-rag-pipelines/secure-rag.png)
+Here is a high-level architecture diagram of a typical RAG pipeline. Notice the lack of authorization
+![architecture diagram](/secure-rag-pipelines/RAG_pipelines.png)
 
 Check out this conference talk that explains all of the concepts in this workshop
 
 [![DevConf talk](/secure-rag-pipelines/youtube.png)](https://youtu.be/aeace8MDlhk "Secure RAG Pipelines")
 
-**Last Updated**: Oct 11, 2025
+**Last Updated**: Oct 15, 2025
 
 ### Workshop Modules
 
