@@ -110,4 +110,4 @@ You now have:
 
 A schema saved to disk and a validation file with test cases. This means your authorization system is no longer ephemeral.
 
-Let's see how you can take this setup to production using AuthZed Cloud in [Part 4](mcp-assisted-authorization/4-cloud.md).
+Let's see how you can take this setup to production using AuthZed Cloud in [Part 4](4-cloud.md).

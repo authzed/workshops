@@ -23,4 +23,4 @@ The end result is a fully working permissions system running in the cloud.
 - Part 4 Production Deployment with AuthZed Cloud  
 - Part 5 Next Steps, and homework
 
-Let's get started with [Part 1](/1-setup.md)
+Let's get started with [Part 1](1-setup.md)

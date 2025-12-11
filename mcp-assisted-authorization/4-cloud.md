@@ -222,4 +222,4 @@ As you move to production:
 You have created a Permissions System in AuthZed Cloud while configuring least-privilege access via Service Accounts, tokens, roles, and policies. You also applied the schema built in the workshop to a managed SpiceDB deployment and connected your application to a production-ready authorization system. 
 Now go build!
 
-In [the epilogue of this tutorial](mcp-assisted-authorization/5-nextsteps.md) you will find example schemas for a multi-tenant SaaS application with complex roles and hierarchies. There's also some homework included if that's your jam.
+In [the epilogue of this tutorial](5-nextsteps.md) you will find example schemas for a multi-tenant SaaS application with complex roles and hierarchies. There's also some homework included if that's your jam.
