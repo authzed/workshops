@@ -98,5 +98,5 @@ You have:
 - Added two MCP Servers
 - Connected them to your AI assistant
 
-In [Step 2](mcp-assisted-authorization/2-schema.md), we'll being adding schema, relations and permissions.
+In [Step 2](/2-schema.md), we'll being adding schema, relations and permissions.
 

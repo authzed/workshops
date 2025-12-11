@@ -177,4 +177,4 @@ This combines:
 
 You’ve built a working permissions model with real schema, test data and permission checks working.
 
-Next we will export our evolving model and save progress so it can be persisted and pushed to GitHub. See you in [Part 3](mcp-assisted-authorization/3-export.md)
+Next we will export our evolving model and save progress so it can be persisted and pushed to GitHub. See you in [Part 3](3-export.md)
