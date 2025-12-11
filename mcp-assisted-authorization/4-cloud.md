@@ -6,8 +6,8 @@ So far, you have built and iterated on a permissions model using the SpiceDB Dev
 
 This part shows how to take that work toward production using **AuthZed Cloud**:
 
-1. Create a **Permissions System** in AuthZed Cloud
-2. Configure **access control** for your application (Service Account, Token, Role, Policy)
+1. Create a **Permissions System** (PS) in AuthZed Cloud
+2. Configure access control for your application (Service Account, Token, Role, Policy)
 3. Connect your application to AuthZed Cloud
 4. Apply your **existing schema** (e.g., document sharing) in a managed, production-ready environment
 
@@ -23,7 +23,7 @@ Before you start, you will need:
 
 ---
 
-## 2. Create a Permissions System (PS) in AuthZed Cloud
+## 2. Create a Permissions System in AuthZed Cloud
 
 1. Sign in to AuthZed Cloud.
 2. Click the **+Create** button to create a new Permissions System (PS).
@@ -73,7 +73,7 @@ AuthZed Cloud lets you apply **least-privilege access** to your Permissions Syst
 
 ### 3.1 Create a Service Account
 
-A **Service Account** represents a single workload or application.
+A Service Accountrepresents a single workload or application.
 
 1. In the AuthZed Cloud UI, go to the Permissions System you just created.
 2. Navigate to **Service Accounts**.
@@ -83,12 +83,11 @@ A **Service Account** represents a single workload or application.
    - **Description**: e.g., “Service account for the document sharing application backend.”
 5. Click **Save**.
 
-Recommendation:  
-Create a separate Service Account for each application or service that will access the SpiceDB API.
+**Recommendation**: Create a separate Service Account for each application or service that will access the SpiceDB API.
 
 ### 3.2 Create a Token
 
-**Tokens** are long-lived credentials for Service Accounts. Your SpiceDB client uses a token in the `Authorization` header.
+Tokens are long-lived credentials for Service Accounts. Your SpiceDB client uses a token in the `Authorization` header.
 
 1. In the same Permissions System, click **Tokens** in the menu.
 2. Click **Create token**.
@@ -198,7 +197,8 @@ High-level steps:
      - Call `CheckPermission` for `read`, `edit`, or `share` on `document:<id>` for `user:<user-id>`.
    - Authorization decisions are enforced by the production SpiceDB deployment on AuthZed Cloud.
 
-A self-guided workshop to learn hands-on how SpiceDB works with a NextJS + Postgres webapp can be [found here](https://github.com/authzed/workshops/tree/main/update-views-authorization)
+A self-guided workshop to learn hands-on how SpiceDB works with a NextJS + Postgres Web App can be [found here](https://github.com/authzed/workshops/tree/main/update-views-authorization).
+
 ---
 
 ## 6. Production Readiness Tips
@@ -219,8 +219,7 @@ As you move to production:
 
 ## Completion Milestone: Part 6
 
-You have:
+You have created a Permissions System in AuthZed Cloud while configuring least-privilege access via Service Accounts, tokens, roles, and policies. You also applied the schema built in the workshop to a managed SpiceDB deployment and connected your application to a production-ready authorization system. 
+Now go build!
 
-Created a Permissions System in AuthZed Cloud while configuring least-privilege access via Service Accounts, tokens, roles, and policies. You also applied the schema built in the workshop to a managed SpiceDB deployment and connected your application to a production-ready authorization system. Now go build!
-
-In [the prologue of this tutorial](/5-nextsteps.md) you will find example schemas for a multi-tenant SaaS application with complex roles and hierarchies. There's also some homework included if that's your jam.
+In [the epilogue of this tutorial](mcp-assisted-authorization/5-nextsteps.md) you will find example schemas for a multi-tenant SaaS application with complex roles and hierarchies. There's also some homework included if that's your jam.

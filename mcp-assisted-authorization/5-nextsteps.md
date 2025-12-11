@@ -1,6 +1,6 @@
 # Part 6 — Next Steps
 
-Now that you know the basics see how you can build permissions for a multi-tenant SaaS application with complex roles and hierarchies. Here's an example scenario:
+Now that you know the basics, see how you can build permissions for a multi-tenant SaaS application with complex roles and hierarchies. Here's an example scenario:
 
 - Organizations have projects
 - Projects have documents
@@ -8,7 +8,7 @@ Now that you know the basics see how you can build permissions for a multi-tenan
 - Access scoped by tenant
 - No cross-tenant permissions
 
-This is a fairly common scenario in the industry, yet traditional authorization techniques such as Role-Based Access Control (RBAC) or Attribute-Based Access Control (ABAC) struggle with the complexities, especially with scale and latency requirements. SpiceDB's schema is flexible to model these requirements, and the operators such as `+`, `-`, `->`, `&` makes modelling easy.
+This is a fairly common scenario in the industry, yet traditional authorization techniques such as Role-Based Access Control (RBAC) or Attribute-Based Access Control (ABAC) struggle with the complexities, especially with scale and latency requirements. Fortunately, ReBAC combined with SpiceDB's schema is flexible to model these requirements, and the operators such as `+`, `-`, `->`, `&` makes modelling easy.
 
 ### Example Schema
 

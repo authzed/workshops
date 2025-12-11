@@ -17,7 +17,7 @@ For this tutorial, we're going to create a Google Docs-style document sharing us
 
 ```
 Create a schema for a document sharing system. Documents have owners, editors, and viewers. 
-Owners can share, editors can edit, and viewers can only read.
+Owners can `share`, editors can `edit`, and viewers can only `read`.
 ```
 
 A typical result:
@@ -84,13 +84,13 @@ Show relationships://all
 
 ## 4. Test Permissions
 
-Test read/edit/share queries using natural language, asking the assistant to use check_permission:
+Test read/edit/share queries using natural language, which asks the MCP Server to use `check_permission`:
 
 ```
 Can charlie edit doc:readme?
 ```
 
-Expected: NO_PERMISSION
+Expected: `NO_PERMISSION`
 Charlie is only a viewer
 
 Then ask:
@@ -99,7 +99,7 @@ Then ask:
 Can bob edit doc:readme?
 ```
 
-Expected: HAS_PERMISSION
+Expected: `HAS_PERMISSION`
 Bob is an editor
 
 Try a share query:
@@ -108,7 +108,7 @@ Try a share query:
 Can bob share doc:readme?
 ```
 
-Expected: NO_PERMISSION
+Expected: `NO_PERMISSION`
 Because share = owner only.
 
 ## 5. Explore the Graph
@@ -177,4 +177,4 @@ This combines:
 
 You’ve built a working permissions model with real schema, test data and permission checks working.
 
-Next we will export our evolving model and save progress so it can be persisted and pushed to GitHub. See you in [Part 3](/3-export.md)
+Next we will export our evolving model and save progress so it can be persisted and pushed to GitHub. See you in [Part 3](mcp-assisted-authorization/3-export.md)

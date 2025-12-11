@@ -85,7 +85,7 @@ Then ask your assistant:
 Load the schema from permissions/document-sharing.zed and apply it to the dev server.
 ```
 
-This reads the file and uses write_schema to load it into the development instance.
+This reads the file and uses `write_schema` to load it into the development instance.
 You can repeat with validation files as needed.
 
 ## Verify Everything Works
@@ -102,7 +102,7 @@ Then repeat a permission check:
 Can charlie edit doc:readme?
 ```
 
-You should get NO_PERMISSION as before.
+You should get `NO_PERMISSION` as before.
 
 ## Completion Milestone: Part 3
 
@@ -110,4 +110,4 @@ You now have:
 
 A schema saved to disk and a validation file with test cases. This means your authorization system is no longer ephemeral.
 
-Let's see how you can take this setup to production using AuthZed Cloud in [Part 4](/4-cloud.md).
+Let's see how you can take this setup to production using AuthZed Cloud in [Part 4](mcp-assisted-authorization/4-cloud.md).

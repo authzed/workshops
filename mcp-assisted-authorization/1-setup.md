@@ -22,7 +22,7 @@ Keep this terminal open and notice the updates when you run the commands later i
 
 ## 3. Connect Your MCP Client
 
-Pick one:
+Pick an AI coding assistant:
 
 ### a. Claude Code
 
@@ -41,7 +41,7 @@ Enable Developer Mode, then add connector:
 
 ### c. VSCode with Copilot
 
-Command Palette → MCP: Add Server
+Open the Command Palette → MCP: Add Server
 
 - Transport: HTTP
 - URL: http://localhost:9999/mcp
@@ -73,6 +73,8 @@ You should see:
 
 ## 6. Separation of Roles
 
+Since we've added two MCP servers, it's important to undetstand the distinction between the two:
+
 | Server | Purpose |
 |---|---|
 | SpiceDB Dev MCP Server | Local development and testing |
@@ -84,7 +86,7 @@ Typical workflow:
 1. Ask AuthZed for a pattern
 2. Build/test it locally with SpiceDB
 3. Export to file when done
-4. ??? (maybe deploy to AuthZed Cloud?)
+4. ??? (maybe deploy to AuthZed Cloud)
 5. PROFIT
 ```
 
@@ -96,5 +98,5 @@ You have:
 - Added two MCP Servers
 - Connected them to your AI assistant
 
-In [Step 2](/2-schema.md), we'll being adding schema, relations and permissions.
+In [Step 2](mcp-assisted-authorization/2-schema.md), we'll being adding schema, relations and permissions.
 
