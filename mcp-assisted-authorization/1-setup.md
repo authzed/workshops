@@ -1,60 +1,30 @@
 # Part 1 — Setup and First Run
 
-## Overview
+In this step, we'll install the SpiceDB Dev MCP Server and the AuthZed MCP Server and connect the two to the coding assistant of your choice.
 
-This part guides you through installing and running the SpiceDB Dev MCP Server and connecting tools. You will:
+## 1. Run the Local Development Server
 
-- Install the Zed CLI
-- Run the SpiceDB Dev MCP server
-- Connect your AI coding assistant
-- Connect the AuthZed MCP server
-- Validate that everything is working
+Install [Zed](https://github.com/authzed/zed) - the command line client for managing SpiceDB
 
-## 1. Install Dependencies
+We'll start by using the SpiceDB Dev MCP Server. This is a local development tool that runs an in-memory SpiceDB instance accessible through MCP. It’s designed to iterate quickly on schemas and test permission logic with AI assistance.
 
-### Install Zed CLI
-
-The development server relies on the Zed CLI.
-
-Most systems:
-
-```
-brew install authzed/tap/zed
-```
-
-Verify:
-
-```
-zed version
-```
-
-## 2. Run the Local Development Server
-
-Start an in-memory SpiceDB instance:
+Lets start an in-memory SpiceDB instance:
 
 ```
 zed mcp experimental-run
 ```
 
-It will start on:
+It will start on `http://localhost:9999/mcp` with an empty in-memory SpiceDB instance.
 
-```
-http://localhost:9999/mcp
-```
+**Important:** The server runs in-memory only. All schemas and relationships are lost when you stop the server.
 
-Important notes:
-
-- In-memory only
-- All schemas and relationships are lost on shutdown
-- No external dependencies
-
-Keep this terminal open.
+Keep this terminal open and notice the updates when you run the commands later in the workshop.
 
 ## 3. Connect Your MCP Client
 
 Pick one:
 
-### Claude Code
+### a. Claude Code
 
 ```
 claude mcp add --transport http spicedb http://localhost:9999/mcp
@@ -62,14 +32,14 @@ claude mcp add --transport http spicedb http://localhost:9999/mcp
 
 Restart Claude Code.
 
-### ChatGPT (Pro/Plus)
+### b. ChatGPT (Pro/Plus)
 
 Enable Developer Mode, then add connector:
 
 - Name: spicedb
 - URL: http://localhost:9999/mcp
 
-### VS Code with Copilot
+### c. VSCode with Copilot
 
 Command Palette → MCP: Add Server
 
@@ -79,16 +49,18 @@ Command Palette → MCP: Add Server
 
 ## 4. Connect the AuthZed MCP Server
 
-Add this remote server:
+The AuthZed MCP Server is a remote MCP server that provides tools with searchable access to SpiceDB and AuthZed resources to learn about authorization systems, explore APIs, and find implementation examples without leaving your LLM chat or development environment.
+
+To use it, add this remote MCP server:
 
 - Name: authzed
 - URL: https://mcp.authzed.com
 
-No authentication required.
+There's no authentication required.
 
 ## 5. Validate
 
-Ask your assistant:
+Ask your AI assistant:
 
 ```
 What MCP servers are available?
@@ -98,12 +70,6 @@ You should see:
 
 - spicedb (local)
 - authzed (remote)
-
-Then test schema writing:
-
-```
-Write a minimal schema with a single resource and permission.
-```
 
 ## 6. Separation of Roles
 
@@ -115,9 +81,11 @@ Write a minimal schema with a single resource and permission.
 Typical workflow:
 
 ```
-Ask AuthZed for a pattern
-Build/test it locally with SpiceDB
-Export to file when done
+1. Ask AuthZed for a pattern
+2. Build/test it locally with SpiceDB
+3. Export to file when done
+4. ??? (maybe deploy to AuthZed Cloud?)
+5. PROFIT
 ```
 
 ## Completion Milestone: Part 1
@@ -125,7 +93,8 @@ Export to file when done
 You have:
 
 - Installed Zed
-- Run the dev server
-- Connected tools
-- Written a first schema
+- Added two MCP Servers
+- Connected them to your AI assistant
+
+In [Step 2](/2-schema.md), we'll being adding schema, relations and permissions.
 

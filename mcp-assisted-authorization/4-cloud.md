@@ -1,14 +1,10 @@
-# Part 5 — Taking It to Production with AuthZed Cloud
+# Part 4 — Taking It to Production with AuthZed Cloud
 
 ## Overview
 
-So far, you have:
+So far, you have built and iterated on a permissions model using the SpiceDB Dev & AuthZed MCP Server. You've also exported schemas and validation files and versioned them in Git.
 
-- Built and iterated on a permissions model using the SpiceDB Dev MCP Server
-- Validated behavior with document sharing and (optionally) multi-tenant SaaS examples
-- Exported schemas and validation files and versioned them in Git
-
-This part shows how to take that work **toward production** using **AuthZed Cloud**:
+This part shows how to take that work toward production using **AuthZed Cloud**:
 
 1. Create a **Permissions System** in AuthZed Cloud
 2. Configure **access control** for your application (Service Account, Token, Role, Policy)
@@ -19,18 +15,18 @@ This part shows how to take that work **toward production** using **AuthZed Clou
 
 ## 1. Prerequisites
 
-Before you start:
+Before you start, you will need:
 
-- You have an AuthZed Cloud account
+- An [AuthZed Cloud](https://authzed.com/products/authzed-cloud) account
 - You have your schema exported (for example: `permissions/document-sharing.zed`)
-- You have a basic understanding of how your application will talk to SpiceDB (e.g., via gRPC/HTTP client libraries)
+- You have a basic understanding of how your application will talk to SpiceDB (e.g., via [gRPC](https://buf.build/authzed/api/docs/main:authzed.api.v1) or the HTTP client libraries)
 
 ---
 
 ## 2. Create a Permissions System (PS) in AuthZed Cloud
 
-1. **Sign in** to AuthZed Cloud.
-2. Click the **+Create** button to create a new **Permissions System (PS)**.
+1. Sign in to AuthZed Cloud.
+2. Click the **+Create** button to create a new Permissions System (PS).
 3. Fill in the required details:
 
    - **Type**  
@@ -63,7 +59,7 @@ Before you start:
      - Start with **2 vCPUs**. Monitor metrics and adjust as needed based on workload.
 
    - **Replicas**  
-     - Number of replicas for primarily read workloads. A common starting point is **3**, but tune based on latency and availability requirements.
+     - Number of replicas for primarily read workloads. A common starting point is **3**, but tune it based on latency and availability requirements.
 
 5. Click **Save** to create the Permissions System.
 
@@ -73,12 +69,7 @@ At this point, you have a managed SpiceDB deployment ready to receive your schem
 
 ## 3. Configure Access (Service Account, Token, Role, Policy)
 
-AuthZed Cloud lets you apply **least-privilege access** to your Permissions System. You will:
-
-1. Create a **Service Account**
-2. Create a **Token**
-3. Create a **Role** with specific API permissions
-4. Create a **Policy** binding the Role to the Service Account
+AuthZed Cloud lets you apply **least-privilege access** to your Permissions System through service accounts, tokens, roles and policies. 
 
 ### 3.1 Create a Service Account
 
@@ -88,7 +79,7 @@ A **Service Account** represents a single workload or application.
 2. Navigate to **Service Accounts**.
 3. Click **Create Service Account**.
 4. Provide:
-   - **Name**: for example, `blog-app` or `doc-sharing-api`.
+   - **Name**: for example, `doc-sharing-app`.
    - **Description**: e.g., “Service account for the document sharing application backend.”
 5. Click **Save**.
 
@@ -102,7 +93,7 @@ Create a separate Service Account for each application or service that will acce
 1. In the same Permissions System, click **Tokens** in the menu.
 2. Click **Create token**.
 3. Provide:
-   - **Name** (e.g., `blog-app-token`)
+   - **Name** (e.g., `doc-app-token`)
    - **Description**
 4. Save the token and **securely record** the value.  
    - This is what your application will present when calling the API.
@@ -114,7 +105,7 @@ A **Role** defines which API operations are allowed. Roles are later bound to Se
 1. Go to **Roles**.
 2. Click **Create Role**.
 3. Provide:
-   - **Name** (e.g., `blog-app-role`)
+   - **Name** (e.g., `doc-app-role`)
    - **Description**
 4. Add the following permissions for a typical application with full read/write access:
 
@@ -134,22 +125,22 @@ A **Policy** binds a Role to a Service Account.
 1. Go to **Policies**.
 2. Click **Create policy**.
 3. Provide:
-   - **Name** (e.g., `blog-app-policy`)
+   - **Name** (e.g., `doc-app-policy`)
    - **Description**
 4. Choose:
-   - The **Service Account** you created (e.g., `blog-app`)
-   - The **Role** you just defined (e.g., `blog-app-role`)
+   - The **Service Account** you created (e.g., `doc-app`)
+   - The **Role** you just defined (e.g., `doc-app-role`)
 
 5. Save the policy.
 
 You now have:
 
-- A Service Account (`blog-app`)
+- A Service Account (`doc-app`)
 - A Token (for that Service Account)
 - A Role with specific API permissions
 - A Policy binding them together
 
-Your application is now authorized to use the AuthZed Cloud Permissions System.
+Your application is now authorized (ha!) to use the AuthZed Cloud Permissions System.
 
 ---
 
@@ -167,24 +158,16 @@ This is the schema you tested with the SpiceDB Dev MCP Server.
 
 ### 4.2 Load the Schema into AuthZed Cloud
 
-Use one of the following approaches:
+Let's configure Zed to point to your AuthZed Cloud SpiceDB endpoint with:
+   
+`zed context set <name> <endpoint> <api-token>`
 
-1. **CLI / client library**  
-   Configure your client to point at your AuthZed Cloud SpiceDB endpoint with:
+- `name` is the name of the application. eg: `doc-sharing-app`
+- The correct **endpoint URL** typically in the form of `xyz123.us-east-1.aws.authzed.cloud:443`
+- The **Token** for your Service Account in the `Authorization` header
+- TLS/other required settings
 
-   - The correct **endpoint URL**
-   - The **Token** for your Service Account in the `Authorization` header
-   - TLS/other required settings
-
-   Then call the equivalent of `WriteSchema` with the contents of `document-sharing.zed`.
-
-2. **IDE / tools**  
-   If your environment or tooling has native AuthZed integration, configure it with:
-   - Endpoint
-   - Token
-   - Permissions System ID
-
-   And then write the schema from your local file.
+Then call `zed schema write <document-sharing.zed>` to write the schema to the PS running in the cloud.
 
 Once applied, your AuthZed Cloud deployment is running the **same schema** you developed using the MCP dev server.
 
@@ -215,6 +198,7 @@ High-level steps:
      - Call `CheckPermission` for `read`, `edit`, or `share` on `document:<id>` for `user:<user-id>`.
    - Authorization decisions are enforced by the production SpiceDB deployment on AuthZed Cloud.
 
+A self-guided workshop to learn hands-on how SpiceDB works with a NextJS + Postgres webapp can be [found here](https://github.com/authzed/workshops/tree/main/update-views-authorization)
 ---
 
 ## 6. Production Readiness Tips
@@ -237,78 +221,6 @@ As you move to production:
 
 You have:
 
-Created a Permissions System in AuthZed Cloud while configuring least-privilege access via Service Accounts, Tokens, Roles, and Policies. You also applied the schema built in the workshop to a managed SpiceDB deployment and connected your application to a production-ready authorization system
+Created a Permissions System in AuthZed Cloud while configuring least-privilege access via Service Accounts, tokens, roles, and policies. You also applied the schema built in the workshop to a managed SpiceDB deployment and connected your application to a production-ready authorization system. Now go build!
 
-## Next Steps
-
-Now that you know the basics see how you can build permissions for a multi-tenant SaaS application with complex roles and hierarchies. Here's an example scenario:
-
-- Organizations have projects
-- Projects have documents
-- Users belong to organizations
-- Access scoped by tenant
-- No cross-tenant permissions
-
-### Example Schema
-
-```
-definition user {}
-
-definition organization {
-  relation admin: user
-  relation member: user
-
-  permission manage = admin + member
-}
-
-definition project {
-  relation parent: organization
-  relation member: user
-  relation viewer: user
-
-  permission read = member + viewer + parent.admin
-  permission edit = member + parent.admin
-}
-
-definition document {
-  relation parent: project
-  relation owner: user
-  relation editor: user
-  relation viewer: user
-
-  permission read = owner + editor + viewer + parent.read
-  permission edit = owner + editor + parent.edit
-}
-```
-
-### Sample Relationships
-
-```
-org:acme admin user:alice
-org:acme member user:bob
-
-project:website parent org:acme
-project:website member user:bob
-
-document:homepage parent project:website
-document:homepage editor user:bob
-```
-
-### Test
-
-```
-Can alice edit document:homepage?
-Can bob read document:homepage?
-Can charlie view document:homepage?
-```
-
-## Homework
-
-1. Add an auditor role:
-
-- Auditors can read everything in their org
-- Never edit
-
-2. Exercise B — Add Inheritance for Editors
-
-- Allow project members to edit documents.
+In [the prologue of this tutorial](/5-nextsteps.md) you will find example schemas for a multi-tenant SaaS application with complex roles and hierarchies. There's also some homework included if that's your jam.

@@ -1,26 +1,23 @@
 # Part 2 — Build Your First Permissions Schema
 
-## Learning Goals
-
-You will learn to:
+In this step, you will learn to:
 
 - Write and inspect a SpiceDB schema
 - Add relationships
 - Validate with permission checks
 - Explore results
 
-We will model document sharing:
-
-- Owners can share, edit, view
-- Editors can edit, view
-- Viewers can only view
-
+If you're new to the world of SpiceDB and authorization, please familiarize yourself with concepts such as [schema](https://authzed.com/docs/spicedb/concepts/schema), [relationships](https://authzed.com/docs/spicedb/concepts/relationships) and [permissions](https://authzed.com/docs/spicedb/concepts/caveats#checkpermission)
+ 
 ## 1. Write the Schema
 
-Ask your assistant:
+A SpiceDB schema defines the types of objects found your application, how those objects can relate to one another, and the permissions that can be computed off of those relations. 
+
+For this tutorial, we're going to create a Google Docs-style document sharing usecase. So ask your assistant:
 
 ```
-Create a schema for a document sharing system. Documents have owners, editors, and viewers. Owners can share, editors can edit, and viewers can only read.
+Create a schema for a document sharing system. Documents have owners, editors, and viewers. 
+Owners can share, editors can edit, and viewers can only read.
 ```
 
 A typical result:
@@ -39,6 +36,10 @@ definition document {
 }
 ```
 
+This basically defines a document sharing system where users can be owners, editors, or viewers of documents. Owners can share, editors can edit, and all three roles can read documents. 
+
+The assistant uses `write_schema` to create the schema in your development instance. You can verify this by opening the terminal window where the SpiceDB Dev MCP Server.
+
 ## 2. Inspect the Schema
 
 Run:
@@ -51,22 +52,22 @@ The assistant should display the currently loaded schema.
 
 This is how you verify correctness and discover errors like:
 
-undefined types
-
-syntax problems
+- undefined types
+- syntax problems
 
 The documentation indicates that schema errors can be debugged by reviewing the source and validation resources
 
 ## 3. Add Test Data
 
-Now let’s populate the system.
+Now let’s populate the system by building relationships between different objects. This is the core tenet of any Relationship-Based Access Control (ReBAC) system. The real power of ReBAC comes from transforming authorization questions into graph reachability  problems, and then answering them efficiently.
 
-Use natural language:
+Let's use natural language to create a relationship: (typically this would be done via an API/gRPC call in your app)
 
 ```
 Create test data where alice owns doc:readme, bob is an editor, and charlie is a viewer.
 ```
-Your assistant should call update_relationships to apply these relationships in memory.
+
+Your assistant should call `update_relationships` to apply these relationships in memory.
 That should result in something equivalent to:
 
 ```
@@ -112,48 +113,68 @@ Because share = owner only.
 
 ## 5. Explore the Graph
 
-Explore resources by permission:
+SpiceDB can traverse the graph to answer questions such as “what can this user do?” or “who can do this on that?”
+
+Lets explore resources by permission:
 
 ```
 Which documents can alice share?
 ```
 
-The assistant should use lookup_resources to find documents where alice has share permission, as described 
+Under the hood, it should call `lookup_resources` on:
 
-View subjects with permission:
+- resource type: `document`
+- permission: share
+- subject: `user:alice` 
+
+You should see:
+
+- `document:readme`
+
+This mimics real-world questions like:
+
+- “Show me all files this user can access.”
+- “List documents a user can share.”
+
+You can also view subjects with permission:
 
 ```
 Who can view doc:readme?
 ```
 
-Expected subjects:
+The assistant should call `lookup_subjects` for:
+
+- `resource: document:readme`
+- `permission: read` 
+
+You should see:
+
+- `user:alice`
+- `user:bob`
+- `user:charlie`
+
+These are direct analogues of common product questions such as:
+
+- “Which users can edit this document?”
+- “Who has share rights on this resource?”
+
+## 6. Using AuthZed MCP for Conceptual Help
+
+When debugging, it’s common to ask the AI conceptual questions. Use the AuthZed MCP Server for this. It exposes tools like `search_docs`, `search_api`, `search_examples`, and prompts like `explain_concept` to answer conceptual questions with documentation references.
+
+Example:
 
 ```
-alice
-bob
-charlie
+Using the AuthZed MCP server, explain how unions in permissions work in SpiceDB and show a simple example.
 ```
 
-This uses `lookup_subjects`
+This combines:
 
-## 6. Iterate
-
-Now evolve the schema.
-
-```
-Add a manager role that can edit and also share documents.
-```
-
-The assistant will update the existing schema via write_schema and you can immediately test new permissions. This matches the iterative development guidance.
-
-Inspect and retest:
-
-```
-Show schema://current
-```
+- AuthZed MCP for knowledge and examples
+- SpiceDB dev MCP for your live model and tests
 
 ## Completion Milestone: Part 2
 
 You’ve built a working permissions model with real schema, test data and permission checks working.
 
-Next we will export our evolving model and save progress so it can be persisted and pushed to GitHub.
+Next we will export our evolving model and save progress so it can be persisted and pushed to GitHub. See you in [Part 3](/3-export.md)
