@@ -30,7 +30,7 @@ Start the infrastructure:
 docker compose up -d
 ```
 
-This brings up five containers: four for Milvus (`milvus-etcd`, `milvus-minio`, `milvus-standalone`, and its dependencies) and one for SpiceDB. SpiceDB runs in-memory with a preshared key of `devtoken` — no persistence, no TLS, exactly what you want for a workshop.
+This brings up four containers: three for the Milvus stack (`milvus-etcd`, `milvus-minio`, `milvus-standalone`) and one for SpiceDB. SpiceDB runs in-memory with a preshared key of `devtoken` — no persistence, no TLS, exactly what you want for a workshop.
 
 Create a virtual environment and install dependencies:
 
