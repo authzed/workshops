@@ -1,6 +1,6 @@
 # Checkpoint 2 — Secure it with SpiceDB
 
-One code change. That's all it takes to turn the leaking pipeline from Checkpoint 1 into one that enforces real access control — a check the agent cannot route around, the LLM cannot talk its way past, and no prompt engineering trick can defeat.
+One code change. That's all it takes to turn the leaking pipeline from Checkpoint 1 into one that enforces real access control — a check the agent can't route around, and no prompt-engineering trick gets past it.
 
 ---
 
@@ -89,7 +89,7 @@ Every scenario — department access, cross-department, individual exceptions, a
 
 ## Implement the authorization node
 
-Open `agentic_rag/nodes/authorization_node.py`. Right now it has two TODO lines that make `authorized = retrieved` and `denied_count = 0` — the bug from Checkpoint 1. Replace the entire file with this:
+Open `agentic_rag/nodes/authorization_node.py` (from the `starter/` directory). Right now it has two TODO lines that make `authorized = retrieved` and `denied_count = 0` — the bug from Checkpoint 1. Replace the entire file with this:
 
 ```python
 """Authorization node — the deterministic security boundary."""
