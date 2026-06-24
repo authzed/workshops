@@ -181,7 +181,7 @@ Before (Checkpoint 1): `engineering-architecture-002` — a pure engineering doc
 
 After (this checkpoint): `engineering-architecture-002` is gone from `AUTHORIZED`. `DENIED` is greater than zero. The generated answer will note that some relevant information wasn't accessible, because the LLM is now working only with what bob is actually permitted to read.
 
-`engineering-architecture-001`, by contrast, will still appear authorized for bob — that's a cross-department document explicitly shared with sales. That's not a leak; that's the permission matrix working correctly.
+`engineering-architecture-001`, by contrast, will typically still appear authorized for bob (depending on your live Milvus results) — that's a cross-department document explicitly shared with sales. That's not a leak; that's the permission matrix working correctly.
 
 ---
 

@@ -2,7 +2,7 @@
 
 You've wired a SpiceDB authorization node into a LangGraph RAG pipeline — a deterministic security boundary that checks every retrieved document against real permissions before the LLM ever sees them.
 
-That's already a meaningful thing. But there's more to explore.
+Every retrieved document now passes through a deterministic permission check before the LLM ever sees it. But there's more to explore.
 
 ---
 
@@ -12,7 +12,7 @@ Right now you're probably running with `max_attempts=1`, which gives you the cle
 
 Set `max_attempts > 1` and the graph changes shape. After authorization fails — no documents passed, all denied — instead of immediately generating an "access denied" explanation, the `authorize` node routes to the `reason` node (`agentic_rag/nodes/reasoning_node.py`). That node gets the full picture: how many docs were retrieved, how many passed, how many were denied, and how many attempts remain. It reasons about what to try differently and loops back to retrieve.
 
-Here's the thing: the authorization check still runs on every attempt. The `reason` node can't instruct the graph to skip it, and there's no code path that gets around it. The agent adapts its *search strategy*, not its *permissions*.
+The authorization check still runs on every attempt. The `reason` node can't instruct the graph to skip it, and there's no code path that gets around it. The agent adapts its *search strategy*, not its *permissions*.
 
 Try it on a query that gets fully denied:
 
@@ -62,7 +62,7 @@ The schema you've been testing locally maps directly. Once you have an AuthZed C
 
 1. Point `zed` at your cloud endpoint: `zed context set <name> <endpoint> <api-token>`
 2. Write your schema: `zed schema write permissions/schema.zed`
-3. Update the SpiceDB client in `agentic_rag/authzed_client.py` with your cloud endpoint and token.
+3. Update your `.env` file: set `SPICEDB_ENDPOINT` to your cloud permissions-system endpoint and `SPICEDB_TOKEN` to your API token. No code changes needed — `agentic_rag/config.py` already reads both from the environment, and `agentic_rag/grpc_helpers.py` uses them to create the client.
 
 Everything else in the code stays the same. The authorization node doesn't know or care whether SpiceDB is local or managed — it's just a gRPC call.
 

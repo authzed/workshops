@@ -56,6 +56,8 @@ This runs 8 scenarios across all four users: `alice` (engineering), `bob` (sales
 
 Notice that no matter who asks, the authorized count always matches the retrieved count. `DENIED: 0` every time. The stub doesn't discriminate.
 
+You'll also see an empty "Agent Reasoning" section in the output — that's expected. Reasoning only runs when `max_attempts > 1` triggers the retry path; at the default of `max_attempts=1`, the reason node is never reached. The Next Steps module covers adaptive retry and shows what that section actually contains.
+
 ---
 
 ## Watch it leak
@@ -95,7 +97,7 @@ This is the permission matrix you'll be enforcing in Checkpoint 2. Reading it no
 
 ## Retrieval has no idea what permissions are
 
-Here's the thing: semantic search ranks documents by *similarity to your query*, not by *who's allowed to read them*. A query about microservices architecture will reliably surface engineering architecture documents regardless of whether the person asking is an engineer, a sales rep, or anyone else. The vector index doesn't know about departments or clearance levels — it only knows about meaning.
+Semantic search ranks documents by *similarity to your query*, not by *who's allowed to read them*. A query about microservices architecture will reliably surface engineering architecture documents regardless of whether the person asking is an engineer, a sales rep, or anyone else. The vector index doesn't know about departments or clearance levels — it only knows about meaning.
 
 The authorization node is the one and only place in this pipeline where access control can actually happen. Right now it does nothing. That's why every query leaks.
 
