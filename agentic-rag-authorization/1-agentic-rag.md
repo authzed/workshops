@@ -71,7 +71,7 @@ print('AUTHORIZED:', [d.metadata['doc_id'] for d in r['authorized_documents']]);
 print('DENIED:', r['denied_count'])"
 ```
 
-You'll see engineering documents — things like `engineering-architecture-001` — show up in the `AUTHORIZED` list. And `DENIED: 0`.
+You'll see engineering documents — things like `engineering-architecture-002` — show up in the `AUTHORIZED` list. And `DENIED: 0`.
 
 The exact doc_ids depend on your live Milvus data, but the pattern is consistent: engineering architecture documents rank highly against that query, the retrieval node surfaces them, and the authorization node waves them straight through to the LLM.
 
