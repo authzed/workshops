@@ -1,70 +1,54 @@
-"""Authorization node - deterministic permission filtering via SpiceDB."""
+"""Authorization node — the deterministic security boundary.
+
+WORKSHOP STUB
+-------------
+Right now this node lets EVERYTHING through. It does no real permission
+check, so every document semantic search returns is passed straight to the
+LLM — including documents the user is not allowed to see. That is the data
+leak you will observe in Checkpoint 1.
+
+Your job in Checkpoint 2 (see 2-secure-it.md) is to replace the pass-through
+below with a real SpiceDB permission check, so only authorized documents
+reach the model. This node ALWAYS runs in the graph — the agent cannot
+route around it.
+"""
 
 from langchain_core.messages import SystemMessage
-from langchain_spicedb.core import SpiceDBAuthorizer
 
 from ..state import AgenticRAGState
-from ..config import get_config
 from ..logging_config import get_logger
 
 logger = get_logger("nodes.authorization")
 
-_authorizer: SpiceDBAuthorizer | None = None
-
-
-def _get_authorizer() -> SpiceDBAuthorizer:
-    global _authorizer
-    if _authorizer is None:
-        config = get_config()
-        _authorizer = SpiceDBAuthorizer(
-            spicedb_endpoint=config.spicedb_endpoint,
-            spicedb_token=config.spicedb_token,
-            resource_type="document",
-            subject_type="user",
-            permission="view",
-            resource_id_key="doc_id",
-        )
-    return _authorizer
-
 
 async def authorization_node(state: AgenticRAGState) -> dict:
-    """
-    Deterministic authorization node - ALWAYS runs, cannot be bypassed.
+    """Filter retrieved documents by permission before generation.
 
-    Filters retrieved documents through SpiceDB's CheckBulkPermissions API.
-    This is a security boundary - the agent cannot bypass this check.
+    STUB: pass-through. Replace the two marked lines in Checkpoint 2.
     """
-    authorizer = _get_authorizer()
+    retrieved = state["retrieved_documents"]
+
+    # TODO(Checkpoint 2): Replace this pass-through with a real SpiceDB check.
+    # As written, every retrieved document is treated as authorized — the bug.
+    authorized = retrieved
+    denied_count = 0
 
     logger.info(
-        "Starting authorization",
+        "Authorization (STUB — pass-through, no real check)",
         extra={
             "subject_id": state["subject_id"],
-            "document_count": len(state["retrieved_documents"]),
-        },
-    )
-
-    result = await authorizer.filter_documents(
-        documents=state["retrieved_documents"],
-        subject_id=state["subject_id"],
-    )
-
-    logger.info(
-        "Authorization results",
-        extra={
-            "authorized": result.total_authorized,
-            "denied": len(result.denied_resource_ids),
-            "denied_doc_ids": result.denied_resource_ids,
+            "authorized": len(authorized),
+            "denied": denied_count,
         },
     )
 
     return {
-        "authorized_documents": result.authorized_documents,
-        "denied_count": len(result.denied_resource_ids),
-        "authorization_passed": result.total_authorized > 0,
+        "authorized_documents": authorized,
+        "denied_count": denied_count,
+        "authorization_passed": len(authorized) > 0,
         "messages": [
             SystemMessage(
-                content=f"Authorization: {result.total_authorized}/{result.total_retrieved} documents authorized"
+                content=f"Authorization (stub): {len(authorized)}/{len(retrieved)} documents authorized"
             )
         ],
     }
