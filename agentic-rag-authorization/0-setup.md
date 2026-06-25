@@ -63,8 +63,6 @@ Expected tail output:
 ============================================================
 ✅ Setup complete!
 ============================================================
-
-You can now run: python examples/basic_example.py
 ```
 
 With a document distribution of:

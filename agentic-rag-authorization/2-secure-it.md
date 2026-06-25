@@ -168,32 +168,21 @@ The loop calls `CheckPermission` once per retrieved document — at most 5 calls
 
 ## Re-run the same query
 
-Same one-liner from Checkpoint 1, from the `starter/` directory:
+The UI server you started in Checkpoint 1 runs with auto-reload, so the moment you save `authorization_node.py` it picks up your change. (If you'd stopped it, start it again from `starter/` with `python run_ui.py`.)
 
-```bash
-python -c "import asyncio; from agentic_rag.graph import run_agentic_rag_async; \
-r=asyncio.run(run_agentic_rag_async('What are our microservices architecture patterns?', 'bob')); \
-print('AUTHORIZED:', [d.metadata['doc_id'] for d in r['authorized_documents']]); \
-print('DENIED:', r['denied_count'])"
-```
+Back in the browser, run the exact same query as before — **Bob (Sales)**, *What are our microservices architecture patterns?* — and submit.
 
-Before (Checkpoint 1): `engineering-architecture-002` — a pure engineering document bob has no business seeing — showed up in `AUTHORIZED`. `DENIED: 0`.
+Watch what moves. Before, `engineering-architecture-002` sat under **Authorized Documents** with **Denied** at 0. Now that same document drops into **Denied Documents**, tagged with the reason *"User 'bob' does not have permission to access this document"*, and the denied count climbs above zero. The **Answer** shifts too: the LLM is working only with what bob is allowed to read, so it notes that some relevant information wasn't accessible.
 
-After (this checkpoint): `engineering-architecture-002` is gone from `AUTHORIZED`. `DENIED` is greater than zero. The generated answer will note that some relevant information wasn't accessible, because the LLM is now working only with what bob is actually permitted to read.
-
-`engineering-architecture-001`, by contrast, will typically still appear authorized for bob (depending on your live Milvus results) — that's a cross-department document explicitly shared with sales. That's not a leak; that's the permission matrix working correctly.
+`engineering-architecture-001`, by contrast, will typically stay under **Authorized** for bob (depending on your live Milvus results) — that's the cross-department document explicitly shared with sales. That's not a leak; that's the permission matrix working exactly as designed.
 
 ---
 
 ## Prove it across users
 
-```bash
-python examples/basic_example.py
-```
+Use the dropdown to run the same kind of check as different people. The denial scenarios now behave: Alice is refused sales playbooks, the HR Manager is refused finance reports, the Finance Manager is refused engineering architecture — each one showing the blocked documents under **Denied** instead of feeding them to the answer. And the legitimate paths (department, cross-department, individual exceptions, public docs) still land under **Authorized**, exactly as before.
 
-The denial scenarios — alice being denied sales playbooks, hr_manager being denied finance reports, finance_manager being denied engineering architecture — now behave correctly. The legitimate access patterns (department-based, cross-department, individual exceptions, public) still work exactly as before.
-
-`DENIED: 0` should never appear again for a cross-department query. If it does, something's wrong with the SpiceDB connection or the relationships weren't written correctly.
+If a clearly cross-department query ever comes back with everything authorized and nothing denied, something's off — check that Docker is running and that `setup_environment.py` wrote the relationships.
 
 ---
 
@@ -210,8 +199,8 @@ Putting access control in a system prompt is the alternative, and it doesn't hol
 ## Completion Milestone: Checkpoint 2
 
 - [ ] Replaced the pass-through stub with the real SpiceDB `CheckPermission` loop
-- [ ] The `bob` / microservices query now returns `DENIED` > 0 and excludes `engineering-architecture-002`
-- [ ] Legitimate access (department, cross-department, exceptions, public) still works correctly via `python examples/basic_example.py`
+- [ ] The `bob` / microservices query now moves `engineering-architecture-002` into Denied Documents
+- [ ] Confirmed in the UI that legitimate access (department, cross-department, exceptions, public) still works
 - [ ] Can explain why enforcing access in the node — not the prompt — is the correct design
 
 Next: [Next Steps](3-nextsteps.md).

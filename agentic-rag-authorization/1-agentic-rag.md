@@ -44,54 +44,55 @@ Every single retrieved document becomes an authorized document. `denied_count` i
 
 ---
 
-## Run the demo scenarios
+## Start the web UI
 
-From the `starter/` directory, run the bundled example script:
+The clearest way to watch the agent work is the bundled web UI. From the `starter/` directory, with your virtual environment active and Docker still running:
 
 ```bash
-python examples/basic_example.py
+python run_ui.py
 ```
 
-This runs 8 scenarios across all four users: `alice` (engineering), `bob` (sales), `hr_manager`, and `finance_manager`. Each scenario prints the retrieved document count, the authorized document count, and the agent's final answer.
+It runs a few pre-flight checks — Milvus, SpiceDB, your OpenAI key, and whether the documents are loaded — then starts a server on `http://localhost:8000` and opens your browser for you.
 
-Notice that no matter who asks, the authorized count always matches the retrieved count. `DENIED: 0` every time. The stub doesn't discriminate.
+The page has three parts:
 
-You'll also see an empty "Agent Reasoning" section in the output — that's expected. Reasoning only runs when `max_attempts > 1` triggers the retry path; at the default of `max_attempts=1`, the reason node is never reached. The Next Steps module covers adaptive retry and shows what that section actually contains.
+- **User Selection** — a dropdown of the four demo users (Alice/Engineering, Bob/Sales, HR Manager, Finance Manager). This is who the agent runs *as*.
+- **Query** — the question you want to ask.
+- **Results** — what comes back, split into **Authorized Documents**, **Denied Documents**, and the final **Answer**, with retrieved/authorized/denied counts above them.
+
+That split between Authorized and Denied is the whole story of this workshop. Keep your eye on it.
 
 ---
 
 ## Watch it leak
 
-Here's the scenario: `bob` is in sales. He has no business knowing about engineering's internal microservices architecture. Let's ask anyway.
+`bob` is in sales. He has no business knowing about engineering's internal microservices architecture. Let's ask anyway.
 
-Run this from the `starter/` directory:
+In the UI:
 
-```bash
-python -c "import asyncio; from agentic_rag.graph import run_agentic_rag_async; \
-r=asyncio.run(run_agentic_rag_async('What are our microservices architecture patterns?', 'bob')); \
-print('AUTHORIZED:', [d.metadata['doc_id'] for d in r['authorized_documents']]); \
-print('DENIED:', r['denied_count'])"
-```
+1. Pick **Bob (Sales)** from the user dropdown.
+2. Ask: **What are our microservices architecture patterns?** (it's already filled in as the suggested query).
+3. Submit.
 
-You'll see engineering documents — things like `engineering-architecture-002` — show up in the `AUTHORIZED` list. And `DENIED: 0`.
+Look at the results. Engineering documents — things like `engineering-architecture-002` — land under **Authorized Documents**. **Denied Documents** shows **0**. And the **Answer** is a confident, detailed summary of your microservices architecture, written for a sales rep who should never have seen any of it.
 
-The exact doc_ids depend on your live Milvus data, but the pattern is consistent: engineering architecture documents rank highly against that query, the retrieval node surfaces them, and the authorization node waves them straight through to the LLM.
+The exact doc_ids depend on your live Milvus data, but the pattern holds: engineering architecture documents rank highly against that query, retrieval surfaces them, and the authorization node waves every one of them straight through.
 
-`bob` gets a detailed answer about your microservices architecture. He was never supposed to.
+Nothing was denied. Bob got the lot.
 
 ---
 
-## Your turn — reproduce the leak with a different pair
+## Your turn — reproduce the leak as someone else
 
-Open `starter/data/PERMISSIONS.md` and pick a different user/query combination that *should* be restricted. The permission matrix gives you plenty of options. For example:
+Switching users in the UI is a single dropdown change, so try a few. Open `starter/data/PERMISSIONS.md` and pick a user/query pair that *should* be restricted:
 
-- `hr_manager` asking "What are our quarterly financial reports?" (finance is off-limits to HR)
-- `finance_manager` asking "What are the sales playbooks?" (sales documents aren't in their access pattern)
-- `alice` asking "What HR policies do we have?" (engineering has no HR access)
+- **HR Manager** asking "What are our quarterly financial reports?" (finance is off-limits to HR)
+- **Finance Manager** asking "What are the sales playbooks?" (sales isn't in their access pattern)
+- **Alice (Engineering)** asking "What HR policies do we have?" (engineering has no HR access)
 
-Take the one-liner from the previous section, swap in your chosen user and query, and run it. You should see the same result: relevant documents from the wrong department, `DENIED: 0`.
+Run one and watch the same thing happen: documents from the wrong department sitting under **Authorized**, **Denied Documents** stuck at 0.
 
-This is the permission matrix you'll be enforcing in Checkpoint 2. Reading it now — understanding who *should* have access to what — primes you for the SpiceDB schema design ahead.
+This is the permission matrix you'll enforce in Checkpoint 2. Reading it now — who *should* see what — sets you up for the SpiceDB schema ahead.
 
 ---
 
@@ -105,9 +106,9 @@ The authorization node is the one and only place in this pipeline where access c
 
 ## Completion Milestone: Checkpoint 1
 
-- [ ] Ran the agentic RAG pipeline end-to-end with `python examples/basic_example.py`
-- [ ] Reproduced a cross-department leak with the `bob` / microservices scenario
-- [ ] Reproduced the leak with at least one additional user/query pair of your choice
+- [ ] Started the web UI and ran a query end-to-end through the agent
+- [ ] Reproduced a cross-department leak with the `bob` / microservices scenario — engineering docs under Authorized, Denied at 0
+- [ ] Reproduced the leak as at least one other user
 - [ ] Can explain why retrieval alone can't enforce authorization
 
 Next: [Checkpoint 2 — Secure it with SpiceDB](2-secure-it.md).

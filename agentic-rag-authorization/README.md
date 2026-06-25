@@ -6,7 +6,7 @@ The fix is a deterministic SpiceDB permission check wired directly into the agen
 
 ### Why is this important?
 
-Building enterprise-ready AI requires ensuring users can only augment prompts with data they're authorized to access. Probabilistic models hallucinate, misinterpret, and guess — **AI can't secure AI**. Authorization must be deterministic.
+Enterprise AI has one non-negotiable: a user can only ever augment a prompt with data they're allowed to see. And you can't delegate that to the model — probabilistic systems hallucinate, misinterpret, and guess. **AI can't secure AI.** Authorization has to be deterministic.
 
 Fine-grained authorization in agentic RAG is best achieved with **Relationship-based Access Control (ReBAC)**. ReBAC makes decisions based on relationships between objects (who owns what, who belongs to which team, what role grants what access) — which is more precise and composable than traditional RBAC or ABAC. SpiceDB implements ReBAC, and it's what we'll use here.
 

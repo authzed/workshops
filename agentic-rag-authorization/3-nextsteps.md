@@ -1,8 +1,6 @@
 # Next Steps
 
-You've wired a SpiceDB authorization node into a LangGraph RAG pipeline — a deterministic security boundary that checks every retrieved document against real permissions before the LLM ever sees them.
-
-Every retrieved document now passes through a deterministic permission check before the LLM ever sees it. But there's more to explore.
+You've wired a SpiceDB authorization node into a LangGraph RAG pipeline — a deterministic security boundary that checks every retrieved document against real permissions before the LLM ever sees it. That's the core of it. But there's more worth exploring.
 
 ---
 
@@ -70,15 +68,9 @@ Get started at [authzed.com](https://authzed.com/products/authzed-cloud).
 
 ---
 
-## Try the web UI
+## Keep exploring in the web UI
 
-The starter includes a small web application that wraps the agent in a browser interface. Run it with:
-
-```bash
-python run_ui.py
-```
-
-This starts both the FastAPI backend (`api/`) and serves the frontend (`ui/`). You can switch between users, run queries, and see in real time which documents were retrieved, how many were authorized, and how many were denied. It's a good way to build intuition for the access patterns without reading JSON in the terminal.
+The UI you used across both checkpoints (`python run_ui.py`, backed by `api/` and `ui/`) is worth more of your time. Now that the node enforces real permissions, switch between users and throw queries at it — watch documents move between **Authorized** and **Denied** as you change who's asking. It's the fastest way to build intuition for the access patterns.
 
 ---
 
@@ -112,4 +104,4 @@ A few things worth trying on your own:
 
 ---
 
-FIN
+The industry spent the last decade learning to pull authorization out of application code and into a system built for it — for human users. Agents don't get a pass. If anything, they need it more: they move faster, ask more, and never get tired of trying. You've secured one pipeline. Go do the rest.
