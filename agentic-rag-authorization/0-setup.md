@@ -1,11 +1,11 @@
 # Setup
 
-Get the stubbed agentic RAG running locally — broken by design — so we can trigger the vulnerability in Checkpoint 1 and fix it properly in Checkpoint 2. This is best done before the workshop starts.
+This workshop is in two parts. First, we build an Agentic RAG pipeline with a mock corpus of documents. This pipeline will leak data so in Part 2, we'll add fine-grained authorization to the system. The `starter` folder in this repo is a stub of the working code and is meant only for this workshop. The corpus of documents and the working code for this example [can be found here](https://github.com/authzed/examples/tree/main/agentic-rag-authorization)
 
 ## What you need
 
 - **Docker Desktop** (Option A) or a **GitHub account** (Option B — Codespaces)
-- An **OpenAI API key** — used for embeddings and answer generation
+- An **OpenAI API key** — used for embeddings and answer generation (you can replace this with the LLM of your choice, but make sure you change the name in the `get_llm()` method)
 
 ## Get the code
 
@@ -16,13 +16,13 @@ cd workshops/agentic-rag-authorization/starter
 
 ## Option A — Run locally with Docker
 
-Copy the example env file and drop in your OpenAI key:
+Copy the example `.env` file and drop in your OpenAI key:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and set `OPENAI_API_KEY` to your actual key. Everything else — Milvus URI, SpiceDB endpoint, preshared token — is already wired up to match `docker-compose.yml`.
+Open `.env` and set `OPENAI_API_KEY` to your actual key. Everything else such as the Milvus URI, SpiceDB endpoint, and preshared-token is already wired up to match `docker-compose.yml`.
 
 Start the infrastructure:
 
@@ -54,8 +54,8 @@ python examples/setup_environment.py
 
 Two things happen here:
 
-- **SpiceDB setup** — loads the authorization schema and writes all relationships: department memberships, document viewers, cross-department access, and individual exceptions
 - **Milvus setup** — embeds all 50 sample documents using `text-embedding-3-small` and inserts them into a vector collection
+- **SpiceDB setup** — loads the authorization schema and writes all relationships: department memberships, document viewers, cross-department access, and individual exceptions
 
 Expected tail output:
 
@@ -84,7 +84,14 @@ Expected result:
 Results: 18 passed, 0 failed
 ```
 
-This confirms SpiceDB has the right relationships in place — department-based access, cross-department collaboration, individual exceptions, and public documents. We'll rely on all of this in Checkpoint 2 when we wire authorization into the RAG pipeline. Note that the RAG itself isn't secured yet. That's not a bug — it's the whole point of Checkpoint 1.
+This confirms SpiceDB has the right relationships in place: 
+
+- department-based access 
+- cross-department collaboration
+- individual exceptions, and 
+- public documents. 
+
+We'll rely on all of this in Checkpoint 2 when we wire authorization into the RAG pipeline. Note that the RAG itself isn't secured yet.
 
 ---
 

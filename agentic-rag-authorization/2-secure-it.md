@@ -1,6 +1,8 @@
 # Checkpoint 2 — Secure it with SpiceDB
 
-One code change. That's all it takes to turn the leaking pipeline from Checkpoint 1 into one that enforces real access control — a check the agent can't route around, and no prompt-engineering trick gets past it.
+We're gonna make one code change to turn the leaking pipeline from Checkpoint 1 into one that enforces real access control. It's important to see that this is a check the agent can't skip, and no prompt-engineering trick gets past it. 
+
+**You need deterministic security checks in a probabilistic world**
 
 ---
 
@@ -25,7 +27,7 @@ definition document {
 }
 ```
 
-In plain terms: a user can `view` a document if they're a direct `viewer` on it, or if they're its `owner`. The interesting part is that `viewer` can be satisfied two ways — a specific user, or every `member` of a department (`department#member`). That second form is **ReBAC**: Relationship-Based Access Control. Access isn't just a flat list; it follows graph edges. Bob is a member of the sales department, so Bob inherits viewer access to every document that grants `viewer` to `department:sales#member`.
+In plain terms: a user can `view` a document if they're a direct `viewer` on it, or if they're its `owner`. The interesting part is that `viewer` can be satisfied two ways — a specific user, or every `member` of a department (`department#member`). This is the power of **ReBAC**: Relationship-Based Access Control. Unlike in traditional authorziation methods such as Role-Based Access Control (RBAC), access isn't a flat list. Bob is a member of the sales department, so Bob inherits viewer access to every document that grants `viewer` to `department:sales#member`.
 
 The four access patterns this creates:
 
@@ -53,13 +55,15 @@ RelationshipUpdate(
 ),
 ```
 
-`OPERATION_TOUCH` is idempotent — write it once, write it a hundred times, the result is the same relationship. The full set of writes (all four department memberships, document viewers, cross-department grants, individual exceptions, and public access) is in `examples/setup_environment.py` if you want to walk through it.
+`OPERATION_TOUCH` is idempotent. Write it once, write it a hundred times, the result is the same relationship. The full set of writes (all four department memberships, document viewers, cross-department grants, individual exceptions, and public access) is in `examples/setup_environment.py` if you want to walk through it.
 
 ---
 
 ## How a permission check works
 
-SpiceDB answers one question at a time: *does this subject have this permission on this resource?* The API call is straightforward:
+SpiceDB answers one question at a time: *does this subject have this permission on this resource?* 
+
+The API call is straightforward:
 
 ```python
 from authzed.api.v1 import CheckPermissionRequest, ObjectReference, SubjectReference
@@ -89,7 +93,7 @@ Every scenario — department access, cross-department, individual exceptions, a
 
 ## Implement the authorization node
 
-Open `agentic_rag/nodes/authorization_node.py` (from the `starter/` directory). Right now it has two TODO lines that make `authorized = retrieved` and `denied_count = 0` — the bug from Checkpoint 1. Replace the entire file with this:
+Open `agentic_rag/nodes/authorization_node.py` (from the `starter/` directory). Right now it has two TODO lines that make `authorized = retrieved` and `denied_count = 0` — the bug from Checkpoint 1. Replace the **entire file** with this:
 
 ```python
 """Authorization node — the deterministic security boundary."""
@@ -170,7 +174,7 @@ The loop calls `CheckPermission` once per retrieved document — at most 5 calls
 
 The UI server you started in Checkpoint 1 runs with auto-reload, so the moment you save `authorization_node.py` it picks up your change. (If you'd stopped it, start it again from `starter/` with `python run_ui.py`.)
 
-Back in the browser, run the exact same query as before — **Bob (Sales)**, *What are our microservices architecture patterns?* — and submit.
+Back in the browser, run the exact same query as before — **Bob (Sales)**, *What are our microservices architecture patterns?* and submit.
 
 Watch what moves. Before, `engineering-architecture-002` sat under **Authorized Documents** with **Denied** at 0. Now that same document drops into **Denied Documents**, tagged with the reason *"User 'bob' does not have permission to access this document"*, and the denied count climbs above zero. The **Answer** shifts too: the LLM is working only with what bob is allowed to read, so it notes that some relevant information wasn't accessible.
 
@@ -182,13 +186,15 @@ Watch what moves. Before, `engineering-architecture-002` sat under **Authorized 
 
 Use the dropdown to run the same kind of check as different people. The denial scenarios now behave: Alice is refused sales playbooks, the HR Manager is refused finance reports, the Finance Manager is refused engineering architecture — each one showing the blocked documents under **Denied** instead of feeding them to the answer. And the legitimate paths (department, cross-department, individual exceptions, public docs) still land under **Authorized**, exactly as before.
 
-If a clearly cross-department query ever comes back with everything authorized and nothing denied, something's off — check that Docker is running and that `setup_environment.py` wrote the relationships.
+Have some fun and try and 'trick' the AI into giving answers. Tell the pipeline that Bob joined Engineering, for example. The permissions checks are still deterministically enforced and your data is safe.
 
 ---
 
-## The node is the right place — not the prompt
+## The node is the right place, not the prompt
 
-Here's the thing: the authorization node is deterministic. It doesn't interpret, it doesn't reason, it doesn't get confused by a clever query. It runs a binary check against SpiceDB for every document, and SpiceDB either finds the permission path or it doesn't.
+![workflow](/agentic-rag-authorization/images/simple-agentic-rag.png)
+
+Here's the thing: the authorization node is deterministic. It doesn't interpret or reason, it doesn't get confused by a clever query. It runs a binary check against SpiceDB for every document, and SpiceDB either finds the permission path or it doesn't.
 
 More importantly, it's a node in a graph the agent always executes. There's no branch that skips it. The LLM only ever receives documents that have already cleared the permission check — which means it *cannot* leak what it *never saw*.
 
