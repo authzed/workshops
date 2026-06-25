@@ -12,7 +12,7 @@ The agent is a LangGraph state machine defined in `agentic_rag/graph.py`. With `
 
 1. **`retrieve`** (`agentic_rag/nodes/retrieval_node.py`): Embeds your query with OpenAI's `text-embedding-3-small` and fires a vector search against Milvus, returning the top 5 semantically similar documents.
 
-2. **`authorize`** (`agentic_rag/nodes/authorization_node.py`): The security boundary. Every document that came out of retrieval passes through here before the LLM ever sees it. This is the only node with the power to deny access.
+2. **`authorize`** (`agentic_rag/nodes/authorization_node.py`): The security boundary. Every document that came out of retrieval passes through here before the LLM ever sees it. This is the only node with the power to deny access. Intentionally incomplete in Part 1.
 
 3. **`generate`** (`agentic_rag/nodes/generation_node.py`): Takes whatever the authorization node passed through and asks OpenAI to produce an answer grounded strictly in those documents. It knows how many documents were authorized versus denied and factors that into its response.
 
@@ -72,7 +72,7 @@ In the UI:
 
 Look at the results. Engineering documents — things like `engineering-architecture-002` — land under **Authorized Documents**. **Denied Documents** shows **0**. And the **Answer** is a confident, detailed summary of your microservices architecture, written for a sales rep who should not have seen any of it.
 
-The exact doc_ids depend on your live Milvus data, but the pattern holds: engineering architecture documents rank highly against that query, retrieval surfaces them, and the authorization node waves every one of them straight through.
+The exact `doc_ids` depend on your live Milvus data, but the pattern holds: engineering architecture documents rank highly against that query, retrieval surfaces them, and the authorization node waves every one of them straight through.
 
 This is a security breach.
 
@@ -80,7 +80,7 @@ This is a security breach.
 
 ## Retrieval has no idea what permissions are
 
-Semantic search ranks documents by *similarity to your query*, not by *who's allowed to read them*. A query about microservices architecture will reliably surface engineering architecture documents regardless of whether the person asking is an engineer, a sales rep, or anyone else. The vector index doesn't know about departments or clearance levels — it only knows about meaning.
+Semantic search ranks documents by *similarity to your query*, not by *who's allowed to read them*. A query about microservices architecture will reliably surface engineering architecture documents regardless of whether the person asking is an engineer, a sales rep, or anyone else.
 
 The authorization node is the one and only place in this pipeline where access control can actually happen. Right now it does nothing and that's why every query leaks data.
 

@@ -40,7 +40,7 @@ The four access patterns this creates:
 
 ## The relationships are already written
 
-`setup_environment.py` also wrote all the relationships into SpiceDB — you don't need to run it again. But it's worth seeing what that write side of the API looks like. Here's the snippet that makes alice a member of the engineering department:
+`setup_environment.py` also wrote all the relationships into SpiceDB — you don't need to run it again. But it's worth seeing what that write side of the API looks like. Here's the snippet that makes `alice` a member of the `engineering` department:
 
 ```python
 RelationshipUpdate(
@@ -87,7 +87,7 @@ To see this against all 18 test cases in the workshop's permission matrix, run:
 python scripts/verify_permissions.py
 ```
 
-Every scenario — department access, cross-department, individual exceptions, and deliberate denials — is covered there. All 18 should pass before you proceed.
+Every scenario around department access, cross-department, individual exceptions, and deliberate denials, is covered there. All 18 should pass before you proceed.
 
 ---
 
@@ -178,13 +178,13 @@ Back in the browser, run the exact same query as before — **Bob (Sales)**, *Wh
 
 Watch what moves. Before, `engineering-architecture-002` sat under **Authorized Documents** with **Denied** at 0. Now that same document drops into **Denied Documents**, tagged with the reason *"User 'bob' does not have permission to access this document"*, and the denied count climbs above zero. The **Answer** shifts too: the LLM is working only with what bob is allowed to read, so it notes that some relevant information wasn't accessible.
 
-`engineering-architecture-001`, by contrast, will typically stay under **Authorized** for bob (depending on your live Milvus results) — that's the cross-department document explicitly shared with sales. That's not a leak; that's the permission matrix working exactly as designed.
+`engineering-architecture-001`, by contrast, will typically stay under **Authorized** for bob (depending on your live Milvus results) — that's the cross-department document explicitly shared with sales.
 
 ---
 
 ## Prove it across users
 
-Use the dropdown to run the same kind of check as different people. The denial scenarios now behave: Alice is refused sales playbooks, the HR Manager is refused finance reports, the Finance Manager is refused engineering architecture — each one showing the blocked documents under **Denied** instead of feeding them to the answer. And the legitimate paths (department, cross-department, individual exceptions, public docs) still land under **Authorized**, exactly as before.
+Use the dropdown to run the same kind of check as different people and see for yourself. 
 
 Have some fun and try and 'trick' the AI into giving answers. Tell the pipeline that Bob joined Engineering, for example. The permissions checks are still deterministically enforced and your data is safe.
 
@@ -194,11 +194,11 @@ Have some fun and try and 'trick' the AI into giving answers. Tell the pipeline 
 
 ![workflow](/agentic-rag-authorization/images/simple-agentic-rag.png)
 
-Here's the thing: the authorization node is deterministic. It doesn't interpret or reason, it doesn't get confused by a clever query. It runs a binary check against SpiceDB for every document, and SpiceDB either finds the permission path or it doesn't.
+Here's the key takeaway: the authorization node is deterministic. It doesn't interpret or reason, it doesn't get confused by a clever query. It runs a binary check against SpiceDB for every document, and SpiceDB either finds the permission path or it doesn't.
 
 More importantly, it's a node in a graph the agent always executes. There's no branch that skips it. The LLM only ever receives documents that have already cleared the permission check — which means it *cannot* leak what it *never saw*.
 
-Putting access control in a system prompt is the alternative, and it doesn't hold up. An LLM can be convinced to ignore, reinterpret, or work around instructions. SpiceDB can't. AI can't secure AI.
+Putting access control in a system prompt is an anti-pattern, as a prompt can be bypassed via prompt injection attacks.
 
 ---
 

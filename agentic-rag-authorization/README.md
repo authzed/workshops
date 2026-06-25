@@ -1,6 +1,6 @@
 # Building Authorization for Agentic RAG Systems
 
-This workshop shows how to add fine-grained authorization to a production-like RAG system using SpiceDB. Standard RAG pipelines follow a fixed `query -> retrieve -> generate` flow. This workshops teaches you how  to add a deterministic authorization step in your RAG, that agents cannot bypass. 
+This workshop shows how to add fine-grained authorization to a production-like Agentic RAG system using SpiceDB. Standard RAG pipelines follow a fixed `query -> retrieve -> generate` flow. This workshops teaches you how  to add a deterministic authorization step in your RAG, that agents cannot bypass. 
 
 The workshop uses SpiceDB for authorization, Milvus  as the vector database, and the OpenAI API as a LLM.
 
@@ -14,6 +14,8 @@ Fine-grained authorization in Agentic RAG is best achieved with **Relationship-b
 
 ### What you'll build
 
+![agentic-rag](/agentic-rag-authorization/images/full-agentic-rag.png)
+
 - Run a LangGraph agentic RAG pipeline — retrieve → authorize → generate — backed by **Milvus** (vector DB) and **OpenAI** (embeddings + generation), with a frontend.
 - Watch the naive version leak documents across departments: semantic similarity returns everything relevant, regardless of who's asking
 - Implement the SpiceDB authorization node using the raw `authzed` Python SDK — a permission check the agent calls explicitly, before any document reaches the prompt
@@ -24,6 +26,8 @@ Fine-grained authorization in Agentic RAG is best achieved with **Relationship-b
 - **Docker** (or a GitHub account if you'd prefer to use Codespaces)
 - **Python 3.10+**
 - An **OpenAI API key**
+
+OpenAI is used for embeddings and answer generation but you can replace this with the LLM of your choice. Make sure you change the model name in the `get_llm()` method)
 
 SpiceDB and Milvus both run locally via Docker Compose — no additional accounts or cloud services needed.
 

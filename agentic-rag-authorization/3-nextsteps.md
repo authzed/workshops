@@ -6,9 +6,9 @@ You've wired a SpiceDB authorization node into a LangGraph RAG pipeline - a dete
 
 ## Adaptive mode — let the agent retry
 
-Right now you're probably running with `max_attempts=1`, which gives you the clean three-node path: `retrieve → authorize → generate` That's the right default for most queries.
+Right now you're probably running with `max_attempts=1`, which gives you the clean three-node path: `retrieve → authorize → generate`.
 
-Set `max_attempts > 1` and the graph changes shape. After authorization fails — no documents passed, all denied — instead of immediately generating an "access denied" explanation, the `authorize` node routes to the `reason` node (`agentic_rag/nodes/reasoning_node.py`). That node gets the full picture: how many docs were retrieved, how many passed, how many were denied, and how many attempts remain. It reasons about what to try differently and loops back to retrieve.
+The agentic part comes in when you set `max_attempts > 1` . After authorization fails, instead of immediately generating an "access denied" explanation, the `authorize` node routes to the `reason` node (`agentic_rag/nodes/reasoning_node.py`). That node gets the full picture: how many docs were retrieved, how many passed, how many were denied, and how many attempts remain. It reasons about what to try differently and loops back to retrieve.
 
 The authorization check still runs on every attempt. The `reason` node can't instruct the graph to skip it, and there's no code path that gets around it. The agent adapts its *search strategy*, not its *permissions*.
 
@@ -28,9 +28,9 @@ Watch the `reasoning` field in the returned state — it's a list of the agent's
 
 ---
 
-## Post-filter is correct; pre-filter scales better
+## Post-filter and pre-filter 
 
-What you built is **post-filter** authorization: retrieve documents from Milvus first, then call SpiceDB on each one. It's simple, always correct, and works well when a user has access to a reasonable fraction of the corpus.
+What you built is **post-filter** authorization: retrieve documents from Milvus first, then call SpiceDB on each one. It works well when a user has access to a reasonable fraction of the corpus.
 
 ![post-filter](/agentic-rag-authorization/images/post-filter.png)
 
@@ -58,11 +58,11 @@ The full reference implementation at [authzed/examples/agentic-rag-authorization
 
 ## Go to production
 
-The SpiceDB you've been running is in-memory via Docker Compose. This works for a workshop or a proof of concept but not for production, where you want a durable datastore and a deployment you can lean on. You've got three ways to get there:
+The SpiceDB you've been running is in-memory via Docker Compose. This works for a workshop or a proof of concept, but not for production, where you want a durable datastore and a deployment you can lean on. You've got three ways to get there:
 
 - **SpiceDB, self-hosted (open source)** — run it yourself. You have full control, and it runs on your infrastructure and ops. The right call if you're happy managing the database and have specific deployment requirements.
 - **[AuthZed Cloud](https://authzed.com/products/authzed-cloud)** — managed, self-service, pay-as-you-go SpiceDB. Provision a permissions system on demand and get enterprise features like audit logging without running anything yourself. The easy on-ramp for startups and growing teams.
-- **AuthZed Dedicated** — a fully private, single-tenant deployment in the cloud provider and regions you choose, sold annually. For enterprises that need dedicated infrastructure and geographic or compliance guarantees while offloading the ops.
+- **[AuthZed Dedicated](https://authzed.com/products/authzed-dedicated)** — a fully private, single-tenant deployment in the cloud provider and regions you choose, sold annually. For enterprises that need dedicated infrastructure and geographic or compliance guarantees while offloading the ops.
 
 Not sure which fits? The [Picking a product](https://authzed.com/docs/authzed/guides/picking-a-product) guide walks through the trade-offs.
 

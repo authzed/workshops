@@ -2,11 +2,6 @@
 
 This workshop is in two parts. First, we build an Agentic RAG pipeline with a mock corpus of documents. This pipeline will leak data so in Part 2, we'll add fine-grained authorization to the system. The `starter` folder in this repo is a stub of the working code and is meant only for this workshop. The corpus of documents and the working code for this example [can be found here](https://github.com/authzed/examples/tree/main/agentic-rag-authorization)
 
-## What you need
-
-- **Docker Desktop** (Option A) or a **GitHub account** (Option B — Codespaces)
-- An **OpenAI API key** — used for embeddings and answer generation (you can replace this with the LLM of your choice, but make sure you change the name in the `get_llm()` method)
-
 ## Get the code
 
 ```bash
@@ -14,7 +9,7 @@ git clone https://github.com/authzed/workshops.git
 cd workshops/agentic-rag-authorization/starter
 ```
 
-## Option A — Run locally with Docker
+## Option A - Run locally with Docker
 
 Copy the example `.env` file and drop in your OpenAI key:
 
@@ -30,7 +25,7 @@ Start the infrastructure:
 docker compose up -d
 ```
 
-This brings up four containers: three for the Milvus stack (`milvus-etcd`, `milvus-minio`, `milvus-standalone`) and one for SpiceDB. SpiceDB runs in-memory with a preshared key of `devtoken` — no persistence, no TLS, exactly what you want for a workshop.
+This brings up four containers: three for the Milvus stack (`milvus-etcd`, `milvus-minio`, `milvus-standalone`) and one for SpiceDB. SpiceDB runs in-memory with a preshared key of `devtoken`, not recommended for prod ofc.
 
 Create a virtual environment and install dependencies:
 
@@ -38,7 +33,7 @@ Create a virtual environment and install dependencies:
 python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 ```
 
-## Option B — Run in GitHub Codespaces
+## Option B - Run in GitHub Codespaces
 
 For anyone who can't run Docker locally, Codespaces is the path. The repo ships with a `.devcontainer/` config that handles everything automatically.
 
