@@ -2,21 +2,23 @@
 
 Here's the hub for all self-guided AuthZed workshops.  
 
-#### 1. Secure Your RAG Pipelines With Fine Grained Authorization
+#### 1. Building Authorization for Agentic RAG Systems
+This workshop teaches you to add a deterministic authorization boundary to an agentic RAG system. You'll run a LangGraph-based agentic RAG, watch semantic search leak documents across departments, then implement a SpiceDB permission check the agent can't bypass. Uses SpiceDB, Milvus, LangGraph, OpenAI, and Docker Compose. [Link](https://github.com/authzed/workshops/tree/main/agentic-rag-authorization)
+
+#### 2. Secure Your RAG Pipelines With Fine Grained Authorization
 This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in your RAG pipelines. There are different branches for this workshop:
 
 - (recommended) Using the OpenAI API, Pinecone, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/main/secure-rag-pipelines)
 - Using the Deepseek R1 LLM (via OpenRouter), Pinecone, OpenAI Embeddings, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/deepseek/secure-rag-pipelines)
 
-#### 2. Update A Web View Based on Permissions
+#### 3. Update A Web View Based on Permissions
 This workshop will illustrate how you can update a view based on what permissions the user has. The workshop uses a NextJS template by Vercel for an admin dashboard, written in TypeScript. [Link](https://github.com/authzed/workshops/tree/main/update-views-authorization)
 
-#### 3. From Zero to Permissions System in 10 Minutes using AuthZed MCP Servers
+#### 4. From Zero to Permissions System in 10 Minutes using AuthZed MCP Servers
 This workshop teaches you how to build and reason about authorization systems using **AuthZed** and **SpiceDB**, powered by **Model Context Protocol (MCP)** servers.  [Link](https://github.com/authzed/workshops/tree/main/mcp-assisted-authorization)
 
-#### 4. Prevent AI Agents from Accessing Unauthorized Data
+#### 5. Prevent AI Agents from Accessing Unauthorized Data
 This workshop shows how to build a secure Retrieval-Augmented Generation (RAG) pipeline where AI Agents can only access documents they are authorized for. Authorization decisions are enforced by SpiceDB in a post-filter approach. [Link](https://github.com/authzed/workshops/tree/main/ai-agent-authorization)
-
 
 ## Contributing
 

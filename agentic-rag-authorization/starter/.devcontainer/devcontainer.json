@@ -1,0 +1,14 @@
+{
+  "name": "Agentic RAG Authorization Workshop",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [19530, 50051],
+  "postCreateCommand": "cp -n .env.example .env || true && pip install -r requirements.txt && docker compose up -d",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}
