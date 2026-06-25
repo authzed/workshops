@@ -46,7 +46,7 @@ Every single retrieved document becomes an authorized document. `denied_count` i
 
 ## Start the web UI
 
-The clearest way to watch the agent work is the bundled web UI. From the `starter/` directory, with your virtual environment active and Docker still running:
+The clearest way to watch the agent work is the bundled web UI. From the `starter/` directory, with your environment ready from setup (virtual environment active if you're running locally) and the services still up:
 
 ```bash
 python run_ui.py
