@@ -42,12 +42,12 @@ def check_services():
         print("     Run: docker-compose up -d")
         return False
 
-    # Check OpenAI key
-    if not config.openai_api_key or config.openai_api_key == "your-openai-api-key-here":
-        print("  ❌ OPENAI_API_KEY not configured")
+    # Check chat model key
+    if not config.llm_api_key or config.llm_api_key == "your-api-key-here":
+        print("  ❌ LLM_API_KEY not configured")
         print("     Set it in .env file")
         return False
-    print("  ✅ OpenAI API key configured")
+    print(f"  ✅ Chat model configured ({config.llm_model})")
 
     # Check if documents are loaded
     try:

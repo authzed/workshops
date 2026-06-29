@@ -68,6 +68,8 @@ Not sure which fits? The [Picking a product](https://authzed.com/docs/authzed/gu
 
 Whichever you pick, your code doesn't change. The schema you tested locally maps directly, and the authorization node doesn't know or care whether SpiceDB is local or managed — point `SPICEDB_ENDPOINT` and `SPICEDB_TOKEN` in your `.env` at the new instance and you're done. The permission check is just a gRPC/API call.
 
+One more swap for production: this workshop embeds locally with **fastembed** so there's nothing to sign up for and no key to manage. In production you'd more likely reach for a hosted embedding model — OpenAI's `text-embedding-3-small`, a Cohere or Voyage model, or whatever your LLM provider offers — for higher retrieval quality without running the model yourself. Embeddings are decoupled from both the vector store and the chat model, so it's a one-function change in `embed()` — just keep the index and queries on the same model, and match the Milvus collection's `dim` to its output.
+
 ---
 
 ## The full reference implementation

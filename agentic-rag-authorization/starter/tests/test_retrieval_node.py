@@ -38,8 +38,8 @@ def test_retrieval_node_returns_documents(sample_state):
     from agentic_rag.nodes.retrieval_node import retrieval_node
 
     with patch("agentic_rag.nodes.retrieval_node.get_milvus_client") as mock_get_client, \
-         patch("agentic_rag.nodes.retrieval_node._embed") as mock_embed:
-        mock_embed.return_value = [0.1] * 1536
+         patch("agentic_rag.nodes.retrieval_node.embed") as mock_embed:
+        mock_embed.return_value = [0.1] * 384
         mock_client = MagicMock()
         mock_client.search.return_value = [[_make_hit()]]
         mock_get_client.return_value = mock_client
@@ -61,8 +61,8 @@ def test_retrieval_node_increments_attempt_on_failure(sample_state):
     from agentic_rag.nodes.retrieval_node import retrieval_node
 
     with patch("agentic_rag.nodes.retrieval_node.get_milvus_client") as mock_get_client, \
-         patch("agentic_rag.nodes.retrieval_node._embed") as mock_embed:
-        mock_embed.side_effect = RuntimeError("OpenAI unavailable")
+         patch("agentic_rag.nodes.retrieval_node.embed") as mock_embed:
+        mock_embed.side_effect = RuntimeError("embedding model unavailable")
         mock_get_client.return_value = MagicMock()
 
         result = retrieval_node(sample_state)
@@ -71,17 +71,14 @@ def test_retrieval_node_increments_attempt_on_failure(sample_state):
     assert result["retrieval_attempt"] == 1
 
 
-def test_embed_calls_openai():
-    from agentic_rag.nodes.retrieval_node import _embed
+def test_embed_uses_local_model():
+    from agentic_rag import node_helpers
 
-    mock_response = MagicMock()
-    mock_response.data = [MagicMock(embedding=[0.5] * 1536)]
+    mock_embedder = MagicMock()
+    mock_embedder.embed.return_value = iter([[0.5] * 384])
 
-    with patch("agentic_rag.nodes.retrieval_node.openai.OpenAI") as mock_oai:
-        mock_oai.return_value.embeddings.create.return_value = mock_response
-        result = _embed("hello world", "sk-test")
+    with patch("agentic_rag.node_helpers.get_embedder", return_value=mock_embedder):
+        result = node_helpers.embed("hello world")
 
-    assert result == [0.5] * 1536
-    mock_oai.return_value.embeddings.create.assert_called_once_with(
-        model="text-embedding-3-small", input="hello world"
-    )
+    assert result == [0.5] * 384
+    mock_embedder.embed.assert_called_once_with(["hello world"])

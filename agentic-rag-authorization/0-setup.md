@@ -11,13 +11,13 @@ cd workshops/agentic-rag-authorization/starter
 
 ## Option A - Run locally with Docker
 
-Copy the example `.env` file and drop in your OpenAI key:
+Copy the example `.env` file and drop in your model key:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and set `OPENAI_API_KEY` to your actual key. Everything else such as the Milvus URI, SpiceDB endpoint, and preshared-token is already wired up to match `docker-compose.yml`.
+Open `.env` and set `LLM_API_KEY` to your key. The chat model is provider-agnostic — leave `LLM_BASE_URL` blank for OpenAI, or point it at any OpenAI-compatible provider (Anthropic/Claude, Groq, a local Ollama, or your company's endpoint) and set `LLM_MODEL` to match. See the comments in `.env.example` for examples. Embeddings run **locally** via fastembed, so they need no API key. Everything else such as the Milvus URI, SpiceDB endpoint, and preshared-token is already wired up to match `docker-compose.yml`.
 
 Start the infrastructure:
 
@@ -39,7 +39,7 @@ For anyone who can't run Docker locally, Codespaces is the path. The repo ships 
 
 1. On the repo page, click **Code ▸ Codespaces ▸ Create codespace on main**
 2. The devcontainer will run `docker compose up -d` and install dependencies on startup
-3. Once the Codespace is ready, open `.env` and add your `OPENAI_API_KEY`
+3. Once the Codespace is ready, open `.env` and add your `LLM_API_KEY` (and, if you're not using OpenAI, `LLM_BASE_URL` + `LLM_MODEL`)
 
 ## Load the data
 
@@ -49,7 +49,7 @@ python examples/setup_environment.py
 
 Two things happen here:
 
-- **Milvus setup** — embeds all 50 sample documents using `text-embedding-3-small` and inserts them into a vector collection
+- **Milvus setup** — embeds all 50 sample documents locally with fastembed (`bge-small-en-v1.5`, 384-dim; the model downloads once on first run) and inserts them into a vector collection
 - **SpiceDB setup** — loads the authorization schema and writes all relationships: department memberships, document viewers, cross-department access, and individual exceptions
 
 Expected tail output:

@@ -51,8 +51,8 @@ async def main():
     """Run basic examples."""
     config = get_config()
 
-    if not config.openai_api_key:
-        print("❌ Error: OPENAI_API_KEY not set")
+    if not config.llm_api_key:
+        print("❌ Error: LLM_API_KEY not set")
         print("Please set it in your .env file or environment")
         return
 

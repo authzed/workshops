@@ -10,7 +10,7 @@ The goal here is simple: get the agent running, then catch it in the act of hand
 
 The agent is a LangGraph state machine defined in `agentic_rag/graph.py`. With `max_attempts=1` (the default), it runs a clean three-node pipeline:
 
-1. **`retrieve`** (`agentic_rag/nodes/retrieval_node.py`): Embeds your query with OpenAI's `text-embedding-3-small` and fires a vector search against Milvus, returning the top 5 semantically similar documents.
+1. **`retrieve`** (`agentic_rag/nodes/retrieval_node.py`): Embeds your query locally with fastembed (`bge-small-en-v1.5`) and fires a vector search against Milvus, returning the top 5 semantically similar documents.
 
 2. **`authorize`** (`agentic_rag/nodes/authorization_node.py`): The security boundary. Every document that came out of retrieval passes through here before the LLM ever sees it. This is the only node with the power to deny access. Intentionally incomplete in Part 1.
 
