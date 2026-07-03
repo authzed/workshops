@@ -14,7 +14,7 @@ The agent is a LangGraph state machine defined in `agentic_rag/graph.py`. With `
 
 2. **`authorize`** (`agentic_rag/nodes/authorization_node.py`): The security boundary. Every document that came out of retrieval passes through here before the LLM ever sees it. This is the only node with the power to deny access. Intentionally incomplete in Part 1.
 
-3. **`generate`** (`agentic_rag/nodes/generation_node.py`): Takes whatever the authorization node passed through and asks OpenAI to produce an answer grounded strictly in those documents. It knows how many documents were authorized versus denied and factors that into its response.
+3. **`generate`** (`agentic_rag/nodes/generation_node.py`): Takes whatever the authorization node passed through and asks the chat model to produce an answer grounded strictly in those documents. It knows how many documents were authorized versus denied and factors that into its response.
 
 It's "agentic" because the graph has a conditional reason/retry path: when `max_attempts > 1`, the graph can loop - reasoning about why authorization failed and retrying retrieval with a refined strategy. For this checkpoint, we're using the straightforward 3-node path.
 

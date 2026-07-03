@@ -179,8 +179,8 @@ open http://localhost:8000
 # Initialize data
 python3 examples/setup_environment.py
 
-# Run demo
-python3 examples/basic_example.py
+# Launch the web UI
+python3 run_ui.py
 ```
 
 ## How It Works
@@ -280,8 +280,7 @@ agentic-rag-authorization/
 │   ├── logging_config.py      # Structured JSON logging
 │   └── validation.py          # Input validation and sanitization
 ├── examples/
-│   ├── setup_environment.py   # Initialize data (embeds and loads 50 documents)
-│   └── basic_example.py       # 8 demo scenarios
+│   └── setup_environment.py   # Initialize data (embeds and loads 50 documents)
 ├── scripts/
 │   ├── generate_documents.py  # Generate 50 .txt files
 │   ├── parse_documents.py     # Parse documents into objects
@@ -329,7 +328,7 @@ See [data/PERMISSIONS.md](data/PERMISSIONS.md) for the complete permission matri
 
 ## Sample Scenarios
 
-The `examples/basic_example.py` demonstrates 8 scenarios:
+Try these 8 scenarios in the web UI:
 
 1. **Department Access** - alice queries engineering documents
 2. **Access Denial** - bob attempts to access engineering documents

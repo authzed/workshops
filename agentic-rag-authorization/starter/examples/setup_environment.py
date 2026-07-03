@@ -247,7 +247,6 @@ def main():
     print("\n" + "=" * 60)
     print("✅ Setup complete!")
     print("=" * 60)
-    print("\nYou can now run: python examples/basic_example.py")
 
 
 if __name__ == "__main__":

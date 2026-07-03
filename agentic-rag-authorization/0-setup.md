@@ -94,7 +94,7 @@ We'll rely on all of this in Checkpoint 2 when we wire authorization into the RA
 
 - [ ] Cloned the repo
 - [ ] Infrastructure is up — Docker or Codespaces
-- [ ] `.env` has a valid OpenAI API key
+- [ ] `.env` has a valid `LLM_API_KEY` (plus `LLM_BASE_URL`/`LLM_MODEL` if you're not using OpenAI)
 - [ ] 50 documents embedded into Milvus
 - [ ] 18/18 permission checks pass
 
