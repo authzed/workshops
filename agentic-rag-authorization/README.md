@@ -33,7 +33,7 @@ SpiceDB and Milvus both run locally via Docker Compose — no additional account
 
 ---
 
-**Last Updated**: Jun 25, 2026
+**Last Updated**: Jul 3, 2026
 
 ### Workshop Modules
 
