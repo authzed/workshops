@@ -135,7 +135,7 @@ pip install -r requirements.txt  # Includes fastapi and uvicorn
 python3 run_ui.py
 ```
 
-The `setup_environment.py` script sets up Milvus as the vector database and SpiceDB with sample documents and department-based access control. It embeds all 50 documents using OpenAI's `text-embedding-3-small` and inserts them into Milvus, then writes a hierarchical permission model to SpiceDB: users assigned to departments, department-wide document access, 3 cross-department collaboration grants, and 3 individual user exceptions.
+The `setup_environment.py` script sets up Milvus as the vector database and SpiceDB with sample documents and department-based access control. It embeds all 50 documents locally with fastembed (`bge-small-en-v1.5`) and inserts them into Milvus, then writes a hierarchical permission model to SpiceDB: users assigned to departments, department-wide document access, 3 cross-department collaboration grants, and 3 individual user exceptions.
 
 The UI launcher will:
 - Verify documents are loaded in Milvus
@@ -179,8 +179,8 @@ open http://localhost:8000
 # Initialize data
 python3 examples/setup_environment.py
 
-# Run demo
-python3 examples/basic_example.py
+# Launch the web UI
+python3 run_ui.py
 ```
 
 ## How It Works
@@ -214,7 +214,7 @@ definition document {
 ```
 User Query
     ↓
-Retrieval Node ← Milvus semantic vector search (text-embedding-3-small)
+Retrieval Node ← Milvus semantic vector search (local fastembed, bge-small-en-v1.5)
     ↓
 Authorization Node ← SpiceDB filters (SECURITY BOUNDARY - cannot be bypassed)
     ↓
@@ -280,8 +280,7 @@ agentic-rag-authorization/
 │   ├── logging_config.py      # Structured JSON logging
 │   └── validation.py          # Input validation and sanitization
 ├── examples/
-│   ├── setup_environment.py   # Initialize data (embeds and loads 50 documents)
-│   └── basic_example.py       # 8 demo scenarios
+│   └── setup_environment.py   # Initialize data (embeds and loads 50 documents)
 ├── scripts/
 │   ├── generate_documents.py  # Generate 50 .txt files
 │   ├── parse_documents.py     # Parse documents into objects
@@ -298,8 +297,14 @@ agentic-rag-authorization/
 Environment variables (`.env`):
 
 ```bash
-# Required
-OPENAI_API_KEY=sk-...
+# Required — key for the chat model (embeddings run locally, no key needed)
+LLM_API_KEY=sk-...
+
+# Optional — chat model + provider (defaults shown). Leave LLM_BASE_URL blank
+# for OpenAI, or set it to any OpenAI-compatible endpoint (Anthropic, Groq,
+# Ollama, a company gateway) and set LLM_MODEL to match.
+LLM_MODEL=gpt-4
+LLM_BASE_URL=
 
 # Optional (defaults shown)
 MILVUS_URI=http://localhost:19530
@@ -323,7 +328,7 @@ See [data/PERMISSIONS.md](data/PERMISSIONS.md) for the complete permission matri
 
 ## Sample Scenarios
 
-The `examples/basic_example.py` demonstrates 8 scenarios:
+Try these 8 scenarios in the web UI:
 
 1. **Department Access** - alice queries engineering documents
 2. **Access Denial** - bob attempts to access engineering documents

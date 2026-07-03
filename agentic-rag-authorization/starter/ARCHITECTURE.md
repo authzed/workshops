@@ -1239,8 +1239,7 @@ agentic-rag-weaviate/
 │   └── index.html             # Single-page app (HTML/CSS/JS, 544 lines)
 │
 ├── examples/                  # Demo scripts
-│   ├── setup_environment.py   # Initialize data (loads 50 documents + permissions)
-│   └── basic_example.py       # 8 demo scenarios (CLI-based)
+│   └── setup_environment.py   # Initialize data (loads 50 documents + permissions)
 │
 ├── scripts/                   # Utility scripts
 │   ├── parse_documents.py     # Parse documents into structured objects
@@ -1267,7 +1266,6 @@ agentic-rag-weaviate/
 
 **CLI Interface:**
 - Entry: `agentic_rag/graph.py::run_agentic_rag()`
-- Examples: `examples/basic_example.py`
 - Tests: `tests/test_basic_flow.py`
 
 **Web Interface:**

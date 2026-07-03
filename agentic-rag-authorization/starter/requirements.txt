@@ -1,6 +1,7 @@
 # Core dependencies
 langchain>=0.1.0
-langchain-openai>=0.1.0
+langchain-openai>=0.1.0   # provider-agnostic chat model via OpenAI-compatible API
+fastembed>=0.3.0          # local CPU embeddings, no API key required
 langgraph>=0.0.20
 pymilvus>=2.4.0
 authzed>=0.7.0

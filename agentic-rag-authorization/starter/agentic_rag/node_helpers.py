@@ -4,22 +4,47 @@ import time
 from contextlib import contextmanager
 from typing import Dict, Any
 from langchain_openai import ChatOpenAI
+from fastembed import TextEmbedding
 
 from .config import get_config
 
+# Local embedding model: runs on CPU, no API key, downloads weights once (~50MB)
+# and caches them. 384-dim output — keep the Milvus collection's `dim` in sync.
+EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
+_embedder: TextEmbedding | None = None
+
 
 def get_llm() -> ChatOpenAI:
-    """Get configured LLM instance.
+    """Get the configured chat model (provider-agnostic).
+
+    Uses the OpenAI-compatible interface, so it works with OpenAI, Anthropic,
+    Azure, Groq, Together, local vLLM/Ollama, or any corporate endpoint — set
+    LLM_MODEL, LLM_API_KEY, and (for anything but OpenAI) LLM_BASE_URL in .env.
 
     Returns:
-        ChatOpenAI: Configured LLM with gpt-4 and temperature=0
+        ChatOpenAI: Configured chat model with temperature=0.
     """
     config = get_config()
     return ChatOpenAI(
-        model="gpt-4",
+        model=config.llm_model,
         temperature=0,
-        api_key=config.openai_api_key
+        api_key=config.llm_api_key,
+        base_url=config.llm_base_url or None,
     )
+
+
+def get_embedder() -> TextEmbedding:
+    """Get the cached local embedding model, loading it on first use."""
+    global _embedder
+    if _embedder is None:
+        _embedder = TextEmbedding(EMBEDDING_MODEL)
+    return _embedder
+
+
+def embed(text: str) -> list[float]:
+    """Embed a single string locally with fastembed (384-dim, no API key)."""
+    vector = next(iter(get_embedder().embed([text])))
+    return vector.tolist() if hasattr(vector, "tolist") else list(vector)
 
 
 @contextmanager

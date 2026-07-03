@@ -20,8 +20,12 @@ class Config:
     spicedb_endpoint: str
     spicedb_token: str
 
-    # OpenAI
-    openai_api_key: str
+    # Chat LLM (provider-agnostic). Embeddings run locally and need no key.
+    # Works with OpenAI, Anthropic, Azure, Groq, Together, vLLM/Ollama, or any
+    # OpenAI-compatible corporate endpoint. Leave llm_base_url blank for OpenAI.
+    llm_api_key: str
+    llm_model: str = "gpt-4"
+    llm_base_url: str = ""
 
     # Agent behavior
     max_retrieval_attempts: int = 1
@@ -37,7 +41,9 @@ class Config:
             milvus_token=os.getenv("MILVUS_TOKEN", ""),
             spicedb_endpoint=os.getenv("SPICEDB_ENDPOINT", "localhost:50051"),
             spicedb_token=os.getenv("SPICEDB_TOKEN", "devtoken"),
-            openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+            llm_api_key=os.getenv("LLM_API_KEY", ""),
+            llm_model=os.getenv("LLM_MODEL", "gpt-4"),
+            llm_base_url=os.getenv("LLM_BASE_URL", ""),
             max_retrieval_attempts=int(os.getenv("MAX_RETRIEVAL_ATTEMPTS", "1")),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
         )

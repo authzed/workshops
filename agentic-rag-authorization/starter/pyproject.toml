@@ -6,6 +6,7 @@ requires-python = ">=3.10"
 dependencies = [
     "langchain>=0.1.0",
     "langchain-openai>=0.1.0",
+    "fastembed>=0.3.0",
     "langgraph>=0.0.20",
     "langchain-spicedb>=0.1.0",
     "weaviate-client>=4.4.0",
