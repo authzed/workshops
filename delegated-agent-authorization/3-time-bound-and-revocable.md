@@ -109,9 +109,16 @@ extra steps; this makes "approved for now" mean what it says.
 Waiting out a real timer to prove this works isn't worth your time, so `bootstrap.py` gives you a
 faster lever: seed a grant that's already expired.
 
-```bash
-python bootstrap.py --window-minutes 0
-```
+> **Reset the datastore first, once.** You just changed `agent_deployer`'s allowed subject type
+> from `agent` to `agent with expiration`. SpiceDB won't narrow a relation's allowed types while
+> relationships in the old shape — the plain `agent` grants Checkpoint 2 seeded — still exist, so
+> the very first `bootstrap.py` run this checkpoint fails on `WriteSchema` before it ever gets to
+> reseed. Reset the datastore once, then re-seed against the new schema:
+>
+> ```bash
+> docker compose down -v && docker compose up -d --wait
+> python bootstrap.py --window-minutes 0
+> ```
 
 This writes the staging `agent_deployer` relationship with `expires_at` set to *right now* — by
 the time `CheckPermission` runs, it's already in the past. The agent's own `agent_deployer` check

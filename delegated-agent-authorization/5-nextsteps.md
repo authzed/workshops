@@ -88,7 +88,7 @@ anything:
 
 ```python
 if not await check(client, "user", revoker, "manage", "environment", environment):
-    print(f"❌ Refused: user:{revoker} may not manage environment:{environment}")
+    print(f"❌ Refused: user:{revoker} may not manage environment:{environment} (revocation requires an env operator)")
     return 1
 ```
 

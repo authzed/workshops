@@ -1,16 +1,19 @@
 # Delegated Authorization for AI Agents: Build an Agent with Fine-Grained Permissions
 
-An AI agent doesn't ask permission before it acts — it inherits whatever its host process can
-do. Point an agent at a set of credentials and "deploy checkout to staging" and "tear down
-production" look identical to it: both are just tool calls that return `ALLOWED`, because nothing
-downstream of the prompt is checking. In this hands-on workshop you build a DevOps deploy agent on
-[goose](https://github.com/aaif-goose/goose) (the open-source agent from the Agentic AI
-Foundation), watch it over-reach with no guardrail in place, then gate its every action with
-delegated, fine-grained authorization from SpiceDB. By the end you'll have scoped grants, a
-three-way decision (`ALLOWED` / `NEEDS_APPROVAL` / `BLOCKED`), time-bound windows with instant
-revocation, and a relationship hierarchy where revoking one grant cascades to what depends on it —
-the kind of policy a role-based system can't express without a synchronization job to keep it
-honest.
+DevOps and Platform teams now work with hundreds of AI Agents in their internal systems. These
+Agents usually run with credentials that can touch everything, including your production servers.
+This could lead to problems.
+
+This workshop will teach you how to add delegated authorization to your AI Agents, at scale.
+
+We'll build a DevOps deploy agent on goose - the open-source agent from the Agentic AI Foundation
+and then give it fine-grained permissions using Relationship-Based Access Control (ReBAC). Along
+the way you'll get hands-on with the Google Zanzibar model of fine-grained authorization (ReBAC)
+and why it fits AI agents: scoped delegation, expiring grants, instant revocation, and
+hierarchical permissions where revoking staging access automatically suspends production too,
+something role-based systems can't express cleanly.
+
+This is a self-guided, hands-on workshop, and everything runs locally with open-source tooling.
 
 ---
 

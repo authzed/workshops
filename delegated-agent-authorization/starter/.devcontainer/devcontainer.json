@@ -2,6 +2,6 @@
   "name": "delegated-agent-authorization",
   "image": "mcr.microsoft.com/devcontainers/python:3.12",
   "features": { "ghcr.io/devcontainers/features/docker-in-docker:2": {} },
-  "postCreateCommand": "python -m venv .venv && .venv/bin/pip install -r requirements.txt && docker compose up -d",
+  "postCreateCommand": "cd delegated-agent-authorization/starter && python -m venv .venv && .venv/bin/pip install -r requirements.txt && docker compose up -d --wait",
   "forwardPorts": [8000, 50051]
 }
