@@ -1,0 +1,7 @@
+{
+  "name": "delegated-agent-authorization",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": { "ghcr.io/devcontainers/features/docker-in-docker:2": {} },
+  "postCreateCommand": "pip install -r requirements.txt && docker compose up -d",
+  "forwardPorts": [8000, 50051]
+}

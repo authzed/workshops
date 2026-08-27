@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>goose × SpiceDB — deploybot</title>
+<style>
+  :root {
+    --bg: #0E1420;
+    --surface: #161E2E;
+    --surface-2: #1B2536;
+    --line: #26314A;
+    --text: #E6ECF5;
+    --muted: #8A98B2;
+    --allow: #3FB950;
+    --approve: #E3A008;
+    --block: #F04F4F;
+    --brand: #8B7DF0;
+    --brand-dim: #5A4F9E;
+    --mono: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(139,125,240,0.10), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 900px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  /* ---------- Authority bar (the signature) ---------- */
+  .authority {
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .brandmark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 16px;
+    border-right: 1px solid var(--line);
+  }
+  .brandmark .goose { font-size: 22px; line-height: 1; }
+  .brandmark .name { font-family: var(--mono); font-size: 13px; letter-spacing: 0.02em; }
+  .brandmark .name b { color: var(--brand); font-weight: 600; }
+  .brandmark .name span { color: var(--muted); }
+
+  .chain {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 320px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .node {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .node .role { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .node .id { font-size: 13px; }
+  .node.human .id { color: var(--text); }
+  .node.agent { border-color: var(--brand-dim); }
+  .node.agent .id { color: var(--brand); }
+
+  .link {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--brand);
+    letter-spacing: -0.05em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .link .wire { color: var(--brand); }
+  .link .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .link.broken .wire { color: var(--muted); }
+
+  .grants { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .grant {
+    min-width: 132px;
+    padding: 7px 11px;
+    border-radius: 9px;
+    border: 1px solid var(--brand-dim);
+    background: rgba(139,125,240,0.08);
+    font-family: var(--mono);
+  }
+  .grant .env { font-size: 13px; color: var(--text); display: flex; justify-content: space-between; gap: 8px; }
+  .grant .clock { color: var(--brand); }
+  .grant .bar { height: 4px; border-radius: 3px; background: var(--line); margin-top: 6px; overflow: hidden; }
+  .grant .bar > i { display: block; height: 100%; background: var(--brand); border-radius: 3px; transition: width 0.9s linear; }
+  .grant.expiring { border-color: var(--approve); }
+  .grant.expiring .clock { color: var(--approve); }
+  .grant.expiring .bar > i { background: var(--approve); }
+  .grant.suspended { border-color: var(--line); border-style: dashed; background: transparent; opacity: 0.75; }
+  .grant.suspended .clock { color: var(--muted); }
+  .grant.suspended .bar > i { background: var(--muted); }
+  .grant .tag { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 5px; }
+  .grant.suspended .tag { color: var(--block); }
+
+  .no-grant {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    padding: 7px 11px;
+    border: 1px dashed var(--line);
+    border-radius: 9px;
+  }
+
+  .controls { display: flex; gap: 8px; margin-left: auto; }
+
+  button {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 8px 13px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.05s;
+  }
+  button:hover { border-color: var(--brand-dim); background: var(--surface); }
+  button:active { transform: translateY(1px); }
+  button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  button.ghost { background: transparent; color: var(--muted); }
+  button.approve:hover { border-color: var(--approve); }
+  button.revoke:hover { border-color: var(--block); }
+
+  /* ---------- Chat transcript ---------- */
+  .transcript {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .empty {
+    margin: auto;
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .empty .big { font-size: 30px; display: block; margin-bottom: 10px; }
+
+  .msg { display: flex; animation: rise 0.28s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .msg.user { justify-content: flex-end; }
+  .bubble {
+    max-width: 82%;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .msg.user .bubble {
+    background: rgba(139,125,240,0.14);
+    border: 1px solid var(--brand-dim);
+    border-bottom-right-radius: 4px;
+    font-family: var(--mono);
+  }
+  .msg.agent .bubble {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 4px;
+  }
+
+  .toolcall {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .toolcall .arrow { color: var(--brand); }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    animation: pop 0.22s ease both;
+  }
+  @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .chip.ALLOWED { color: var(--allow); background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.4); }
+  .chip.NEEDS_APPROVAL { color: var(--approve); background: rgba(227,160,8,0.12); border: 1px solid rgba(227,160,8,0.4); }
+  .chip.BLOCKED { color: var(--block); background: rgba(240,79,79,0.12); border: 1px solid rgba(240,79,79,0.4); }
+
+  .action { margin: 9px 0 4px; font-size: 14px; }
+  .reason { color: var(--muted); font-size: 13px; font-family: var(--mono); line-height: 1.5; }
+  .listing { font-family: var(--mono); font-size: 13px; white-space: pre-wrap; line-height: 1.6; }
+
+  .system {
+    align-self: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 14px;
+    animation: rise 0.28s ease both;
+  }
+  .system b { color: var(--text); font-weight: 600; }
+
+  /* ---------- Walking-goose "thinking" indicator ---------- */
+  .thinking { display: flex; animation: rise 0.28s ease both; }
+  .thinking .bubble {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .walk-track { position: relative; width: 92px; height: 24px; flex: none; }
+  .goose-walk {
+    position: absolute; left: 0; top: 1px;
+    font-size: 20px; line-height: 1;
+    animation: stroll 2.2s ease-in-out infinite alternate, waddle 0.45s ease-in-out infinite;
+    will-change: left, transform;
+  }
+  .thinking .label { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  @keyframes stroll { from { left: 0; } to { left: calc(100% - 22px); } }
+  @keyframes waddle {
+    0%   { transform: translateY(0)    rotate(-9deg); }
+    25%  { transform: translateY(-4px) rotate(0deg); }
+    50%  { transform: translateY(0)    rotate(9deg); }
+    75%  { transform: translateY(-4px) rotate(0deg); }
+    100% { transform: translateY(0)    rotate(-9deg); }
+  }
+
+  /* ---------- Composer ---------- */
+  .composer { display: flex; flex-direction: column; gap: 10px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 6px 11px;
+  }
+  .chip-btn:hover { color: var(--text); border-color: var(--brand-dim); background: var(--surface); }
+
+  .inputrow { display: flex; gap: 10px; }
+  .inputrow input {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .inputrow input::placeholder { color: var(--muted); }
+  .inputrow input:focus { outline: none; border-color: var(--brand); }
+  .send { background: var(--brand); color: #0E1420; font-weight: 600; border-color: var(--brand); }
+  .send:hover { background: #9d90f5; border-color: #9d90f5; }
+
+  @media (max-width: 640px) {
+    .app { padding: 12px; }
+    .controls { margin-left: 0; width: 100%; }
+    .brandmark { border-right: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .msg, .system, .chip { animation: none; }
+    .grant .bar > i { transition: none; }
+    .goose-walk { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="authority">
+      <div class="brandmark">
+        <span class="goose">🪿</span>
+        <span class="name"><b>goose</b> <span>×</span> SpiceDB</span>
+      </div>
+      <div class="chain" id="chain" aria-label="delegation state"></div>
+      <div class="controls">
+        <button class="approve" id="approveBtn">Approve prod · 10m</button>
+        <button class="revoke" id="revokeStagingBtn">Revoke staging</button>
+        <button class="revoke" id="revokeProdBtn">Revoke prod</button>
+        <button class="ghost" id="resetBtn" title="Re-seed and reset versions">Reset</button>
+      </div>
+    </header>
+
+    <main class="transcript" id="transcript" aria-live="polite">
+      <div class="empty" id="empty">
+        <span class="big">🪿</span>
+        Ask the agent to deploy something.<br />
+        It runs as you — SpiceDB decides what it may actually do.
+      </div>
+    </main>
+
+    <div class="composer">
+      <div class="chips" id="chips"></div>
+      <div class="inputrow">
+        <input id="input" type="text" autocomplete="off"
+               placeholder="Deploy checkout to staging…" aria-label="Ask the agent" />
+        <button class="send" id="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const PRESETS = [
+  "Deploy checkout to staging",
+  "Deploy checkout to production",
+  "Roll back checkout in staging",
+  "Tear down production",
+  "What can I see?",
+];
+
+const transcript = document.getElementById("transcript");
+const empty = document.getElementById("empty");
+const input = document.getElementById("input");
+let grants = [];             // last known grants from /api/state
+const barMax = {};           // per-env max remaining seconds seen (for the depleting bar)
+
+function el(tag, cls, html) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html !== undefined) n.innerHTML = html;
+  return n;
+}
+function esc(s) {
+  return (s ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+function scroll() { transcript.scrollTop = transcript.scrollHeight; }
+function clearEmpty() { if (empty) empty.remove(); }
+
+function addUser(text) {
+  clearEmpty();
+  const m = el("div", "msg user");
+  m.appendChild(el("div", "bubble", esc(text)));
+  transcript.appendChild(m); scroll();
+}
+
+function addSystem(html) {
+  clearEmpty();
+  transcript.appendChild(el("div", "system", html));
+  scroll();
+}
+
+function addAgent(data) {
+  clearEmpty();
+  const m = el("div", "msg agent");
+  const b = el("div", "bubble");
+  if (!data.understood) {
+    b.appendChild(el("div", "reason", esc(data.reply)));
+  } else if (data.op === "list") {
+    b.appendChild(el("div", "toolcall", '<span class="arrow">▸</span> ' + esc(data.tool_call)));
+    b.appendChild(el("div", "listing", esc(data.reply)));
+  } else {
+    b.appendChild(el("div", "toolcall", '<span class="arrow">▸</span> ' + esc(data.tool_call)));
+    if (data.decision) {
+      const label = data.decision.replace("_", " ");
+      const icon = { ALLOWED: "✓", NEEDS_APPROVAL: "⏸", BLOCKED: "⛔" }[data.decision] || "";
+      b.appendChild(el("span", "chip " + data.decision, icon + " " + label));
+    }
+    if (data.action) b.appendChild(el("div", "action", esc(data.action)));
+    if (data.reason) b.appendChild(el("div", "reason", esc(data.reason)));
+  }
+  m.appendChild(b);
+  transcript.appendChild(m); scroll();
+}
+
+function addThinking() {
+  clearEmpty();
+  const m = el("div", "msg thinking");
+  const b = el("div", "bubble");
+  const track = el("div", "walk-track");
+  track.appendChild(el("span", "goose-walk", "🪿"));
+  b.appendChild(track);
+  b.appendChild(el("div", "label", "goose is checking with SpiceDB…"));
+  m.appendChild(b);
+  transcript.appendChild(m); scroll();
+  return m;
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function send(text) {
+  const t = text.trim();
+  if (!t) return;
+  addUser(t);
+  input.value = "";
+  const thinking = addThinking();
+  const started = performance.now();
+  let data = null, failed = false;
+  try {
+    const res = await fetch("/api/request", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: t }),
+    });
+    data = await res.json();
+  } catch (e) {
+    failed = true;
+  }
+  // Local checks are near-instant; hold the walk long enough to read on camera.
+  const wait = 1400 - (performance.now() - started);
+  if (wait > 0) await sleep(wait);
+  thinking.remove();
+  if (failed) addSystem("Could not reach the server — is <b>python web.py</b> running?");
+  else addAgent(data);
+  refreshState();
+}
+
+async function approve() {
+  const res = await fetch("/api/approve", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ environment: "production", minutes: 10 }),
+  });
+  const d = await res.json();
+  addSystem(d.ok
+    ? '🔑 <b>alice</b> approved <b>production</b> for 10 min'
+    : "Approval refused");
+  refreshState();
+}
+
+async function revokeEnv(env) {
+  const res = await fetch("/api/revoke", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ environment: env }),
+  });
+  const d = await res.json();
+  if (!d.ok) { addSystem("Revoke refused"); return; }
+  if (env === "staging") {
+    addSystem('✂️ <b>alice</b> revoked the <b>staging</b> delegation — production autonomy is gated by it, so it suspends too');
+  } else {
+    addSystem('✂️ <b>alice</b> revoked the <b>' + esc(env) + '</b> delegation');
+  }
+  refreshState();
+}
+
+async function reset() {
+  await fetch("/api/reset", { method: "POST" });
+  transcript.innerHTML = "";
+  Object.keys(barMax).forEach(k => delete barMax[k]);
+  addSystem("↺ Demo reset — staging delegated for 60 min, versions restored");
+  refreshState();
+}
+
+async function refreshState() {
+  try {
+    const res = await fetch("/api/state");
+    const s = await res.json();
+    grants = s.grants || [];
+    renderChain(s);
+  } catch (e) { /* server may be restarting; keep last render */ }
+}
+
+function fmt(sec) {
+  if (sec <= 0) return "expired";
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+function renderChain(s) {
+  const chain = document.getElementById("chain");
+  chain.innerHTML = "";
+  chain.appendChild(nodeEl("human", "delegator", "user:" + (s.delegator || "—")));
+
+  // Identity delegation (alice -> agent) always holds; the autonomy link is live
+  // only while the agent has an effective grant somewhere.
+  const anyEffective = grants.some(g => g.effective);
+  chain.appendChild(linkEl("delegates", true));
+  chain.appendChild(nodeEl("agent", "agent", "agent:" + s.agent));
+  chain.appendChild(linkEl("grants", anyEffective));
+
+  const box = el("div", "grants");
+  if (grants.length === 0) {
+    box.appendChild(el("div", "no-grant", "no active delegation"));
+  } else {
+    grants.forEach(g => box.appendChild(grantEl(g)));
+  }
+  chain.appendChild(box);
+}
+
+function nodeEl(cls, role, id) {
+  const n = el("div", "node " + cls);
+  n.appendChild(el("div", "role", role));
+  n.appendChild(el("div", "id", esc(id)));
+  return n;
+}
+function linkEl(label, active) {
+  const l = el("div", "link" + (active ? "" : " broken"));
+  l.appendChild(el("div", "wire", active ? "──▶" : "╌╌╳"));
+  l.appendChild(el("div", "label", label));
+  return l;
+}
+function grantEl(g) {
+  const rem = g.expires_at ? (new Date(g.expires_at).getTime() - Date.now()) / 1000 : null;
+  const suspended = g.effective === false;
+  const wrap = el("div", "grant" + (suspended ? " suspended" : ""));
+  wrap.dataset.expires = g.expires_at || "";
+  wrap.dataset.env = g.environment;
+  wrap.dataset.suspended = suspended ? "1" : "";
+  const row = el("div", "env");
+  row.appendChild(el("span", null, esc(g.environment)));
+  row.appendChild(el("span", "clock", "⏳ " + (rem === null ? "—" : fmt(rem))));
+  wrap.appendChild(row);
+  if (rem !== null) {
+    barMax[g.environment] = Math.max(barMax[g.environment] || 0, rem);
+    const pct = Math.max(0, Math.min(100, (rem / barMax[g.environment]) * 100));
+    const bar = el("div", "bar");
+    bar.appendChild(el("i"));
+    bar.firstChild.style.width = pct + "%";
+    wrap.appendChild(bar);
+    if (!suspended && rem < 120) wrap.classList.add("expiring");
+  }
+  if (suspended) wrap.appendChild(el("div", "tag", "suspended · gated by staging"));
+  return wrap;
+}
+
+// Local 1s tick keeps the countdown/bar smooth between 5s state polls.
+function tick() {
+  document.querySelectorAll(".grant").forEach(wrap => {
+    const iso = wrap.dataset.expires;
+    if (!iso) return;
+    const rem = (new Date(iso).getTime() - Date.now()) / 1000;
+    const clock = wrap.querySelector(".clock");
+    if (clock) clock.textContent = "⏳ " + fmt(rem);
+    const env = wrap.dataset.env;
+    const fill = wrap.querySelector(".bar > i");
+    if (fill && barMax[env]) {
+      fill.style.width = Math.max(0, Math.min(100, (rem / barMax[env]) * 100)) + "%";
+    }
+    wrap.classList.toggle("expiring", rem < 120);
+  });
+}
+
+// wire up
+PRESETS.forEach(p => {
+  const chips = document.getElementById("chips");
+  const b = el("button", "chip-btn", esc(p));
+  b.addEventListener("click", () => send(p));
+  chips.appendChild(b);
+});
+document.getElementById("sendBtn").addEventListener("click", () => send(input.value));
+input.addEventListener("keydown", e => { if (e.key === "Enter") send(input.value); });
+document.getElementById("approveBtn").addEventListener("click", approve);
+document.getElementById("revokeStagingBtn").addEventListener("click", () => revokeEnv("staging"));
+document.getElementById("revokeProdBtn").addEventListener("click", () => revokeEnv("production"));
+document.getElementById("resetBtn").addEventListener("click", reset);
+
+refreshState();
+setInterval(refreshState, 5000);
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
