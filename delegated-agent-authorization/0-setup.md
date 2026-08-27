@@ -15,7 +15,7 @@ git clone https://github.com/authzed/workshops.git
 cd workshops/delegated-agent-authorization/starter
 ```
 
-## Option A — Run locally with Docker
+## Option A - Run locally with Docker
 
 Copy the example `.env` file:
 
@@ -37,7 +37,8 @@ docker compose up -d --wait
 ```
 
 This brings up two containers — `postgres` (SpiceDB's datastore) and `spicedb` — plus a
-short-lived `spicedb-migrate` container that runs the schema migration and exits. SpiceDB serves
+short-lived `spicedb-migrate` container that runs SpiceDB's own datastore migration (setting up
+its Postgres tables — not the `schema.zed` you'll write later) and exits. SpiceDB serves
 on `localhost:50051` with a preshared key of `devtoken` (not recommended for prod, obviously) and
 `--enable-experimental-relationship-expiration` turned on, which later checkpoints use for
 time-bound grants.
@@ -48,13 +49,15 @@ Create a virtual environment and install dependencies:
 python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 ```
 
-## Option B — Run in GitHub Codespaces
+## Option B - Run in GitHub Codespaces
 
 For anyone who can't run Docker locally, Codespaces is the path. The repo ships with a
 `.devcontainer/` config that handles everything automatically.
 
 1. On the repo page, click **Code ▸ Codespaces ▸ Create codespace on main**
-2. The devcontainer installs dependencies and runs `docker compose up -d` on startup
+2. On startup the devcontainer creates the `.venv`, installs dependencies into it, and runs
+   `docker compose up -d` — so the `.venv/bin/python` path the goose step below relies on exists
+   here too
 3. Once the Codespace is ready, `cd delegated-agent-authorization/starter` and copy `.env.example`
    to `.env` as in Option A
 
@@ -78,7 +81,9 @@ If you do want the goose path:
    `SPICEDB_ENDPOINT=localhost:50051`, `SPICEDB_TOKEN=devtoken`, `AGENT_SUBJECT=agent:goose_alice`.
 
 `goose-extension.md` also has a manual verification checklist for once goose is wired up — worth
-skimming now, but there's nothing to run yet: SpiceDB has no schema until Checkpoint 1.
+skimming now, but there's nothing to run yet: SpiceDB has no authorization schema until
+Checkpoint 2, where you write it and the agent's decisions (via goose or the web UI) first come
+online.
 
 ---
 
@@ -86,7 +91,8 @@ skimming now, but there's nothing to run yet: SpiceDB has no schema until Checkp
 
 - [ ] Cloned the repo
 - [ ] Infrastructure is up — Docker (`docker compose up -d --wait`) or Codespaces
-- [ ] Virtual environment created and `pip install -r requirements.txt` succeeded
+- [ ] `.venv` created and dependencies installed — manually in Option A, automatically by the
+      devcontainer in Option B
 - [ ] (Goose path only) goose installed with an LLM provider configured, and the `deploybot`
       extension registered per `goose-extension.md`
 
