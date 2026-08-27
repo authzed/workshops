@@ -37,11 +37,11 @@ goose configure
 ## Manually verifying the goose integration
 
 This step is inherently manual: it drives goose through a live LLM-backed session, which is
-outside what an automated test can exercise. **We did not install goose or run this checklist
-as part of building this repo — no goose install and no LLM API key were used.** The identical
-decision sequence is instead proven deterministically and repeatably by `tests/test_arc.py`,
-which calls `authz.decide` (the same function `deploybot_server.py` calls on every tool
-invocation) directly against a real SpiceDB instance.
+outside what an automated test can exercise. Running goose is optional for this workshop — you
+do not need it (or an LLM API key) installed. The same decision sequence is proven
+deterministically and repeatably by `scripts/verify.py`, which calls `authz.decide` (the same
+function `deploybot_server.py` calls on every tool invocation) directly against a real SpiceDB
+instance. Run it per checkpoint, e.g. `python scripts/verify.py --checkpoint 2`.
 
 If you do have goose installed and an LLM key configured, here is the checklist to confirm the
 wiring end to end:
@@ -59,4 +59,5 @@ Drive these prompts and confirm the deploybot tool output:
 5. In another terminal: `python revoke.py --env staging` → then in goose "deploy checkout to staging again" → **⏸️ NEEDS APPROVAL**.
 
 If goose is not installed / no LLM key is available, this step is skipped and the arc is
-covered by `tests/test_arc.py` (which exercises the identical decision sequence deterministically).
+covered by `scripts/verify.py` (which exercises the identical decision sequence
+deterministically — run `python scripts/verify.py --checkpoint 2` and up).
