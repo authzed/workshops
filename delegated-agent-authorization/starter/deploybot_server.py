@@ -16,6 +16,10 @@ mcp = FastMCP("deploybot")
 
 
 def _load_state() -> dict:
+    # No infra_state.json yet (fresh checkout, before the web UI's /api/reset has
+    # ever run) -> treat as "no environments deployed" instead of crashing.
+    if not STATE_PATH.exists():
+        return {}
     return json.loads(STATE_PATH.read_text())
 
 
