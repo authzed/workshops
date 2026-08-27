@@ -137,8 +137,8 @@ gone on the very next check.
 
 Both are visible in the web UI: reset the demo, approve or bootstrap a grant, and watch its card in
 the **grants** panel — a live countdown with a shrinking bar. Let it hit zero, or hit **Revoke**,
-and the card either disappears or flips to a dashed "suspended" state on the next 5-second poll,
-because `/api/state` is calling the same `check()` you are.
+and the staging card disappears from the panel on the next 5-second poll, because `/api/state`'s
+`ReadRelationships` no longer returns the grant — expired or deleted, it's simply gone.
 
 ---
 
