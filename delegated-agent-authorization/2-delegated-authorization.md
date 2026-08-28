@@ -8,20 +8,27 @@ first, or nobody involved is allowed to do this at all.
 
 ---
 
-## ReBAC, in one paragraph
+## Permissions are a graph, not a table
 
-Most authorization systems people reach for first are **RBAC** — role-based access control. You
-assign `alice` the role `deploy-engineer`, and a table somewhere says that role can deploy. It
-works until you need "the person `alice` is deploying *for*" or "whoever approved this specific
-change" — relationships between subjects and resources that a flat role list can't express without
-exploding into a role per case.
+Think about how a corporate card works when you hand it to an assistant. They can book flights and
+cover the team's lunch, because you can — the card doesn't grant some separate blanket authority,
+it borrows yours. A role called `has-corporate-card` can't express that; you'd need a new role for
+every person an assistant might be borrowing authority from. Swap "assistant" for "AI agent" and
+"corporate card" for "who gets to touch production," and that's this checkpoint's actual problem.
+
+**RBAC** — role-based access control — is what most systems reach for first, and it's a fine
+choice when permissions really do attach to a role rather than a relationship: assign `alice` the
+role `deploy-engineer`, a table somewhere says that role can deploy, done. It breaks down exactly
+where the corporate-card problem lives — "the person `alice` is deploying *for*" or "whoever
+approved this specific change" are relationships between subjects and resources that a flat role
+list can't express without exploding into a role per case.
 
 **ReBAC** — relationship-based access control — models permissions as a graph instead: subjects,
 resources, and the relations between them, with permissions defined as graph traversals over those
 relations. This is the model Google published in 2019 as
 [**Zanzibar**](https://research.google/pubs/pub48190/), the system that authorizes Google Drive,
 Docs, and Calendar. SpiceDB is an open-source implementation of the same ideas. A permission check
-in SpiceDB isn't a table lookup — it's "is there a path through the relationship graph from this
+in SpiceDB isn't a table lookup. It's "is there a path through the relationship graph from this
 subject to this resource with this permission." That graph-walk is exactly what lets you model
 delegation directly: an `agent` node with a `delegator` edge to the `user` it acts for, and
 permissions that consider both.
@@ -52,22 +59,22 @@ definition environment {
 
 Walking it:
 
-- **`user`** — an empty definition. Humans don't need relations of their own here; they're
+- `user` is an empty definition. Humans don't need relations of their own here; they're
   subjects that other things point to.
-- **`agent { relation delegator: user }`** — this is the delegation edge. An agent doesn't hold
+- `agent { relation delegator: user }` is the delegation edge. An agent doesn't hold
   authority on its own; it has exactly one relation, `delegator`, pointing at the human it acts
   for. Everything about "the agent may do only what its human could" flows from this one edge.
-- **`environment`** — the resource being deployed to, approved for, or destroyed. It has four
+- `environment` is the resource being deployed to, approved for, or destroyed. It has four
   relations (`direct_deployer`, `agent_deployer`, `approver`, `destroyer`) and three permissions
   computed from them:
-  - `permission deploy = direct_deployer + agent_deployer` — a **union**. A human wired up as
+  - `permission deploy = direct_deployer + agent_deployer` is a **union**. A human wired up as
     `direct_deployer` can deploy, and separately, an agent wired up as `agent_deployer` can
     deploy. Same permission, two independent ways to earn it — that's the delegation: granting
     `agent_deployer` on an environment is what lets an *agent* deploy there without a human doing
     it directly.
-  - `permission approve = approver` — a human-only relation. Nothing gives an agent `approve`,
+  - `permission approve = approver` is a human-only relation. Nothing gives an agent `approve`,
     so agents can never approve their own grants.
-  - `permission destroy = destroyer` — deliberately its own relation, not folded into `deploy`.
+  - `permission destroy = destroyer` is deliberately its own relation, not folded into `deploy`.
     Deploying a service and tearing down an entire environment are different levels of
     consequence, so they get different permissions with different holders.
 
@@ -88,14 +95,14 @@ graph mean something for this workshop:
 
 - `alice` is `direct_deployer` on **both** `staging` and `production` — she can deploy either
   herself, right now, no agent involved.
-- `alice` is `approver` on `production` — she's the one who can sign off on the agent's production
+- `alice` is `approver` on `production`. She's the one who can sign off on the agent's production
   requests.
 - `sre_admin` is `destroyer` on **both** environments, and is the *only* one. Not even Alice can
   destroy — tearing down an environment is scoped to a separate role entirely.
-- `goose_alice` (the agent) has `delegator: alice` — it acts for Alice specifically. `decide()`
+- `goose_alice` (the agent) has `delegator: alice`. It acts for Alice specifically. `decide()`
   will read this edge to find out whose authority to fall back on.
 - `goose_alice` is `agent_deployer` on `staging` only. That's the one delegated grant this
-  checkpoint hands the agent directly — staging autonomy, nothing more.
+  checkpoint hands the agent directly. Staging autonomy, nothing more.
 
 Nobody made the agent `agent_deployer` on `production`, and nobody made it (or Alice) a
 `destroyer` anywhere. Those gaps are intentional — they're what `decide()` is about to expose as
@@ -125,16 +132,16 @@ async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
 `CheckPermission`, the other reads the `agent#delegator` relationship straight off the graph. The
 logic is a strict fallthrough, evaluated in this order:
 
-1. **Does the agent itself hold the permission?** — `check(client, "agent", agent_id, permission,
+1. Does the agent itself hold the permission? `check(client, "agent", agent_id, permission,
    "environment", environment_id)` asks SpiceDB the same question `deploy = direct_deployer +
    agent_deployer` was built to answer: is there a path from `agent:goose_alice` to `deploy` on
    `environment:staging`? For staging, yes — `ALLOWED`, and the agent never has to ask anyone.
-2. **If not, could the human it acts for do this?** — `read_delegator()` walks the `delegator`
+2. If not, could the human it acts for do this? `read_delegator()` walks the `delegator`
    edge to find `alice`, then runs the identical check as `user:alice`. For production, Alice
-   holds `deploy` directly (`direct_deployer`) but the agent doesn't — so this branch fires:
+   holds `deploy` directly (`direct_deployer`) but the agent doesn't, so this branch fires:
    `NEEDS_APPROVAL`. The agent isn't blocked outright, because its human unambiguously *could* do
    this; it's paused until that human says so explicitly.
-3. **If neither holds it, `BLOCKED`.** — for `destroy` on any environment, the agent has no
+3. If neither holds it, `BLOCKED`. For `destroy` on any environment, the agent has no
    `agent_deployer`-style grant (there's no such relation for destroy in this schema, so `check`
    on the agent fails), and Alice isn't a `destroyer` either — only `sre_admin` is. Neither side
    of the delegation chain has the permission, so there's nothing to escalate to. `BLOCKED` is
@@ -228,8 +235,8 @@ in the middle, and checks the exact same four outcomes you just watched in the U
 
 Nothing in this checkpoint told the agent, in English, "you may deploy staging but not
 production, and never destroy anything." There's no system-prompt instruction to argue with, talk
-around, or forget three turns into a conversation. The agent's tool call runs through
-`deploybot_server._decide_and_mutate`, which calls `decide()` before it ever touches
+around, or forget three turns into a conversation (the usual jailbreak playbook). The agent's tool
+call runs through `deploybot_server._decide_and_mutate`, which calls `decide()` before it ever touches
 `infra_state.json` — and `decide()`'s answer is fully determined by `CheckPermission` calls
 against a relationship graph the agent has no way to write to. Ask the same question a thousand
 different ways, through goose or the web UI or a hand-written script, and you get the same

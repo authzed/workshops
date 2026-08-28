@@ -11,13 +11,13 @@ agents, many resources, a real platform team on the other end of the pager."
 ## One schema, not one authorization system per resource
 
 Nothing about `schema.zed` is specific to deploy agents. `agent { relation delegator: user }` is
-the entire idea of delegation, expressed once, as a graph edge — not a column on a `deploys` table,
+the entire idea of delegation, expressed once, as a graph edge: not a column on a `deploys` table,
 not a special case in a `DeployService.deploy()` method, not something a second microservice
 re-derives on its own. Add a new resource type to the platform — a database, a feature-flag
 service, a CI pipeline — and it either reuses `direct_deployer` / `agent_deployer` / `gated_by`
 directly or extends the same pattern by a line or two. Add a new agent and it's one `delegator`
 edge. Nobody stands up a tenth bespoke permission system because the platform grew a tenth
-resource type; the graph just gets one more kind of node in it.
+resource type; the graph just gains one more kind of node.
 
 That's the payoff of modeling authority as relationships instead of scattering `if user.role ==
 "admin"` checks through the codebase: the schema is the single place authority is defined, and
@@ -26,10 +26,10 @@ every service that needs an answer asks the same graph the same kind of question
 ## `CheckBulkPermissions` — asking about many resources at once
 
 `decide()` in this workshop asks one question at a time: can this agent do *this* thing to *this*
-environment. That's the right shape for a mutating call — `deploy` and `destroy` each act on one
-resource. But an agent with a bigger surface area often needs a different question: **"which of
-these N resources may I touch at all?"** — before it decides what to do next, or before a UI
-renders a list of options.
+environment. That's the right shape for a mutating call: `deploy` and `destroy` each act on one
+resource. But an agent with a bigger surface area often needs a different question, one worth
+asking before it decides what to do next or before a UI renders a list of options: *which of
+these N resources may I touch at all?*
 
 Looping a `CheckPermission` call per resource works, but it's N round trips to answer one
 question, and nothing guarantees they're all evaluated against the same snapshot of the graph.
@@ -38,14 +38,14 @@ answers all of them in a single call, against one consistent read. `deploybot`'s
 `list_environments` — deliberately left ungated in this workshop — is exactly the tool that would
 reach for this at scale: instead of "list every environment" as an unchecked read, it becomes "of
 these N environments, which does this agent hold `view` on," answered in one round trip instead of
-N. (If you don't already have the candidate list — you want *every* resource a subject can reach,
-not a filter over a known set — `LookupResources` is the streaming counterpart to reach for
+N. (If you don't already have the candidate list, and want *every* resource a subject can reach
+rather than a filter over a known set, `LookupResources` is the streaming counterpart to reach for
 instead.)
 
 ## On-behalf-of vs. advisory enforcement
 
-Every check in this workshop is **on-behalf-of, blocking enforcement**: `decide()`'s answer isn't
-a suggestion, it's the gate itself — `deploybot_server.py` calls it *before* touching
+Every check in this workshop is **on-behalf-of, blocking enforcement**. `decide()`'s answer isn't
+a suggestion; it's the gate itself: `deploybot_server.py` calls it *before* touching
 `infra_state.json`, and an `ALLOWED`/`NEEDS_APPROVAL`/`BLOCKED` verdict is the only way anything
 happens. The agent never gets to act first and ask forgiveness later.
 
@@ -64,11 +64,11 @@ wiring.
 Two things were left ungated on purpose, to keep every checkpoint's diff small and centered on one
 new idea at a time:
 
-- **`list_environments` has no permission check.** Every environment in `infra_state.json` is
+- `list_environments` has no permission check. Every environment in `infra_state.json` is
   visible to every agent, always. A production version gates it behind a `view` permission and
   filters the listing to what the caller can actually see — exactly the `CheckBulkPermissions`
   shape described above.
-- **`revoke.py` has no permission check.** Anyone who can run the script can delete anyone's
+- `revoke.py` has no permission check. Anyone who can run the script can delete anyone's
   delegation on any environment. A production version gates revocation behind a `manage`
   permission, so only an environment's own operators can pull an agent's access.
 
@@ -104,8 +104,8 @@ Drive, Docs, and Calendar at global scale for years. The graph-walk you used for
 inheritance; deploy agents and shared documents turn out to be the same authorization problem
 wearing different resource names.
 
-Everything here ran against a single local `spicedb serve` container with a Postgres datastore —
-fine for a workshop, not how you'd run this for a real platform. In production, SpiceDB is
+Everything here ran against a single local `spicedb serve` container with a Postgres datastore.
+That's fine for a workshop, not how you'd run this for a real platform. In production, SpiceDB is
 typically deployed via the
 [SpiceDB Operator](https://authzed.com/docs/spicedb/ops/operator) on Kubernetes, which manages
 the cluster, datastore migrations, and rolling upgrades as a `SpiceDBCluster` resource instead of

@@ -1,12 +1,12 @@
 # Setup
 
 In this workshop you build a DevOps deploy agent on [goose](https://github.com/aaif-goose/goose)
-(the open-source agent from the Agentic AI Foundation), then gate its every action with
-delegated, fine-grained authorization from SpiceDB — scoped grants, time-bound windows, instant
-revocation, and a permission hierarchy where revoking a base grant cascades to what depends on
-it. The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP extension,
-docker-compose, seed/approve/revoke scripts, web UI) is provided, and you'll write the schema and
-the decision engine yourself across the checkpoints.
+(the open-source agent from the Agentic AI Foundation), then gate every action it takes with
+delegated, fine-grained authorization from SpiceDB: scoped grants, time-bound windows, instant
+revocation, and a permission hierarchy where revoking a base grant cascades to everything that
+depends on it. The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP
+extension, docker-compose, seed/approve/revoke scripts, web UI) is already there, and you'll
+write the schema and the decision engine yourself across the checkpoints.
 
 ## Get the code
 
@@ -23,10 +23,10 @@ Copy the example `.env` file:
 cp .env.example .env
 ```
 
-`.env` holds the SpiceDB connection details the app itself needs — endpoint, preshared token,
+`.env` holds the SpiceDB connection details the app itself needs: endpoint, preshared token,
 and which agent identity the deploy bot acts as. Nothing in this repo talks to an LLM directly,
 so there's no LLM key in here. The LLM key only comes into play later, and only if you use the
-goose path (see [Install goose](#install-goose-and-register-the-extension) below) — the
+goose path (see [Install goose](#install-goose-and-register-the-extension) below). The
 deterministic path (`scripts/verify.py` and the web UI, introduced in later checkpoints) needs no
 LLM at all.
 
@@ -36,9 +36,9 @@ Start the infrastructure:
 docker compose up -d --wait
 ```
 
-This brings up two containers — `postgres` (SpiceDB's datastore) and `spicedb` — plus a
+This brings up two containers, `postgres` (SpiceDB's datastore) and `spicedb`, plus a
 short-lived `spicedb-migrate` container that runs SpiceDB's own datastore migration (setting up
-its Postgres tables — not the `schema.zed` you'll write later) and exits. SpiceDB serves
+its Postgres tables, not the `schema.zed` you'll write later) and exits. SpiceDB serves
 on `localhost:50051` with a preshared key of `devtoken` (not recommended for prod, obviously) and
 `--enable-experimental-relationship-expiration` turned on, which later checkpoints use for
 time-bound grants.
@@ -54,8 +54,8 @@ python3 -m venv .venv && source .venv/bin/activate && pip install -r requirement
 <!-- TODO: verify on a live Codespace before the conference -->
 
 For anyone who can't run Docker locally, Codespaces is the path. This repo's devcontainer config
-lives at `delegated-agent-authorization/starter/.devcontainer/devcontainer.json` — nested under
-`starter/`, not at the repo root — which most Codespaces-creation flows don't auto-detect. Be
+lives at `delegated-agent-authorization/starter/.devcontainer/devcontainer.json` (nested under
+`starter/`, not at the repo root), which most Codespaces-creation flows don't auto-detect. Be
 explicit about which folder you're opening:
 
 1. On the repo page, click **Code ▸ Codespaces ▸ Create codespace on main**. Because the
@@ -72,14 +72,14 @@ explicit about which folder you're opening:
 4. Once dependencies are installed and infra is up, `cd delegated-agent-authorization/starter` (if
    you're not already there) and copy `.env.example` to `.env` as in Option A.
 
-In short: Codespaces gets you most of the way there, but don't assume it's zero-config — confirm
-`.venv` and `docker compose ps` both look right before moving on, and fall back to the manual
-Dev Containers step above if they don't.
+Codespaces gets you most of the way there. It isn't zero-config: confirm `.venv` and
+`docker compose ps` both look right before moving on, and fall back to the manual Dev Containers
+step above if they don't.
 
 ## Install goose and register the extension
 
 Installing goose is optional for this workshop. Every checkpoint has a second, deterministic way
-to see the same decisions — `scripts/verify.py` plus a web UI, neither of which needs goose or an
+to see the same decisions: `scripts/verify.py` plus a web UI, neither of which needs goose or an
 LLM key. Install goose if you want to drive the agent with natural language ("Deploy checkout to
 staging") and watch its tool calls resolve through SpiceDB live.
 
@@ -95,7 +95,7 @@ If you do want the goose path:
    `deploybot_server.py`, plus three env vars the extension needs to reach SpiceDB:
    `SPICEDB_ENDPOINT=localhost:50051`, `SPICEDB_TOKEN=devtoken`, `AGENT_SUBJECT=agent:goose_alice`.
 
-`goose-extension.md` also has a manual verification checklist for once goose is wired up — worth
+`goose-extension.md` also has a manual verification checklist for once goose is wired up. Worth
 skimming now, but there's nothing to run yet: SpiceDB has no authorization schema until
 Checkpoint 2, where you write it and the agent's decisions (via goose or the web UI) first come
 online.

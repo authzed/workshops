@@ -13,9 +13,10 @@ staging's, enforced by the graph, not by anyone remembering to check.
 ## Contingent authority — why RBAC can't express this
 
 The policy you want is: "the agent may deploy production on its own only while it can also deploy
-staging on its own." That's not "the agent has role X," it's "the agent has role X *and* a second,
-independent fact about a different resource currently holds." RBAC assigns roles to subjects and
-stops there — a role is a static label, not a live query against another resource. To fake this
+staging on its own." RBAC can only ever hear the first half of that sentence: "the agent has role
+X." What you actually need is "the agent has role X *and* a second, independent fact about a
+different resource currently holds." RBAC assigns roles to subjects and stops there — a role is a
+static label, not a live query against another resource. To fake this
 dependency in a role system you'd need a role that means "agent-with-current-staging-autonomy," and
 you'd need to *maintain* it — write code somewhere that watches for staging revocation and
 downgrades the production role in lockstep, by hand, every time. Miss one code path and the two
@@ -128,7 +129,7 @@ python revoke.py --env staging
 production. And yet: ask for "deploy checkout to production" again, and it comes back
 ⏸️ **NEEDS APPROVAL** — the same verdict as if someone had revoked production directly, except
 nobody did. `agent_deploy` on production still needs `gated_by->agent_deployer`, that arrow still
-points at staging, and staging's `agent_deployer` relationship is gone — so the intersection goes
+points at staging, and staging's `agent_deployer` relationship is gone, so the intersection goes
 empty, and `deploy` falls back to the delegator check, same as any other lost grant. One delete,
 two environments affected, because the second one was never independent to begin with.
 

@@ -4,16 +4,16 @@ DevOps and Platform teams now work with hundreds of AI Agents in their internal 
 Agents usually run with credentials that can touch everything, including your production servers.
 This could lead to problems.
 
-This workshop will teach you how to add delegated authorization to your AI Agents, at scale.
+This workshop teaches you how to add delegated authorization to your AI Agents, at scale.
 
-We'll build a DevOps deploy agent on goose - the open-source agent from the Agentic AI Foundation
-and then give it fine-grained permissions using Relationship-Based Access Control (ReBAC). Along
-the way you'll get hands-on with the Google Zanzibar model of fine-grained authorization (ReBAC)
-and why it fits AI agents: scoped delegation, expiring grants, instant revocation, and
-hierarchical permissions where revoking staging access automatically suspends production too,
-something role-based systems can't express cleanly.
+We'll build a DevOps deploy agent on goose, the open-source agent from the Agentic AI Foundation,
+and give it fine-grained permissions using Relationship-Based Access Control (ReBAC). Along the
+way you'll get hands-on with the Google Zanzibar model behind it, and why it fits AI agents:
+scoped delegation, expiring grants, instant revocation, and hierarchical permissions where
+revoking staging access automatically suspends production too, something role-based systems
+can't express cleanly.
 
-This is a self-guided, hands-on workshop, and everything runs locally with open-source tooling.
+It's self-guided and hands-on, and everything runs locally with open-source tooling.
 
 ---
 
@@ -72,8 +72,7 @@ enough.
 | [Checkpoint 4 — Relationship-based hierarchy](4-relationship-based-hierarchy.md) | 20 min | Make production's autonomy contingent on staging's, and watch the cascade |
 | [Next steps](5-nextsteps.md) | 5 min | Zoom out to a real platform: bulk checks, on-behalf-of enforcement, scaling ReBAC |
 
-That's 90 minutes end to end, self-guided — it works equally well live or worked through on your
-own afterward.
+That's 90 minutes end to end, self-guided — it works equally well live or self-paced afterward.
 
 ## The full reference solution
 
