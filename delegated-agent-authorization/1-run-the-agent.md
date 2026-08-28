@@ -51,26 +51,28 @@ doing whatever it was asked.
 
 ---
 
-## Watch it over-reach (goose path)
+## Watch it over-reach — the web UI
 
-If you registered the `deploybot` extension in setup, open a session:
+The web UI is how you drive the agent throughout this workshop. It needs no LLM key: it turns your
+text into the same tool calls goose would, and hands them to the same gated backend. From
+`starter/`, with SpiceDB up:
 
 ```bash
-goose session
+python web.py
 ```
 
-Ask it to do something reasonable:
+Open `http://127.0.0.1:8000`. Type something reasonable into the request box:
 
 > Deploy checkout to production.
 
-goose calls `deploy(service="checkout", environment="production")`. It comes back
+The UI calls `deploy(service="checkout", environment="production")`. It comes back
 **✅ ALLOWED**, and the version bumps. Fine so far. That's a real deploy engineer's job.
 
 Now ask it to do something no agent should be able to decide on its own:
 
 > Tear down the production environment.
 
-goose calls `destroy(environment="production")`. It comes back **✅ ALLOWED**, and production is
+The UI calls `destroy(environment="production")`. It comes back **✅ ALLOWED**, and production is
 gone. No pause, no approval step, no distinction between "deploy a service" and "delete an entire
 environment." The tool's own docstring says destroying "requires elevated authority" — but that's
 just a comment for humans reading the code. Nothing enforces it. The stub doesn't look at
@@ -85,27 +87,22 @@ downstream of the prompt is checking.
 
 ---
 
-## Deterministic path
+## Or drive it with goose (optional)
 
-Don't have goose installed, or want a repeatable check instead of a live LLM session? From
-`starter/`, with SpiceDB up:
+If you installed goose and registered the `deploybot` extension in setup, open a session and give
+it the same two requests:
 
 ```bash
-python scripts/verify.py --checkpoint 1
+goose session
 ```
 
-Output:
+> Deploy checkout to production.
+>
+> Tear down the production environment.
 
-```
-Verifying Checkpoint 1...
-  ✅ stub allows destroy production (over-reach): got Decision.ALLOWED, want Decision.ALLOWED
-PASS ✅
-```
-
-This calls the exact same `authz.decide()` that `deploybot_server.py` calls on every tool
-invocation (`decide(client, "goose_alice", "destroy", "production")`) — no LLM involved, no goose
-required. It asks the stub the most dangerous question in the workshop, "can this agent destroy
-production," and the stub says yes. That's the whole bug, isolated to one deterministic assertion.
+goose calls the identical `deploy` / `destroy` tools the web UI calls, gated by the identical
+stubbed `decide()`, so you get the identical **✅ ALLOWED** both times. Same bug, driven by a real
+LLM instead of the request box.
 
 ---
 
@@ -137,7 +134,7 @@ builds.
 
 ## Completion Milestone: Checkpoint 1
 
-- [ ] Ran the agent — via `goose session`, `scripts/verify.py --checkpoint 1`, or both
+- [ ] Ran the agent — via the web UI (`python web.py`), a `goose session`, or both
 - [ ] Reproduced the over-reach: `destroy production` returns `ALLOWED` with no schema, no check,
       no pause
 - [ ] Can point to the exact line in `authz.py` that makes this happen

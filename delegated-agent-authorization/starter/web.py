@@ -7,20 +7,21 @@ logic of its own — what you see is exactly what SpiceDB decides.
 
 Run:  python web.py   (then open http://127.0.0.1:8000)
 """
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from authzed.api.v1 import Consistency, ReadRelationshipsRequest
+from google.protobuf.timestamp_pb2 import Timestamp
+from authzed.api.v1 import Consistency, ReadRelationshipsRequest, WriteRelationshipsRequest
 
 import bootstrap
 import deploybot_server
 from approve import approve
 from authz import check, read_delegator
-from relationships import agent_deployer_filter
+from relationships import agent_deployer_filter, rel
 from revoke import revoke
 from spicedb_client import make_client
 
@@ -78,6 +79,11 @@ class RevokeBody(BaseModel):
     environment: str = "staging"
 
 
+class GrantBody(BaseModel):
+    environment: str = "staging"
+    seconds: int = 30
+
+
 @app.get("/")
 async def index():
     return FileResponse(BASE / "static" / "index.html")
@@ -118,25 +124,41 @@ async def request_action(body: RequestBody):
 
 @app.get("/api/state")
 async def state():
+    # Defensive throughout: in Checkpoint 1 no schema exists yet, so the delegator
+    # read / relationship read / permission checks below all error. We degrade to an
+    # empty "no delegation configured" view so the web UI still loads and the chat
+    # (which routes through the stubbed decide()) shows the agent over-reaching.
     client = make_client()
-    delegator = await read_delegator(client, AGENT_ID)
+    try:
+        delegator = await read_delegator(client, AGENT_ID)
+    except Exception:
+        delegator = None
     grants = []
-    req = ReadRelationshipsRequest(
-        consistency=Consistency(fully_consistent=True),
-        relationship_filter=agent_deployer_filter(AGENT_ID),
-    )
-    async for resp in client.ReadRelationships(req):
-        r = resp.relationship
-        env = r.resource.object_id
-        expires_at = None
-        if r.HasField("optional_expires_at"):
-            dt = r.optional_expires_at.ToDatetime().replace(tzinfo=timezone.utc)
-            expires_at = dt.isoformat()
-        # A grant tuple can exist yet be suspended by the cascade (e.g. a prod grant
-        # after staging was revoked). `effective` is the actual deploy verdict.
-        effective = await check(client, "agent", AGENT_ID, "deploy", "environment", env)
-        grants.append({"environment": env, "expires_at": expires_at, "effective": effective})
-    versions = deploybot_server._load_state()
+    try:
+        req = ReadRelationshipsRequest(
+            consistency=Consistency(fully_consistent=True),
+            relationship_filter=agent_deployer_filter(AGENT_ID),
+        )
+        async for resp in client.ReadRelationships(req):
+            r = resp.relationship
+            env = r.resource.object_id
+            expires_at = None
+            if r.HasField("optional_expires_at"):
+                dt = r.optional_expires_at.ToDatetime().replace(tzinfo=timezone.utc)
+                expires_at = dt.isoformat()
+            # A grant tuple can exist yet be suspended by the cascade (e.g. a prod grant
+            # after staging was revoked). `effective` is the actual deploy verdict.
+            try:
+                effective = await check(client, "agent", AGENT_ID, "deploy", "environment", env)
+            except Exception:
+                effective = False
+            grants.append({"environment": env, "expires_at": expires_at, "effective": effective})
+    except Exception:
+        grants = []  # no schema yet (Checkpoint 1)
+    try:
+        versions = deploybot_server._load_state()
+    except Exception:
+        versions = {}
     return {"agent": AGENT_ID, "delegator": delegator, "grants": grants, "versions": versions}
 
 
@@ -150,6 +172,23 @@ async def approve_action(body: ApproveBody):
 async def revoke_action(body: RevokeBody):
     code = await revoke(body.environment, AGENT_ID)
     return {"ok": code == 0, "environment": body.environment}
+
+
+@app.post("/api/grant-short")
+async def grant_short(body: GrantBody):
+    """Grant the agent a short-lived deploy window so you can watch it expire live in the
+    authority bar (used in Checkpoint 3). An operator/demo action: it writes the
+    agent_deployer grant directly with a seconds-scale expiration. Requires the schema to
+    allow expiration (`agent_deployer: agent with expiration`, from Checkpoint 3)."""
+    client = make_client()
+    ts = Timestamp()
+    ts.FromDatetime(datetime.now(timezone.utc) + timedelta(seconds=body.seconds))
+    update = rel("environment", body.environment, "agent_deployer", "agent", AGENT_ID, expires_at=ts)
+    try:
+        await client.WriteRelationships(WriteRelationshipsRequest(updates=[update]))
+        return {"ok": True, "environment": body.environment, "seconds": body.seconds}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:200]}
 
 
 @app.post("/api/reset")

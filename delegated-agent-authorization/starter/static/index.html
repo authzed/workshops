@@ -333,6 +333,7 @@
         <button class="approve" id="approveBtn">Approve prod · 10m</button>
         <button class="revoke" id="revokeStagingBtn">Revoke staging</button>
         <button class="revoke" id="revokeProdBtn">Revoke prod</button>
+        <button class="approve" id="grantShortBtn" title="Grant staging a 30-second window to watch it expire live">Grant staging · 30s</button>
         <button class="ghost" id="resetBtn" title="Re-seed and reset versions">Reset</button>
       </div>
     </header>
@@ -484,6 +485,18 @@ async function revokeEnv(env) {
   refreshState();
 }
 
+async function grantShort() {
+  const res = await fetch("/api/grant-short", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ environment: "staging", seconds: 30 }),
+  });
+  const d = await res.json();
+  addSystem(d.ok
+    ? '⏱️ granted <b>staging</b> a <b>30-second</b> window — watch the countdown expire in the bar above'
+    : 'Short grant failed — is the schema at Checkpoint 3 yet (agent_deployer: agent with expiration)?');
+  refreshState();
+}
+
 async function reset() {
   await fetch("/api/reset", { method: "POST" });
   transcript.innerHTML = "";
@@ -593,6 +606,7 @@ input.addEventListener("keydown", e => { if (e.key === "Enter") send(input.value
 document.getElementById("approveBtn").addEventListener("click", approve);
 document.getElementById("revokeStagingBtn").addEventListener("click", () => revokeEnv("staging"));
 document.getElementById("revokeProdBtn").addEventListener("click", () => revokeEnv("production"));
+document.getElementById("grantShortBtn").addEventListener("click", grantShort);
 document.getElementById("resetBtn").addEventListener("click", reset);
 
 refreshState();

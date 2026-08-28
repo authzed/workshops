@@ -106,25 +106,17 @@ the bare `agent_deployer` relation.
 
 ## See the cascade
 
-Grant the agent both environments the way Checkpoint 2 and 3 taught you:
+Start the web UI (`python web.py`) and grant the agent both environments the way Checkpoints 2 and 3
+taught you. Staging is already autonomous from the seed; click **Approve prod · 10m** to give
+production its own `agent_deployer` write — same button, same one-relationship approval as always,
+nothing about it changed. Confirm both are live, in the web UI or by asking goose to deploy each
+environment: staging ✅ **ALLOWED** from its standing grant, production ✅ **ALLOWED** from the
+approval you just ran. Two independent relationships, both satisfying `agent_deploy` on their
+respective environments.
 
-```bash
-python approve.py --approver alice --env production
-```
+Now pull the base out from under it: click **Revoke staging**.
 
-Staging is already autonomous from the seed; production just got its own `agent_deployer` write
-from `approve.py`, same as always — nothing about `approve.py` changed. Confirm both are live, in
-the web UI (`python web.py`) or by asking goose to deploy each environment: staging ✅ **ALLOWED**
-from its standing grant, production ✅ **ALLOWED** from the approval you just ran. Two independent
-relationships, both satisfying `agent_deploy` on their respective environments.
-
-Now pull the base out from under it:
-
-```bash
-python revoke.py --env staging
-```
-
-`revoke.py` hasn't changed since Checkpoint 3 — it deletes exactly one relationship,
+That deletes exactly one relationship,
 `environment:staging#agent_deployer@agent:goose_alice`, and nothing else. It does not touch
 production. And yet: ask for "deploy checkout to production" again, and it comes back
 ⏸️ **NEEDS APPROVAL** — the same verdict as if someone had revoked production directly, except
@@ -136,37 +128,17 @@ two environments affected, because the second one was never independent to begin
 The web UI shows this precisely: production's grant card stays on screen but turns dashed, tagged
 **"suspended · gated by staging"** — the relationship itself is untouched, only what it computes to
 has changed. A system message spells out why: *"alice revoked the staging delegation — production
-autonomy is gated by it, so it suspends too."*
-
-Confirm it deterministically:
-
-```bash
-python scripts/verify.py --checkpoint 4
-```
-
-```
-Verifying Checkpoint 4...
-✅ Approved: agent:goose_alice may deploy environment:production
-  ✅ with both grants: deploy production: got Decision.ALLOWED, want Decision.ALLOWED
-✅ Revoked: agent:goose_alice agent_deployer on environment:staging
-  ✅ cascade: deploy staging: got Decision.NEEDS_APPROVAL, want Decision.NEEDS_APPROVAL
-  ✅ cascade: deploy production: got Decision.NEEDS_APPROVAL, want Decision.NEEDS_APPROVAL
-PASS ✅
-```
-
-The first check approves production and confirms both environments are live. The second revokes
-only staging and confirms *both* fall back to `NEEDS_APPROVAL` — the cascade, asserted the same way
-every other checkpoint's behavior was: by calling `decide()` directly against a live SpiceDB, no UI
-or LLM required.
+autonomy is gated by it, so it suspends too."* One click on **Revoke staging**, two environments
+affected, and no write ever touched production's own relationships.
 
 ---
 
 ## Suspend, not erase — why this is contingent evaluation
 
-Look again at what `revoke.py --env staging` actually deleted:
+Look again at what **Revoke staging** actually deleted:
 `environment:staging#agent_deployer@agent:goose_alice`. That's one tuple. The relationship
-`environment:production#agent_deployer@agent:goose_alice` — the one `approve.py` wrote — is still
-sitting in the graph, completely untouched. `agent_deploy` on production went from `ALLOWED` to
+`environment:production#agent_deployer@agent:goose_alice` — the one **Approve prod · 10m** wrote — is
+still sitting in the graph, completely untouched. `agent_deploy` on production went from `ALLOWED` to
 `NEEDS_APPROVAL` without a single write touching production's own relationships. Nothing was
 deleted there; a permission that used to evaluate `true` now evaluates `false`, because one of the
 two facts it depends on changed underneath it.
@@ -179,12 +151,13 @@ orphaned grants behind. `gated_by->agent_deployer` doesn't walk anything at writ
 *check* time, against whatever the graph currently says, every single time — the same way expiration
 in Checkpoint 3 didn't need a cron job to notice a grant had gone stale.
 
-The proof is the revive. Re-grant staging — run `bootstrap.py` again, or write the relationship
-directly — and, without touching production at all, `agent_deploy` on production goes straight back
-to `ALLOWED`, for whatever's left of the window `approve.py` originally gave it. The production
-relationship was never wrong; it was only ever asking a question whose answer depends on staging.
-Suspend, not erase, is what lets a fact come back to life just by the thing it depends on coming
-back — no re-approval, no re-run of `approve.py`, because the grant itself never went anywhere.
+The proof is the revive. Re-grant staging — click **Grant staging · 30s**, which writes only
+staging's `agent_deployer` relationship — and, without touching production at all, `agent_deploy` on
+production goes straight back to `ALLOWED`, for whatever's left of the window **Approve prod · 10m**
+originally gave it. The production relationship was never wrong; it was only ever asking a question
+whose answer depends on staging. Suspend, not erase, is what lets a fact come back to life just by
+the thing it depends on coming back — no re-approval, no second click of **Approve prod · 10m**,
+because the grant itself never went anywhere.
 
 ---
 
@@ -194,11 +167,10 @@ back — no re-approval, no re-run of `approve.py`, because the grant itself nev
       gated_by->agent_deployer`, and rewired `permission deploy = direct_deployer + agent_deploy`
       in `schema.zed`
 - [ ] Seeded the hierarchy in `bootstrap.py` — staging gated by itself, production gated by staging
-- [ ] Approved production, confirmed both environments `ALLOWED`, then revoked staging and watched
-      production fall back to `NEEDS_APPROVAL` with no second delete
+- [ ] Clicked **Approve prod · 10m**, confirmed both environments `ALLOWED`, then clicked
+      **Revoke staging** and watched production fall back to `NEEDS_APPROVAL` with no second delete
 - [ ] Saw production's grant go dashed/"suspended" in the web UI while the underlying relationship
       stayed in the graph
-- [ ] `python scripts/verify.py --checkpoint 4` prints `PASS ✅`
 - [ ] Can explain why this is contingent evaluation rather than a cascading delete, and why RBAC
       can't express "this role's authority depends on that other role currently holding" without a
       role explosion and a synchronization job to keep it honest

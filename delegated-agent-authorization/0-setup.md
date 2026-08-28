@@ -5,7 +5,7 @@ In this workshop you build a DevOps deploy agent on [goose](https://github.com/a
 delegated, fine-grained authorization from SpiceDB: scoped grants, time-bound windows, instant
 revocation, and a permission hierarchy where revoking a base grant cascades to everything that
 depends on it. The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP
-extension, docker-compose, seed/approve/revoke scripts, web UI) is already there, and you'll
+extension, docker-compose, the seed script, the web UI) is already there, and you'll
 write the schema and the decision engine yourself across the checkpoints.
 
 ## Get the code
@@ -26,9 +26,8 @@ cp .env.example .env
 `.env` holds the SpiceDB connection details the app itself needs: endpoint, preshared token,
 and which agent identity the deploy bot acts as. Nothing in this repo talks to an LLM directly,
 so there's no LLM key in here. The LLM key only comes into play later, and only if you use the
-goose path (see [Install goose](#install-goose-and-register-the-extension) below). The
-deterministic path (`scripts/verify.py` and the web UI, introduced in later checkpoints) needs no
-LLM at all.
+goose path (see [Install goose](#install-goose-and-register-the-extension) below). The web UI you
+drive every checkpoint from (introduced in Checkpoint 1) needs no LLM at all.
 
 Start the infrastructure:
 
@@ -39,9 +38,9 @@ docker compose up -d --wait
 This brings up two containers, `postgres` (SpiceDB's datastore) and `spicedb`, plus a
 short-lived `spicedb-migrate` container that runs SpiceDB's own datastore migration (setting up
 its Postgres tables, not the `schema.zed` you'll write later) and exits. SpiceDB serves
-on `localhost:50051` with a preshared key of `devtoken` (not recommended for prod, obviously) and
-`--enable-experimental-relationship-expiration` turned on, which later checkpoints use for
-time-bound grants.
+on `localhost:50051` with a preshared key of `devtoken` (not recommended for prod, obviously).
+Relationship expiration — which Checkpoint 3 uses for time-bound grants — is built into SpiceDB, so
+there's no flag to enable.
 
 Create a virtual environment and install dependencies:
 
@@ -78,10 +77,9 @@ step above if they don't.
 
 ## Install goose and register the extension
 
-Installing goose is optional for this workshop. Every checkpoint has a second, deterministic way
-to see the same decisions: `scripts/verify.py` plus a web UI, neither of which needs goose or an
-LLM key. Install goose if you want to drive the agent with natural language ("Deploy checkout to
-staging") and watch its tool calls resolve through SpiceDB live.
+Installing goose is optional for this workshop. Every checkpoint runs through a web UI that needs
+neither goose nor an LLM key. Install goose if you want to drive the agent with natural language
+("Deploy checkout to staging") and watch its tool calls resolve through SpiceDB live.
 
 If you do want the goose path:
 
@@ -96,9 +94,9 @@ If you do want the goose path:
    `SPICEDB_ENDPOINT=localhost:50051`, `SPICEDB_TOKEN=devtoken`, `AGENT_SUBJECT=agent:goose_alice`.
 
 `goose-extension.md` also has a manual verification checklist for once goose is wired up. Worth
-skimming now, but there's nothing to run yet: SpiceDB has no authorization schema until
+skimming now, but there's nothing to verify yet: SpiceDB has no authorization schema until
 Checkpoint 2, where you write it and the agent's decisions (via goose or the web UI) first come
-online.
+online. Checkpoint 1 is next, and it drives the agent from the web UI to watch it over-reach.
 
 ---
 

@@ -43,20 +43,20 @@ matter how many different ways — or how many different agents — ask it.
   that models delegation directly: an `agent` acts for a `user` through one relation, `delegator`
 - A three-way decision engine, `decide()`, that turns every mutating tool call into `ALLOWED`,
   `NEEDS_APPROVAL`, or `BLOCKED` — never a silent yes
-- Time-bound grants that expire on their own, for incident-style access windows, plus a
-  `revoke.py` for instant, on-demand revocation
+- Time-bound grants that expire on their own, for incident-style access windows, plus instant,
+  on-demand revocation for when you need to pull a grant early
 - A relationship hierarchy (`gated_by`) where revoking one environment's autonomy automatically
   suspends what depends on it — contingent evaluation, not a cascading delete
-- A web UI and a deterministic CLI verifier (`scripts/verify.py`) so every checkpoint is
-  confirmable without an LLM in the loop
+- A web UI that drives every action — request, approve, revoke, watch a grant expire live — and
+  shows exactly what SpiceDB decides, so every checkpoint is confirmable without an LLM in the loop
 
 ## Prerequisites
 
 - **Docker**, or a GitHub Codespace — the repo ships a `.devcontainer/` that handles setup for you
 - **Python 3.10+**
 - **goose, plus an API key for any LLM it supports** — only needed if you want to drive the agent
-  in natural language. Every checkpoint also has a deterministic path
-  (`scripts/verify.py` and a web UI) that needs no LLM at all.
+  in natural language. The web UI drives every checkpoint without an LLM, so goose is optional
+  throughout.
 
 No prior authorization background is assumed. Comfort with a terminal, Python, and Docker is
 enough.

@@ -180,18 +180,15 @@ Try the three cases:
 - **"Tear down production"** → 🚫 **BLOCKED**. Neither the agent nor Alice is a `destroyer` —
   only `sre_admin` is. Nothing to escalate to; production stays up.
 
-Click **Approve prod · 10m** (or run the CLI directly, see below), then retry the production
-deploy — it flips to ✅ **ALLOWED**. Nothing about `decide()` changed; the relationship graph did.
+Click **Approve prod · 10m**, then retry the production deploy — it flips to ✅ **ALLOWED**.
+Nothing about `decide()` changed; the relationship graph did.
 
-### `approve.py` — the human in the loop
+### Approve — the human in the loop
 
-```bash
-python approve.py --approver alice --env production
-```
-
-Before writing anything, `approve.py` runs two checks of its own: is `alice` actually an
-`approver` on `production`, and does her `delegator` relationship to the agent still hold
-`deploy` there? Only if both pass does it write one relationship —
+**Approve prod · 10m** is the approval path, and it's deliberately dull under the hood. Before
+writing anything, it runs two checks of its own: is `alice` actually an `approver` on
+`production`, and does her `delegator` relationship to the agent still hold `deploy` there? Only if
+both pass does it write one relationship —
 `environment:production#agent_deployer@agent:goose_alice` — the same relation your schema's
 `deploy` permission already unions over. That single write is the entire "approval": no new code
 path, no special-cased branch in `decide()`. The next `decide()` call for
@@ -210,24 +207,6 @@ Drive the same three requests in natural language — "Deploy checkout to stagin
 to production", "Tear down the production environment" — and watch the identical
 ✅ / ⏸️ / 🚫 verdicts come back, because goose is calling the same `deploybot_server.py` tools the
 web UI calls, gated by the same `decide()`.
-
-### Deterministic path
-
-```bash
-python scripts/verify.py --checkpoint 2
-```
-
-```
-Verifying Checkpoint 2...
-  ✅ agent deploy staging: got Decision.ALLOWED, want Decision.ALLOWED
-  ✅ agent deploy production: got Decision.NEEDS_APPROVAL, want Decision.NEEDS_APPROVAL
-  ✅ agent destroy production: got Decision.BLOCKED, want Decision.BLOCKED
-  ✅ after approve: deploy production: got Decision.ALLOWED, want Decision.ALLOWED
-PASS ✅
-```
-
-No LLM, no goose — this calls your `decide()` directly against a live SpiceDB, runs `approve.py`
-in the middle, and checks the exact same four outcomes you just watched in the UI or goose.
 
 ---
 
@@ -253,9 +232,8 @@ care what the model believes, only what the graph says.
       permissions
 - [ ] Seeded the graph with `python bootstrap.py`
 - [ ] Implemented the three-way `decide()` in `authz.py`
-- [ ] `python scripts/verify.py --checkpoint 2` prints `PASS ✅`
-- [ ] Saw all three decisions — `ALLOWED`, `NEEDS_APPROVAL`, `BLOCKED` — in the web UI and/or
-      goose, and watched `approve.py` flip production to `ALLOWED`
+- [ ] Saw all three decisions — `ALLOWED`, `NEEDS_APPROVAL`, `BLOCKED` — in the web UI (and/or
+      goose), and watched **Approve prod · 10m** flip production to `ALLOWED`
 - [ ] Can explain ReBAC in your own words, and why `agent { relation delegator: user }` is what
       makes delegation a graph edge instead of a special case in code
 

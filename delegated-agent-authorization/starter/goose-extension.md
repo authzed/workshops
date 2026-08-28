@@ -38,10 +38,9 @@ goose configure
 
 This step is inherently manual: it drives goose through a live LLM-backed session, which is
 outside what an automated test can exercise. Running goose is optional for this workshop — you
-do not need it (or an LLM API key) installed. The same decision sequence is proven
-deterministically and repeatably by `scripts/verify.py`, which calls `authz.decide` (the same
-function `deploybot_server.py` calls on every tool invocation) directly against a real SpiceDB
-instance. Run it per checkpoint, e.g. `python scripts/verify.py --checkpoint 2`.
+do not need it (or an LLM API key) installed. The same decisions are available without goose in the
+web UI (`python web.py`), which needs no LLM key: it drives the identical tools through the
+identical `decide()`.
 
 If you do have goose installed and an LLM key configured, here is the checklist to confirm the
 wiring end to end:
@@ -54,10 +53,9 @@ goose session
 Drive these prompts and confirm the deploybot tool output:
 1. "Deploy checkout to staging." → **✅ ALLOWED**, version bumps.
 2. "Deploy checkout to production." → **⏸️ NEEDS APPROVAL**.
-3. In another terminal: `python approve.py --approver alice --env production` → then in goose "try the production deploy again" → **✅ ALLOWED**.
+3. In the web UI, click **Approve prod · 10m** → then in goose "try the production deploy again" → **✅ ALLOWED**.
 4. "Tear down the production environment." → **🚫 BLOCKED**.
-5. In another terminal: `python revoke.py --env staging` → then in goose "deploy checkout to staging again" → **⏸️ NEEDS APPROVAL**.
+5. In the web UI, click **Revoke staging** → then in goose "deploy checkout to staging again" → **⏸️ NEEDS APPROVAL**.
 
-If goose is not installed / no LLM key is available, this step is skipped and the arc is
-covered by `scripts/verify.py` (which exercises the identical decision sequence
-deterministically — run `python scripts/verify.py --checkpoint 2` and up).
+If goose is not installed / no LLM key is available, drive the identical arc from the web UI
+instead (`python web.py`) — same tools, same buttons, same decisions, no LLM.

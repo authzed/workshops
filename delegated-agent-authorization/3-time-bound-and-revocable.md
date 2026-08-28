@@ -97,55 +97,45 @@ update = rel("environment", environment, "agent_deployer", "agent", agent_id,
              expires_at=expiry_from_now(minutes))
 ```
 
-Run `python approve.py --approver alice --env production` (or click **Approve prod · 10m** in the
-web UI) and the resulting grant now expires 10 minutes later on its own. No follow-up step, no
-second script to remember to run. An approval that never expires was really a standing grant with
-extra steps; this makes "approved for now" mean what it says.
+Now clicking **Approve prod · 10m** in the web UI writes a grant that expires 10 minutes later on
+its own. No follow-up step, nothing to remember to undo. An approval that never expires was really
+a standing grant with extra steps; this makes "approved for now" mean what it says.
 
 ---
 
 ## See expiry without waiting
 
-Waiting out a real timer to prove this works isn't worth your time, so `bootstrap.py` gives you a
-faster lever: seed a grant that's already expired.
+Waiting out a 60-minute window to prove this works isn't worth your time, so the web UI gives you a
+faster lever: **Grant staging · 30s**, a button that hands the agent a 30-second staging window you
+can watch expire live.
 
 > **Reset the datastore first, once.** You just changed `agent_deployer`'s allowed subject type
 > from `agent` to `agent with expiration`. SpiceDB won't narrow a relation's allowed types while
 > relationships in the old shape — the plain `agent` grants Checkpoint 2 seeded — still exist, so
-> the very first `bootstrap.py` run this checkpoint fails on `WriteSchema` before it ever gets to
+> the first `bootstrap.py` run this checkpoint fails on `WriteSchema` before it ever gets to
 > reseed. Reset the datastore once, then re-seed against the new schema:
 >
 > ```bash
 > docker compose down -v && docker compose up -d --wait
-> python bootstrap.py --window-minutes 0
+> python bootstrap.py
 > ```
 
-This writes the staging `agent_deployer` relationship with `expires_at` set to *right now*. By
-the time `CheckPermission` runs, it's already in the past. The agent's own `agent_deployer` check
-on staging fails, `decide()` falls through to branch 2, and "deploy checkout to staging" — the one
-request that was unconditionally ✅ **ALLOWED** in Checkpoint 2 — now comes back
-⏸️ **NEEDS APPROVAL** instead, with Alice named as the delegator who'd have to approve it. Nothing
-about `decide()` changed. The relationship it was reading simply isn't there anymore, as far as
-SpiceDB is concerned.
+Start the web UI (`python web.py`) and open `http://127.0.0.1:8000`. Click **Grant staging · 30s**.
+The **grants** panel shows staging's card with a live countdown and a shrinking bar. Watch it hit
+zero, then ask the agent to "deploy checkout to staging" — the one request that was unconditionally
+✅ **ALLOWED** in Checkpoint 2 — and it now comes back ⏸️ **NEEDS APPROVAL** instead, with Alice
+named as the delegator who'd have to approve it. Nothing about `decide()` changed. The agent's own
+`agent_deployer` check on staging fails because the relationship it was reading simply isn't there
+anymore, as far as SpiceDB is concerned: it expired on schedule, server-side, with nothing external
+polling for it.
 
-Now the other lever, instant revocation, for when you don't want to wait for any window to run
-out:
-
-```bash
-python revoke.py --env staging
-```
-
-`revoke.py` deletes the `agent_deployer` relationship on `staging` outright, using the same
-`agent_deployer_filter` helper `bootstrap.py` uses to reset it between runs. Re-run the check (or
-ask the agent to deploy staging again) and you get the identical ⏸️ **NEEDS APPROVAL**, the same
-outcome as letting the window lapse, just on your schedule instead of the clock's. An operator who
-sees something wrong mid-incident doesn't wait for a TTL; they run one command and the grant is
-gone on the very next check.
-
-Both are visible in the web UI: reset the demo, approve or bootstrap a grant, and watch its card in
-the **grants** panel, a live countdown with a shrinking bar. Let it hit zero, or hit **Revoke**,
-and the staging card disappears from the panel on the next 5-second poll, because `/api/state`'s
-`ReadRelationships` no longer returns the grant. Expired or deleted, it's simply gone.
+Now the other lever, instant revocation, for when you don't want to wait for even a 30-second window
+to run out. Click **Revoke staging**. The `agent_deployer` relationship on `staging` is deleted
+outright, and the staging card disappears from the panel on the next 5-second poll, because
+`/api/state`'s `ReadRelationships` no longer returns the grant. Ask the agent to deploy staging
+again and you get the identical ⏸️ **NEEDS APPROVAL**, the same outcome as letting the window lapse,
+just on your schedule instead of the clock's. An operator who sees something wrong mid-incident
+doesn't wait for a TTL; they click one button and the grant is gone on the very next check.
 
 ---
 
@@ -168,34 +158,13 @@ decision. The boundary is exactly as tight as `CheckPermission` itself.
 
 ---
 
-## Deterministic path
-
-```bash
-python scripts/verify.py --checkpoint 3
-```
-
-```
-Verifying Checkpoint 3...
-  ✅ expired staging grant: got Decision.NEEDS_APPROVAL, want Decision.NEEDS_APPROVAL
-  ✅ after revoke: deploy staging: got Decision.NEEDS_APPROVAL, want Decision.NEEDS_APPROVAL
-PASS ✅
-```
-
-This seeds a `--window-minutes 0` grant and confirms `decide()` falls back to `NEEDS_APPROVAL`, then
-seeds a fresh 60-minute window, calls `revoke.py` against it, and confirms the same fallback,
-proving both paths, expiry and revocation, land on the identical honest answer.
-
----
-
 ## Completion Milestone: Checkpoint 3
 
 - [ ] Added `use expiration` to `schema.zed` and marked `agent_deployer: agent with expiration`
 - [ ] Updated `bootstrap.py`'s staging seed to carry `expires_at=expiry_from_now(window_minutes)`
 - [ ] Updated `approve.py`'s grant write to carry `expires_at=expiry_from_now(minutes)`
-- [ ] Saw `python bootstrap.py --window-minutes 0` drop the agent's staging autonomy to
-      `NEEDS_APPROVAL`, and `python revoke.py --env staging` do the same instantly
-- [ ] Watched a grant's countdown and revocation in the web UI
-- [ ] `python scripts/verify.py --checkpoint 3` prints `PASS ✅`
+- [ ] Clicked **Grant staging · 30s**, watched the countdown hit zero, and saw the agent's staging
+      autonomy drop to `NEEDS_APPROVAL` on its own — then **Revoke staging** do the same instantly
 - [ ] Can explain why expiration evaluated inside `CheckPermission` beats a cron job that deletes
       old relationships
 

@@ -68,9 +68,10 @@ new idea at a time:
   visible to every agent, always. A production version gates it behind a `view` permission and
   filters the listing to what the caller can actually see — exactly the `CheckBulkPermissions`
   shape described above.
-- `revoke.py` has no permission check. Anyone who can run the script can delete anyone's
-  delegation on any environment. A production version gates revocation behind a `manage`
-  permission, so only an environment's own operators can pull an agent's access.
+- Revocation has no permission check. `revoke.py` — the helper behind the web UI's **Revoke**
+  buttons — deletes a delegation without checking who's asking, so anyone who can reach the UI can
+  pull any agent's access on any environment. A production version gates revocation behind a
+  `manage` permission, so only an environment's own operators can pull an agent's access.
 
 The [full reference solution](https://github.com/sohanmaheshwar/goose-spicedb-delegation) does
 both. Its schema adds two permissions this workshop never defines:

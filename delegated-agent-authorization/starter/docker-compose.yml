@@ -26,9 +26,9 @@ services:
 
   spicedb:
     image: authzed/spicedb:latest
-    # --enable-experimental-relationship-expiration turns on the built-in
-    # relationship expiration feature used by `agent_deployer: agent with expiration`.
-    command: "serve --enable-experimental-relationship-expiration"
+    # Relationship expiration (used by `agent_deployer: agent with expiration`) is a
+    # built-in feature — no flag needed.
+    command: "serve"
     environment:
       SPICEDB_GRPC_PRESHARED_KEY: "${SPICEDB_TOKEN:-devtoken}"
       SPICEDB_DATASTORE_ENGINE: postgres
