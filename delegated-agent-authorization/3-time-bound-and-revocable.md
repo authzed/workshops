@@ -139,6 +139,16 @@ doesn't wait for a TTL; they click one button and the grant is gone on the very 
 
 ---
 
+## Drive it with goose (optional)
+
+If you're running the goose path, the same lever works in natural language. Click **Grant staging ·
+30s** (or **Revoke staging**), then in a `goose session` ask it to "deploy checkout to staging."
+Before the window runs out, ✅ **ALLOWED**; after it expires — or once you've revoked —
+⏸️ **NEEDS APPROVAL**. goose is calling the same gated `deploy` tool, so it sees exactly what the
+web UI sees.
+
+---
+
 ## Why contingent evaluation beats a cron job
 
 The obvious fix looks like this: keep the grant unexpiring, and run a cron job that deletes

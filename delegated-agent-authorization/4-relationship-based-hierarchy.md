@@ -133,6 +133,16 @@ affected, and no write ever touched production's own relationships.
 
 ---
 
+## Drive it with goose (optional)
+
+If you're running the goose path, watch the cascade in natural language. With both grants live, ask
+goose to "deploy checkout to production" — ✅ **ALLOWED**. Click **Revoke staging**, then ask again:
+⏸️ **NEEDS APPROVAL**, even though you never touched production. goose deploys through the same gated
+`deploy` permission, so `gated_by` suspends its production autonomy exactly as it does for the web
+UI.
+
+---
+
 ## Suspend, not erase — why this is contingent evaluation
 
 Look again at what **Revoke staging** actually deleted:

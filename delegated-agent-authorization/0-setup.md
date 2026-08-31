@@ -1,12 +1,22 @@
-# Setup
+# Introduction
 
-In this workshop you build a DevOps deploy agent on [goose](https://github.com/aaif-goose/goose)
-(the open-source agent from the Agentic AI Foundation), then gate every action it takes with
-delegated, fine-grained authorization from SpiceDB: scoped grants, time-bound windows, instant
+In this workshop you build a DevOps deploy Agent, then gate every action it takes with
+delegated, fine-grained authorization: scoped grants, time-bound windows, instant
 revocation, and a permission hierarchy where revoking a base grant cascades to everything that
-depends on it. The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP
+depends on it. The purpose of the workshop is to understand why fine-grained authorization is required for AI Agents, 
+and how it can be implemented. 
+
+The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP
 extension, docker-compose, the seed script, the web UI) is already there, and you'll
-write the schema and the decision engine yourself across the checkpoints.
+write the schema and the decision engine yourself across the checkpoints to learn each of the concepts.
+
+## Two ways to drive the agent
+
+You can complete every checkpoint in this workshop with just the web UI — no LLM key, no goose
+install required. That's the primary path, and it's all you need. 
+
+Each checkpoint page also ends with an optional *drive it with goose* step: the same requests in natural language, through a real
+LLM, hitting the exact same authorization boundary. Use this if you want to watch the agent work with a live LLM; skip it and you miss nothing, because the authorization decision is identical either way.
 
 ## Get the code
 
@@ -15,21 +25,24 @@ git clone https://github.com/authzed/workshops.git
 cd workshops/delegated-agent-authorization/starter
 ```
 
-## Option A - Run locally with Docker
+## Installation
 
-Copy the example `.env` file:
+#### Option A - Run locally with Docker
+
+1. Copy the example `.env` file:
 
 ```bash
 cp .env.example .env
 ```
 
-`.env` holds the SpiceDB connection details the app itself needs: endpoint, preshared token,
-and which agent identity the deploy bot acts as. Nothing in this repo talks to an LLM directly,
-so there's no LLM key in here. The LLM key only comes into play later, and only if you use the
+`.env` holds the SpiceDB connection details the app itself needs: endpoint, and preshared-token,
+and which agent identity the deploy bot acts as. 
+
+Note: You can run this workshop without the need for a LLM key. The LLM key only comes into play later, and only if you use the
 goose path (see [Install goose](#install-goose-and-register-the-extension) below). The web UI you
 drive every checkpoint from (introduced in Checkpoint 1) needs no LLM at all.
 
-Start the infrastructure:
+2. Start the infrastructure:
 
 ```bash
 docker compose up -d --wait
@@ -39,16 +52,14 @@ This brings up two containers, `postgres` (SpiceDB's datastore) and `spicedb`, p
 short-lived `spicedb-migrate` container that runs SpiceDB's own datastore migration (setting up
 its Postgres tables, not the `schema.zed` you'll write later) and exits. SpiceDB serves
 on `localhost:50051` with a preshared key of `devtoken` (not recommended for prod, obviously).
-Relationship expiration — which Checkpoint 3 uses for time-bound grants — is built into SpiceDB, so
-there's no flag to enable.
 
-Create a virtual environment and install dependencies:
+3. Create a virtual environment and install dependencies:
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 ```
 
-## Option B - Run in GitHub Codespaces
+#### Option B - Run in GitHub Codespaces
 
 <!-- TODO: verify on a live Codespace before the conference -->
 

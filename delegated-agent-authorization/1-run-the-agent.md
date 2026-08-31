@@ -1,7 +1,7 @@
 # Checkpoint 1 — Run the Agent (and Watch It Over-Reach)
 
-The goal here is simple: get the deploy agent running, then catch it doing something it should
-never be allowed to do — tearing down production — because right now nothing stops it.
+The goal here is simple: get the deploy agent running, then try a few actions and catch it doing something it should
+never be allowed to do. For example this agent can tear down production servers since there are no checks to stop it from doing so.
 
 ---
 
@@ -31,12 +31,12 @@ workshop is about. In Checkpoint 1, the boundary is a stub that never says no.
 ## `decide()` is a deliberate stub
 
 Open `authz.py`. `decide()` is the one function every mutating tool call goes through, and right
-now it's honest about doing nothing:
+now there are no permission checks. 
 
 ```python
 async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
     # WORKSHOP STUB — Checkpoint 1.
-    # Returns ALLOWED for everything WITHOUT consulting SpiceDB. This is exactly why
+    # Returns ALLOWED for everything. This is exactly why
     # the agent over-reaches in Checkpoint 1. You implement the real, SpiceDB-backed
     # three-way decision in Checkpoint 2.
     # TODO(Checkpoint 2): replace this stub.
@@ -45,9 +45,7 @@ async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
 
 It takes a `client` — a live connection to SpiceDB — and ignores it. Every argument that should
 matter (which agent, which permission, which environment) is ignored too. `decide()` always
-returns `ALLOWED`. There's no schema yet for it to consult even if it wanted to. That arrives in
-Checkpoint 2. Right now, an authorization call is just a formality the code performs on its way to
-doing whatever it was asked.
+returns `ALLOWED`. This should obviously not be the case for any production Agent. 
 
 ---
 
@@ -61,20 +59,19 @@ text into the same tool calls goose would, and hands them to the same gated back
 python web.py
 ```
 
-Open `http://127.0.0.1:8000`. Type something reasonable into the request box:
+Open `http://127.0.0.1:8000`. Type something reasonable into the request box (or click one of the buttons)
 
 > Deploy checkout to production.
 
 The UI calls `deploy(service="checkout", environment="production")`. It comes back
-**✅ ALLOWED**, and the version bumps. Fine so far. That's a real deploy engineer's job.
+**✅ ALLOWED**, and the version bumps. So far so good.
 
 Now ask it to do something no agent should be able to decide on its own:
 
 > Tear down the production environment.
 
-The UI calls `destroy(environment="production")`. It comes back **✅ ALLOWED**, and production is
-gone. No pause, no approval step, no distinction between "deploy a service" and "delete an entire
-environment." The tool's own docstring says destroying "requires elevated authority" — but that's
+The UI calls `destroy(environment="production")`. It comes back **✅ ALLOWED**, and production environment is
+gone. The tool's own docstring says destroying "requires elevated authority" — but that's
 just a comment for humans reading the code. Nothing enforces it. The stub doesn't look at
 `permission` or `environment_id` at all, so it can't tell a deploy from a destroy any more than it
 can tell staging from production.
@@ -82,8 +79,7 @@ can tell staging from production.
 Nothing about the *prompt* told the agent to be reckless. Nothing about the *user's* request was
 malicious: "deploy checkout to production" and "tear down the production environment" are both
 plausible things an operator might type into a chat window, adversarially or by mistake, or an
-agent might decide to do on its own mid-task. The problem isn't the prompt. It's that nothing
-downstream of the prompt is checking.
+agent might decide to do on its own mid-task. This is the consequence of no deterministic check before performing an action.
 
 ---
 
@@ -108,8 +104,8 @@ LLM instead of the request box.
 
 ## Why this happens: ambient authority
 
-The agent process holds one set of credentials — the `SPICEDB_TOKEN` and `AGENT_SUBJECT` in its
-environment — and every tool call runs with the full weight of those credentials behind it.
+The agent process holds one set of credentials - the `SPICEDB_TOKEN` and `AGENT_SUBJECT` in its
+environment. Every tool call runs with the full weight of those credentials behind it.
 There's no notion of *this specific action, for this specific reason, scoped to this specific
 window*. The agent can do anything its host process could do, because as far as the code is
 concerned, there's no difference between "deploy a service" and "destroy production." Both are
@@ -121,12 +117,9 @@ running with root because it happened to be launched by root — not because any
 should have root.
 
 You might be tempted to fix this by editing the tool's docstring, or telling the agent in its
-system prompt "never destroy production without approval." Don't reach for that. The prompt is not
-a boundary — it's a suggestion to a language model, not a control the system enforces. Nothing
-stops a differently worded request, a longer conversation that talks the model out of its own
-guardrail, or a chain of reasoning that convinces the agent this particular destroy is the
-exception. The instruction lives in the same channel as everything else the model reads, which
-means it can be argued with. An authorization boundary has to live *outside* the model's judgment,
+system prompt "never destroy production without approval." This is an anti-pattern. The prompt is not
+a boundary as prompts are suggestions to a language model, not a control the system enforces. 
+An authorization boundary has to live *outside* the model's judgment,
 in code that runs whether or not the agent "remembers" the rule. That boundary is what Checkpoint 2
 builds.
 
