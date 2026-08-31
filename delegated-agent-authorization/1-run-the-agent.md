@@ -1,13 +1,14 @@
-# Checkpoint 1 — Run the Agent (and Watch It Over-Reach)
+# Part 1 — Run the Agent (and Watch It Over-Reach)
 
-The goal here is simple: get the deploy agent running, then try a few actions and catch it doing something it should
-never be allowed to do. For example this agent can tear down production servers since there are no checks to stop it from doing so.
+In this section we'll get the deploy agent running, try a few actions and catch it doing something it should
+never be allowed to do. For example: this agent can tear down production servers since there are no checks to stop it from doing so.
 
 ---
 
 ## The flow — goose calls deploybot
 
-`deploybot_server.py` is a goose MCP extension. It exposes three tools:
+`deploybot_server.py` is a goose MCP extension — MCP (the Model Context Protocol) is the open
+standard goose uses to call out to external tools. It exposes three tools:
 
 - **`list_environments`** — lists every environment and the service versions deployed to it.
   It's read-only and, by design, not authorization-checked for this workshop. The code says so
@@ -24,7 +25,7 @@ never be allowed to do. For example this agent can tear down production servers 
 
 `deploy` and `destroy` are mutating, and both are gated: before either touches anything, it calls
 `authz.decide()` to get a ruling, and only proceeds on `ALLOWED`. That's the boundary this
-workshop is about. In Checkpoint 1, the boundary is a stub that never says no.
+workshop is about. In Part 1, the boundary is a stub that never says no.
 
 ---
 
@@ -35,11 +36,11 @@ now there are no permission checks.
 
 ```python
 async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
-    # WORKSHOP STUB — Checkpoint 1.
+    # WORKSHOP STUB — Part 1.
     # Returns ALLOWED for everything. This is exactly why
-    # the agent over-reaches in Checkpoint 1. You implement the real, SpiceDB-backed
-    # three-way decision in Checkpoint 2.
-    # TODO(Checkpoint 2): replace this stub.
+    # the agent over-reaches in Part 1. You implement the real, SpiceDB-backed
+    # three-way decision in Part 2.
+    # TODO(Part 2): replace this stub.
     return AuthzResult(Decision.ALLOWED, "no authorization configured (workshop stub)")
 ```
 
@@ -49,7 +50,7 @@ returns `ALLOWED`. This should obviously not be the case for any production Agen
 
 ---
 
-## Watch it over-reach — the web UI
+## Watch it over-reach
 
 The web UI is how you drive the agent throughout this workshop. It needs no LLM key: it turns your
 text into the same tool calls goose would, and hands them to the same gated backend. From
@@ -91,6 +92,7 @@ it the same two requests:
 ```bash
 goose session
 ```
+And type the following and see what happens:
 
 > Deploy checkout to production.
 >
@@ -120,12 +122,12 @@ You might be tempted to fix this by editing the tool's docstring, or telling the
 system prompt "never destroy production without approval." This is an anti-pattern. The prompt is not
 a boundary as prompts are suggestions to a language model, not a control the system enforces. 
 An authorization boundary has to live *outside* the model's judgment,
-in code that runs whether or not the agent "remembers" the rule. That boundary is what Checkpoint 2
+in code that runs whether or not the agent "remembers" the rule. That boundary is what Part 2
 builds.
 
 ---
 
-## Completion Milestone: Checkpoint 1
+## Completion Milestone: Part 1
 
 - [ ] Ran the agent — via the web UI (`python web.py`), a `goose session`, or both
 - [ ] Reproduced the over-reach: `destroy production` returns `ALLOWED` with no schema, no check,
@@ -134,4 +136,4 @@ builds.
 - [ ] Can explain why ambient authority is the problem, and why fixing it in the prompt wouldn't
       be enough
 
-Next: [Checkpoint 2 — Delegated authorization](2-delegated-authorization.md)
+Next: [Part 2 — Delegated authorization](2-delegated-authorization.md)

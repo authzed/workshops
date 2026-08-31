@@ -124,7 +124,7 @@ async def request_action(body: RequestBody):
 
 @app.get("/api/state")
 async def state():
-    # Defensive throughout: in Checkpoint 1 no schema exists yet, so the delegator
+    # Defensive throughout: in Part 1 no schema exists yet, so the delegator
     # read / relationship read / permission checks below all error. We degrade to an
     # empty "no delegation configured" view so the web UI still loads and the chat
     # (which routes through the stubbed decide()) shows the agent over-reaching.
@@ -154,7 +154,7 @@ async def state():
                 effective = False
             grants.append({"environment": env, "expires_at": expires_at, "effective": effective})
     except Exception:
-        grants = []  # no schema yet (Checkpoint 1)
+        grants = []  # no schema yet (Part 1)
     try:
         versions = deploybot_server._load_state()
     except Exception:
@@ -177,9 +177,9 @@ async def revoke_action(body: RevokeBody):
 @app.post("/api/grant-short")
 async def grant_short(body: GrantBody):
     """Grant the agent a short-lived deploy window so you can watch it expire live in the
-    authority bar (used in Checkpoint 3). An operator/demo action: it writes the
+    authority bar (used in Part 3). An operator/demo action: it writes the
     agent_deployer grant directly with a seconds-scale expiration. Requires the schema to
-    allow expiration (`agent_deployer: agent with expiration`, from Checkpoint 3)."""
+    allow expiration (`agent_deployer: agent with expiration`, from Part 3)."""
     client = make_client()
     ts = Timestamp()
     ts.FromDatetime(datetime.now(timezone.utc) + timedelta(seconds=body.seconds))

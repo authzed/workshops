@@ -8,14 +8,14 @@ and how it can be implemented.
 
 The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP
 extension, docker-compose, the seed script, the web UI) is already there, and you'll
-write the schema and the decision engine yourself across the checkpoints to learn each of the concepts.
+write the schema and the decision engine yourself across the parts to learn each of the concepts.
 
 ## Two ways to drive the agent
 
-You can complete every checkpoint in this workshop with just the web UI — no LLM key, no goose
+You can complete every part in this workshop with just the web UI — no LLM key, no goose
 install required. That's the primary path, and it's all you need. 
 
-Each checkpoint page also ends with an optional *drive it with goose* step: the same requests in natural language, through a real
+Each part page also ends with an optional *drive it with goose* step: the same requests in natural language, through a real
 LLM, hitting the exact same authorization boundary. Use this if you want to watch the agent work with a live LLM; skip it and you miss nothing, because the authorization decision is identical either way.
 
 ## Get the code
@@ -40,7 +40,7 @@ and which agent identity the deploy bot acts as.
 
 Note: You can run this workshop without the need for a LLM key. The LLM key only comes into play later, and only if you use the
 goose path (see [Install goose](#install-goose-and-register-the-extension) below). The web UI you
-drive every checkpoint from (introduced in Checkpoint 1) needs no LLM at all.
+drive every part from (introduced in Part 1) needs no LLM at all.
 
 2. Start the infrastructure:
 
@@ -88,7 +88,7 @@ step above if they don't.
 
 ## Install goose and register the extension
 
-Installing goose is optional for this workshop. Every checkpoint runs through a web UI that needs
+Installing goose is optional for this workshop. Every part runs through a web UI that needs
 neither goose nor an LLM key. Install goose if you want to drive the agent with natural language
 ("Deploy checkout to staging") and watch its tool calls resolve through SpiceDB live.
 
@@ -106,8 +106,8 @@ If you do want the goose path:
 
 `goose-extension.md` also has a manual verification checklist for once goose is wired up. Worth
 skimming now, but there's nothing to verify yet: SpiceDB has no authorization schema until
-Checkpoint 2, where you write it and the agent's decisions (via goose or the web UI) first come
-online. Checkpoint 1 is next, and it drives the agent from the web UI to watch it over-reach.
+Part 2, where you write it and the agent's decisions (via goose or the web UI) first come
+online. Part 1 is next, and it drives the agent from the web UI to watch it over-reach.
 
 ---
 
@@ -120,4 +120,4 @@ online. Checkpoint 1 is next, and it drives the agent from the web UI to watch i
 - [ ] (Goose path only) goose installed with an LLM provider configured, and the `deploybot`
       extension registered per `goose-extension.md`
 
-Next: [Checkpoint 1 — Run the agent](1-run-the-agent.md)
+Next: [Part 1 — Run the agent](1-run-the-agent.md)

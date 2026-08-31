@@ -1,9 +1,8 @@
-# Checkpoint 3 — Time-Bound and Revocable
+# Part 3 — Time-Bound and Revocable
 
-Checkpoint 2 gave the agent a real grant: `goose_alice` is `agent_deployer` on `staging`, forever,
-until someone edits the graph by hand. That's already better than ambient authority, but "forever"
-is still a bigger blast radius than most delegation actually needs. An incident responder pulled in
-at 2am should get staging access for the duration of the incident, not a standing grant nobody
+Part 2 gave the agent a real grant: `goose_alice` is `agent_deployer` on `staging`, forever,
+until someone edits the graph by hand. That's already better than ambient authority, but typically you need 
+time-bound delegation. An incident responder pulled in at 2am should get staging access for the duration of the incident, not a permanent grant nobody
 remembers to revoke. Here you make that grant expire on its own, and give an operator a way to kill
 it early.
 
@@ -11,18 +10,18 @@ it early.
 
 ## Temporary access for incident windows
 
-The shape you want is: "this agent may deploy staging, but only for the next 60 minutes." Two ways
+The shape you want is: "this agent may deploy staging, but only for the next 60 minutes." There are two ways
 to build that:
 
 - **A caveat**: SpiceDB lets you attach a boolean expression to a relationship (`agent_deployer:
   agent with expiry_check`) and pass in context like `now < grant_expiry` at check time. It works,
-  but it's you re-deriving "is this timestamp in the past" by hand, on every check, forever.
+  but it's you re-deriving "is this timestamp in the past" by hand, on every check.
+
 - **Relationship expiration**: SpiceDB has a built-in `optional_expires_at` field on a
   relationship. You write the expiry once, at grant time, and `CheckPermission` treats an expired
-  relationship as if it were never written. No caveat context to thread through, no expression to
-  get subtly wrong.
+  relationship as if it were never written. 
 
-Expiration wins here for a reason that matters beyond convenience: it's evaluated **server-side,
+Expiration is the preferred method as it's evaluated **server-side,
 inside the same consistent snapshot as the rest of the check**. There's no window where a
 just-expired grant still reads as valid because a caveat context object was stale, and no separate
 process has to notice the expiry and act on it. SpiceDB's own datastore garbage-collects expired
@@ -33,7 +32,7 @@ external polling for it.
 
 ## Schema edit: opt in, then mark the relation
 
-Two changes to `schema.zed`. First, expiration is an opt-in schema feature. Declare it at the top
+To add time-bound delegation, first make two changes to `schema.zed`. First, expiration is an opt-in schema feature. Declare it at the top
 of the file:
 
 ```zed
@@ -63,16 +62,18 @@ know or care that one side of it can expire. That's the point: expiration is a p
 
 ---
 
-## Update the seed
+## Update the relationships
 
-`bootstrap.py` already takes a `--window-minutes` flag and threads it into `seed()`. Checkpoint 2
+`bootstrap.py` already takes a `--window-minutes` flag and threads it into `seed()`. Part 2
 left the actual staging grant unexpiring; this is where that gets fixed. Import
 `expiry_from_now` from `authz` (it builds the protobuf `Timestamp` that `optional_expires_at`
 expects) and pass it into the staging `agent_deployer` write:
 
 ```python
+# Add this import at the top of bootstrap.py
 from authz import expiry_from_now
-# ...
+
+# Add this line in seed() method
 rel("environment", "staging", "agent_deployer", "agent", AGENT_ID,
     expires_at=expiry_from_now(window_minutes)),
 ```
@@ -87,12 +88,14 @@ forever.
 ## Update `approve.py`
 
 The human-in-the-loop path needs the same fix. `approve.py` already takes `--minutes`
-(default 10) and ignored it. Checkpoint 2's version wrote the grant with no expiry at all. Import
+(default 10) and ignored it. Part 2's version wrote the grant with no expiry at all. Import
 `expiry_from_now` alongside the checks it already runs, and carry it into the write:
 
 ```python
+# Add this import at the top of approve.py
 from authz import check, read_delegator, expiry_from_now
-# ...
+
+# Add this line in the approve() method
 update = rel("environment", environment, "agent_deployer", "agent", agent_id,
              expires_at=expiry_from_now(minutes))
 ```
@@ -105,14 +108,13 @@ a standing grant with extra steps; this makes "approved for now" mean what it sa
 
 ## See expiry without waiting
 
-Waiting out a 60-minute window to prove this works isn't worth your time, so the web UI gives you a
-faster lever: **Grant staging · 30s**, a button that hands the agent a 30-second staging window you
+The web UI has a **Grant staging · 30s** button that hands the agent a 30-second staging window you
 can watch expire live.
 
 > **Reset the datastore first, once.** You just changed `agent_deployer`'s allowed subject type
 > from `agent` to `agent with expiration`. SpiceDB won't narrow a relation's allowed types while
-> relationships in the old shape — the plain `agent` grants Checkpoint 2 seeded — still exist, so
-> the first `bootstrap.py` run this checkpoint fails on `WriteSchema` before it ever gets to
+> relationships in the old shape — the plain `agent` grants Part 2 seeded — still exist, so
+> the first `bootstrap.py` run this part fails on `WriteSchema` before it ever gets to
 > reseed. Reset the datastore once, then re-seed against the new schema:
 >
 > ```bash
@@ -123,7 +125,7 @@ can watch expire live.
 Start the web UI (`python web.py`) and open `http://127.0.0.1:8000`. Click **Grant staging · 30s**.
 The **grants** panel shows staging's card with a live countdown and a shrinking bar. Watch it hit
 zero, then ask the agent to "deploy checkout to staging" — the one request that was unconditionally
-✅ **ALLOWED** in Checkpoint 2 — and it now comes back ⏸️ **NEEDS APPROVAL** instead, with Alice
+✅ **ALLOWED** in Part 2 — and it now comes back ⏸️ **NEEDS APPROVAL** instead, with Alice
 named as the delegator who'd have to approve it. Nothing about `decide()` changed. The agent's own
 `agent_deployer` check on staging fails because the relationship it was reading simply isn't there
 anymore, as far as SpiceDB is concerned: it expired on schedule, server-side, with nothing external
@@ -152,15 +154,14 @@ web UI sees.
 ## Why contingent evaluation beats a cron job
 
 The obvious fix looks like this: keep the grant unexpiring, and run a cron job that deletes
-`agent_deployer` relationships older than an hour. Don't. A cron-based cleanup means the
-grant is *actually* valid — checkable, usable, real — for however long it takes the cron job to
-notice and catch up, which is never zero. Someone deploys at minute 59:58 using a grant that's
-"supposed to" be gone; whether that succeeds depends on scheduler jitter, not policy. You've also
-now got a second system that has to run, has to not fail silently, and has to agree with SpiceDB
-about what "expired" means. Two sources of truth for one fact.
+`agent_deployer` relationships older than an hour. This is an anti-pattern. 
 
-Relationship expiration collapses that back to one. There's no janitor process to keep alive: the
-expiry is evaluated *at check time*, inside the same call that's already asking "does this
+A cron-based cleanup means the grant is *actually* valid — checkable, usable, real — for however long it takes the cron job to
+notice and catch up, which is never zero. For example: someone deploys at minute 59:58 using a grant that's
+"supposed to" be gone. You've also now got a second system that has to run, has to not fail silently, and has to agree with SpiceDB
+about what "expired" means. 
+
+Relationship expiration collapses that back to one as the expiry is evaluated *at check time*, inside the same call that's already asking "does this
 relationship exist and hold." An expired grant isn't cleaned up later. It was never a valid answer
 to begin with, the moment the clock passed `expires_at`. Garbage collection still runs in the
 background to reclaim storage, but it's a housekeeping detail, not part of the authorization
@@ -168,7 +169,7 @@ decision. The boundary is exactly as tight as `CheckPermission` itself.
 
 ---
 
-## Completion Milestone: Checkpoint 3
+## Completion Milestone: Part 3
 
 - [ ] Added `use expiration` to `schema.zed` and marked `agent_deployer: agent with expiration`
 - [ ] Updated `bootstrap.py`'s staging seed to carry `expires_at=expiry_from_now(window_minutes)`
@@ -178,4 +179,4 @@ decision. The boundary is exactly as tight as `CheckPermission` itself.
 - [ ] Can explain why expiration evaluated inside `CheckPermission` beats a cron job that deletes
       old relationships
 
-Next: [Checkpoint 4 — Relationship-based hierarchy](4-relationship-based-hierarchy.md)
+Next: [Part 4 — Relationship-based hierarchy](4-relationship-based-hierarchy.md)

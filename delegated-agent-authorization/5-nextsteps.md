@@ -1,6 +1,6 @@
 # Next Steps
 
-Four checkpoints ago the agent could destroy production on a whim. Now every mutating call it
+Four parts ago the agent could destroy production on a whim. Now every mutating call it
 makes resolves through a relationship graph: delegated authority, a three-way decision, expiring
 grants, and a hierarchy that suspends dependents automatically. That's the whole mechanism. What's
 left is zooming out — how the same shape holds up once "one agent, two environments" becomes "many
@@ -54,14 +54,14 @@ knowing. **Advisory enforcement** is when a check informs a decision without bei
 it — logged for audit, surfaced to a human reviewer, used to rank or filter results — while the
 actual authority to act sits somewhere else. This workshop's own `list_environments` is an
 advisory-shaped tool by design (its code comment says so directly: *"UNGATED in this workshop"*):
-reads are lower stakes than a destroy, so it was left open to keep the checkpoints focused on the
+reads are lower stakes than a destroy, so it was left open to keep the parts focused on the
 mutating path. A real platform team draws that line deliberately, tool by tool, action class by
 action class — not by defaulting everything to advisory because blocking enforcement takes more
 wiring.
 
 ## Where this workshop deliberately stopped short
 
-Two things were left ungated on purpose, to keep every checkpoint's diff small and centered on one
+Two things were left ungated on purpose, to keep every part's diff small and centered on one
 new idea at a time:
 
 - `list_environments` has no permission check. Every environment in `infra_state.json` is
@@ -83,7 +83,7 @@ permission manage = direct_deployer
 
 `view` includes `agent_deploy` deliberately — an agent that's lost its deploy autonomy (staging
 revoked, cascade in effect) also loses visibility into the environment it can no longer touch, so
-the same `gated_by` cascade from Checkpoint 4 hides a suspended environment from `list_environments`
+the same `gated_by` cascade from Part 4 hides a suspended environment from `list_environments`
 as a side effect, with no extra code. `revoke.py` in the solution checks `manage` before it deletes
 anything:
 

@@ -1,12 +1,13 @@
-# Checkpoint 4 — Relationship-Based Hierarchy
+# Part 4 — Relationship-Based Hierarchy
 
-Checkpoint 3 made every grant time-bound and revocable, but it left each environment answering
+Part 3 made every grant time-bound and revocable, but it left each environment answering
 for itself. Staging autonomy and production autonomy live as two unrelated facts in the graph —
-revoking one has no opinion about the other. That's not how a real deploy pipeline works. If the
-whole point of staging is to catch a bad build before it reaches production, then an agent that's
+revoking one has no opinion about the other. That's not how a real deploy pipeline works. 
+
+If the whole point of staging is to catch a bad build before it reaches production, then an agent that's
 lost its staging privileges has lost the thing that made its production privileges trustworthy in
 the first place. Here you make that dependency real: production's autonomy is *contingent* on
-staging's, enforced by the graph, not by anyone remembering to check.
+staging's, enforced by the graph. ReBAC makes this pattern very straightforward.
 
 ---
 
@@ -15,18 +16,9 @@ staging's, enforced by the graph, not by anyone remembering to check.
 The policy you want is: "the agent may deploy production on its own only while it can also deploy
 staging on its own." RBAC can only ever hear the first half of that sentence: "the agent has role
 X." What you actually need is "the agent has role X *and* a second, independent fact about a
-different resource currently holds." RBAC assigns roles to subjects and stops there — a role is a
-static label, not a live query against another resource. To fake this
-dependency in a role system you'd need a role that means "agent-with-current-staging-autonomy," and
-you'd need to *maintain* it — write code somewhere that watches for staging revocation and
-downgrades the production role in lockstep, by hand, every time. Miss one code path and the two
-facts drift out of sync: production autonomy silently outlives the staging autonomy it was supposed
-to depend on.
+different resource currently holds." 
 
-ReBAC doesn't need a synchronization job, because the dependency isn't a copy of a fact — it's a
-graph traversal that reads the live fact every time. You add one relation that says "this
-environment is gated by that one," and a permission that walks it. There's nothing to keep in sync,
-because there's nothing duplicated to begin with.
+ReBAC computes permissions based off relationships expressed in a graph. Expressing a *relation* between the staging and prod server access is just about adding a new relationship and an associated permission. All permissions checks fall into place accordingly. This is one of the strengths of ReBAC - hierarchies and nested permissions are easy to compute.
 
 ---
 
@@ -49,13 +41,13 @@ definition environment {
 }
 ```
 
-Two new pieces, and one rewrite of a permission you already wrote in Checkpoint 2:
+Two new pieces, and one rewrite of a permission you already wrote in Part 2:
 
 - **`relation gated_by: environment`** — an edge from one environment to another. This is new: every
   other relation on `environment` so far has pointed at a `user` or `agent`. `gated_by` points at
   another `environment` entirely — it's how one resource says "my autonomy answers to that resource
   over there."
-- **`permission agent_deploy = agent_deployer & gated_by->agent_deployer`** — the payoff line. Read
+- **`permission agent_deploy = agent_deployer & gated_by->agent_deployer`** — Read
   the right-hand side as two separate questions joined by `&`, an **intersection**: both must hold.
   - `agent_deployer` — does the agent hold *this* environment's own delegated grant? Same relation
     as before, checked the same way.
@@ -67,7 +59,7 @@ Two new pieces, and one rewrite of a permission you already wrote in Checkpoint 
     **and** it holds `agent_deployer` on whatever environment gates this one. `&` is what makes
     it contingent instead of additive — either side going empty collapses the whole permission to
     empty, immediately, without anyone deleting the other side.
-- **`permission deploy = direct_deployer + agent_deploy`** — the Checkpoint 2 line was
+- **`permission deploy = direct_deployer + agent_deploy`** — the Part 2 line was
   `direct_deployer + agent_deployer`; the agent's whole way in now runs through `agent_deploy`
   instead of the bare relation. A human's `direct_deployer` grant is untouched — Alice can still
   deploy either environment herself, gate or no gate. The gate only ever constrains the *agent's*
@@ -87,6 +79,7 @@ independent relationships, on two different resources, both required.
 Add two relationships to `bootstrap.seed()`, alongside the ones already there:
 
 ```python
+# Add this to the seed() method in bootstrap.py
 rel("environment", "staging", "gated_by", "environment", "staging"),
 rel("environment", "production", "gated_by", "environment", "staging"),
 ```
@@ -106,15 +99,16 @@ the bare `agent_deployer` relation.
 
 ## See the cascade
 
-Start the web UI (`python web.py`) and grant the agent both environments the way Checkpoints 2 and 3
+Start the web UI (`python web.py`) and grant the agent both environments the way Parts 2 and 3
 taught you. Staging is already autonomous from the seed; click **Approve prod · 10m** to give
-production its own `agent_deployer` write — same button, same one-relationship approval as always,
-nothing about it changed. Confirm both are live, in the web UI or by asking goose to deploy each
+production its own `agent_deployer` write. 
+
+Confirm both are live, in the web UI or by asking goose to deploy each
 environment: staging ✅ **ALLOWED** from its standing grant, production ✅ **ALLOWED** from the
 approval you just ran. Two independent relationships, both satisfying `agent_deploy` on their
 respective environments.
 
-Now pull the base out from under it: click **Revoke staging**.
+Now pull the base out from under it by clicking **Revoke staging**.
 
 That deletes exactly one relationship,
 `environment:staging#agent_deployer@agent:goose_alice`, and nothing else. It does not touch
@@ -127,9 +121,7 @@ two environments affected, because the second one was never independent to begin
 
 The web UI shows this precisely: production's grant card stays on screen but turns dashed, tagged
 **"suspended · gated by staging"** — the relationship itself is untouched, only what it computes to
-has changed. A system message spells out why: *"alice revoked the staging delegation — production
-autonomy is gated by it, so it suspends too."* One click on **Revoke staging**, two environments
-affected, and no write ever touched production's own relationships.
+has changed. 
 
 ---
 
@@ -146,32 +138,19 @@ UI.
 ## Suspend, not erase — why this is contingent evaluation
 
 Look again at what **Revoke staging** actually deleted:
-`environment:staging#agent_deployer@agent:goose_alice`. That's one tuple. The relationship
+
+`environment:staging#agent_deployer@agent:goose_alice`. 
+
+That's just one relationship. The relationship
 `environment:production#agent_deployer@agent:goose_alice` — the one **Approve prod · 10m** wrote — is
 still sitting in the graph, completely untouched. `agent_deploy` on production went from `ALLOWED` to
 `NEEDS_APPROVAL` without a single write touching production's own relationships. Nothing was
 deleted there; a permission that used to evaluate `true` now evaluates `false`, because one of the
 two facts it depends on changed underneath it.
 
-That's the distinction worth sitting with: this is **evaluation**, not **deletion**. A cascading
-delete — the RBAC-shaped fix, where revoking a base role fires code that goes and deletes every
-dependent grant — would have to walk every environment gated by staging and remove their
-`agent_deployer` relationships one by one, and it would have to get that walk exactly right or leave
-orphaned grants behind. `gated_by->agent_deployer` doesn't walk anything at write time. It's read at
-*check* time, against whatever the graph currently says, every single time — the same way expiration
-in Checkpoint 3 didn't need a cron job to notice a grant had gone stale.
-
-The proof is the revive. Re-grant staging — click **Grant staging · 30s**, which writes only
-staging's `agent_deployer` relationship — and, without touching production at all, `agent_deploy` on
-production goes straight back to `ALLOWED`, for whatever's left of the window **Approve prod · 10m**
-originally gave it. The production relationship was never wrong; it was only ever asking a question
-whose answer depends on staging. Suspend, not erase, is what lets a fact come back to life just by
-the thing it depends on coming back — no re-approval, no second click of **Approve prod · 10m**,
-because the grant itself never went anywhere.
-
 ---
 
-## Completion Milestone: Checkpoint 4
+## Completion Milestone: Part 4
 
 - [ ] Added `relation gated_by: environment`, `permission agent_deploy = agent_deployer &
       gated_by->agent_deployer`, and rewired `permission deploy = direct_deployer + agent_deploy`

@@ -48,14 +48,14 @@ matter how many different ways — or how many different agents — ask it.
 - A relationship hierarchy (`gated_by`) where revoking one environment's autonomy automatically
   suspends what depends on it — contingent evaluation, not a cascading delete
 - A web UI that drives every action — request, approve, revoke, watch a grant expire live — and
-  shows exactly what SpiceDB decides, so every checkpoint is confirmable without an LLM in the loop
+  shows exactly what SpiceDB decides, so every part is confirmable without an LLM in the loop
 
 ## Prerequisites
 
 - **Docker**, or a GitHub Codespace — the repo ships a `.devcontainer/` that handles setup for you
 - **Python 3.10+**
 - **goose, plus an API key for any LLM it supports** — only needed if you want to drive the agent
-  in natural language. The web UI drives every checkpoint without an LLM, so goose is optional
+  in natural language. The web UI drives every part without an LLM, so goose is optional
   throughout.
 
 No prior authorization background is assumed. Comfort with a terminal, Python, and Docker is
@@ -66,17 +66,17 @@ enough.
 | Module | Time | What you do |
 | --- | --- | --- |
 | [Setup](0-setup.md) | 15 min | Bring up Docker (or Codespaces), install dependencies, optionally register the goose extension |
-| [Checkpoint 1 — Run the agent](1-run-the-agent.md) | 10 min | Run the agent ungated and watch it destroy production on request |
-| [Checkpoint 2 — Delegated authorization](2-delegated-authorization.md) | 25 min | Write the ReBAC schema and implement the three-way `decide()` |
-| [Checkpoint 3 — Time-bound and revocable](3-time-bound-and-revocable.md) | 15 min | Add expiring grants for incident windows, plus instant revocation |
-| [Checkpoint 4 — Relationship-based hierarchy](4-relationship-based-hierarchy.md) | 20 min | Make production's autonomy contingent on staging's, and watch the cascade |
+| [Part 1 — Run the agent](1-run-the-agent.md) | 10 min | Run the agent ungated and watch it destroy production on request |
+| [Part 2 — Delegated authorization](2-delegated-authorization.md) | 25 min | Write the ReBAC schema and implement the three-way `decide()` |
+| [Part 3 — Time-bound and revocable](3-time-bound-and-revocable.md) | 15 min | Add expiring grants for incident windows, plus instant revocation |
+| [Part 4 — Relationship-based hierarchy](4-relationship-based-hierarchy.md) | 20 min | Make production's autonomy contingent on staging's, and watch the cascade |
 | [Next steps](5-nextsteps.md) | 5 min | Zoom out to a real platform: bulk checks, on-behalf-of enforcement, scaling ReBAC |
 
 That's 90 minutes end to end, self-guided — it works equally well live or self-paced afterward.
 
 ## The full reference solution
 
-Everything you write in this workshop — the schema, `decide()`, the checkpoint progression — is a
+Everything you write in this workshop — the schema, `decide()`, the part progression — is a
 guided version of a complete, tested implementation:
 [`github.com/sohanmaheshwar/goose-spicedb-delegation`](https://github.com/sohanmaheshwar/goose-spicedb-delegation).
 Use it if you get stuck, or to see the production-hardening this workshop deliberately skips (more
@@ -85,10 +85,10 @@ on that in [Next steps](5-nextsteps.md)).
 ## Modules
 
 0. [Setup](0-setup.md)
-1. [Checkpoint 1 — Run the agent](1-run-the-agent.md)
-2. [Checkpoint 2 — Delegated authorization](2-delegated-authorization.md)
-3. [Checkpoint 3 — Time-bound and revocable](3-time-bound-and-revocable.md)
-4. [Checkpoint 4 — Relationship-based hierarchy](4-relationship-based-hierarchy.md)
+1. [Part 1 — Run the agent](1-run-the-agent.md)
+2. [Part 2 — Delegated authorization](2-delegated-authorization.md)
+3. [Part 3 — Time-bound and revocable](3-time-bound-and-revocable.md)
+4. [Part 4 — Relationship-based hierarchy](4-relationship-based-hierarchy.md)
 5. [Next steps](5-nextsteps.md)
 
 Let's get started with [Setup](0-setup.md).
