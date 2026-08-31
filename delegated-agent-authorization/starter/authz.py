@@ -67,9 +67,9 @@ async def read_delegator(client, agent_id) -> str | None:
 
 
 async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
-    # WORKSHOP STUB — Checkpoint 1.
+    # WORKSHOP STUB — Part 1.
     # Returns ALLOWED for everything WITHOUT consulting SpiceDB. This is exactly why
-    # the agent over-reaches in Checkpoint 1. You implement the real, SpiceDB-backed
-    # three-way decision in Checkpoint 2.
-    # TODO(Checkpoint 2): replace this stub.
+    # the agent over-reaches in Part 1. You implement the real, SpiceDB-backed
+    # three-way decision in Part 2.
+    # TODO(Part 2): replace this stub.
     return AuthzResult(Decision.ALLOWED, "no authorization configured (workshop stub)")

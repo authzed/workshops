@@ -35,7 +35,7 @@ async def seed(client, window_minutes: int = 60) -> None:
         rel("environment", "staging", "destroyer", "user", "sre_admin"),
         rel("environment", "production", "destroyer", "user", "sre_admin"),
         rel("agent", AGENT_ID, "delegator", "user", "alice"),
-        # Checkpoint 2: staging-only delegation (no expiration yet).
+        # Part 2: staging-only delegation (no expiration yet).
         rel("environment", "staging", "agent_deployer", "agent", AGENT_ID),
     ]
     await client.WriteRelationships(WriteRelationshipsRequest(updates=updates))
@@ -44,7 +44,7 @@ async def seed(client, window_minutes: int = 60) -> None:
 async def main() -> None:
     parser = argparse.ArgumentParser(description="Bootstrap the delegated-agent-authorization workshop.")
     parser.add_argument("--window-minutes", type=int, default=60,
-                        help="Minutes the agent's staging delegation stays valid (Checkpoint 3+).")
+                        help="Minutes the agent's staging delegation stays valid (Part 3+).")
     args = parser.parse_args()
     client = make_client()
     print("Writing schema...")

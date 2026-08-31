@@ -1,7 +1,7 @@
-// WORKSHOP STUB — you will build this schema up across Checkpoints 2–4.
+// WORKSHOP STUB — you will build this schema up across Parts 2–4.
 // It defines the object types but grants the agent nothing. Combined with the
-// authz.decide() stub, the deploy agent runs UNGATED in Checkpoint 1.
-// TODO(Checkpoint 2): model delegated authorization here.
+// authz.decide() stub, the deploy agent runs UNGATED in Part 1.
+// TODO(Part 2): model delegated authorization here.
 
 definition user {}
 
