@@ -95,11 +95,41 @@ If you do want the goose path:
    project's own install instructions, then run `goose configure` to pick an LLM provider and set
    its API key — this is where the "LLM key" lives, in goose's own config, not in this project's
    `.env`.
-2. Register the `deploybot` MCP extension so goose can call into this repo's deploy tools. Follow
-   `goose-extension.md` — it walks through editing `~/.config/goose/config.yaml` (or running
-   `goose configure` interactively) with **absolute paths** to this repo's `.venv/bin/python` and
-   `deploybot_server.py`, plus three env vars the extension needs to reach SpiceDB:
-   `SPICEDB_ENDPOINT=localhost:50051`, `SPICEDB_TOKEN=devtoken`, `AGENT_SUBJECT=agent:goose_alice`.
+2. Register the `deploybot` MCP extension so goose can call this repo's deploy tools. goose launches
+   `deploybot_server.py` with your virtualenv's Python, so it needs the **absolute path** to both.
+   From `starter/`, print that path once:
+
+   ```bash
+   pwd
+   ```
+
+   Then run `goose configure` and answer the prompts (exact wording varies slightly by goose
+   version):
+
+   - **What would you like to configure?** → `Add Extension`
+   - **What type of extension would you like to add?** → `Command-line Extension`
+   - **What would you like to call this extension?** → `deploybot`
+   - **What command should be run?** → your venv Python and the server script, both as absolute
+     paths — take the `pwd` output above and append `/.venv/bin/python` and `/deploybot_server.py`:
+
+     ```
+     /ABSOLUTE/PATH/to/starter/.venv/bin/python /ABSOLUTE/PATH/to/starter/deploybot_server.py
+     ```
+
+   - **Please set the timeout for this tool (in secs):** → `300`
+   - **Would you like to add a description?** → `No`
+   - **Would you like to add environment variables?** → `Yes`, then add these three (goose asks for
+     a name, then a value, then "add another?" after each):
+
+     | Name | Value |
+     | --- | --- |
+     | `SPICEDB_ENDPOINT` | `localhost:50051` |
+     | `SPICEDB_TOKEN` | `devtoken` |
+     | `AGENT_SUBJECT` | `agent:goose_alice` |
+
+   `AGENT_SUBJECT` pins the agent's identity: every authorization check goose triggers runs as
+   `agent:goose_alice`. goose writes all of this into `~/.config/goose/config.yaml` — see
+   `goose-extension.md` for the equivalent YAML if you'd rather edit it by hand.
 
 `goose-extension.md` also has a manual verification checklist for once goose is wired up. Worth
 skimming now, but there's nothing to verify yet: SpiceDB has no authorization schema until
