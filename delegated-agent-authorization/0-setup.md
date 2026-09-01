@@ -1,7 +1,6 @@
 # Introduction
 
-In this workshop you build a DevOps deploy Agent, then gate every action it takes with
-delegated, fine-grained authorization: scoped grants, time-bound windows, instant
+In this workshop you will build a DevOps deploy Agent with fine-grained authorization: scoped grants, time-bound windows, instant
 revocation, and a permission hierarchy where revoking a base grant cascades to everything that
 depends on it. The purpose of the workshop is to understand why fine-grained authorization is required for AI Agents, 
 and how it can be implemented using ReBAC. 
@@ -14,7 +13,7 @@ write the schema and the decision engine yourself across the parts to learn each
 
 ## Two ways to drive the agent
 
-You can complete every part in this workshop with just the web UI — no LLM key, no goose
+As a reminder, you can complete every part in this workshop with just the web UI — no LLM key, no goose
 install required. That's the primary path, and it's all you need. 
 
 Each part page also ends with an optional *drive it with goose* step: the same requests in natural language, through a real
