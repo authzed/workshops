@@ -70,15 +70,13 @@
       <text class="lbl" x="574" y="50">SPICEDB</text>
       <rect x="595" y="58" width="11" height="404" rx="5.5" fill="url(#beam)" filter="url(#glow)" opacity="0.55"/>
       <rect x="597" y="58" width="7" height="404" rx="3.5" fill="url(#beam)"/>
-      <circle cx="600" cy="250" r="46" fill="#170d1c" stroke="#3a3243" stroke-width="1.5"/>
-      <use href="#saturn" x="572" y="222" width="56" height="56"/>
       <rect x="516" y="392" width="168" height="30" rx="15" fill="#fff" stroke="#c6c0cb" stroke-width="1"/>
       <text class="lbl-b" x="600" y="411" text-anchor="middle" fill="#a5318a">AUTHORIZATION LAYER</text>
 
       <!-- fan to the three verdicts -->
-      <path class="edge-teal" d="M648 236 Q706 220 706 150 Q706 108 800 108" marker-end="url(#aT)"/>
-      <path class="edge" d="M648 250 H800" stroke="#d98324" stroke-width="2" marker-end="url(#aM)"/>
-      <path class="edge-red" d="M648 264 Q706 280 706 350 Q706 392 800 392" marker-end="url(#aR)"/>
+      <path class="edge-teal" d="M608 236 Q706 220 706 150 Q706 108 800 108" marker-end="url(#aT)"/>
+      <path class="edge" d="M608 250 H800" stroke="#d98324" stroke-width="2" marker-end="url(#aM)"/>
+      <path class="edge-red" d="M608 264 Q706 280 706 350 Q706 392 800 392" marker-end="url(#aR)"/>
 
       <!-- ALLOWED -->
       <rect class="node-al" x="800" y="66" width="350" height="84" rx="12" filter="url(#soft)"/>
