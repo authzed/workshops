@@ -4,13 +4,13 @@ In this workshop you build a DevOps deploy Agent, then gate every action it take
 delegated, fine-grained authorization: scoped grants, time-bound windows, instant
 revocation, and a permission hierarchy where revoking a base grant cascades to everything that
 depends on it. The purpose of the workshop is to understand why fine-grained authorization is required for AI Agents, 
-and how it can be implemented. 
+and how it can be implemented using ReBAC. 
 
 The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP
 extension, docker-compose, the seed script, the web UI) is already there, and you'll
 write the schema and the decision engine yourself across the parts to learn each of the concepts.
 
-![What you'll build: every agent action goes through a SpiceDB permission check, decided ALLOWED, NEEDS_APPROVAL, or BLOCKED](/delegated-agent-authorization/images/fig1-permission-check.svg)
+![Architecture diagram of the project](/delegated-agent-authorization/images/fig1-permission-check.svg)
 
 ## Two ways to drive the agent
 
@@ -39,10 +39,6 @@ cp .env.example .env
 
 `.env` holds the SpiceDB connection details the app itself needs: endpoint, and preshared-token,
 and which agent identity the deploy bot acts as. 
-
-Note: You can run this workshop without the need for a LLM key. The LLM key only comes into play later, and only if you use the
-goose path (see [Install goose](#install-goose-and-register-the-extension) below). The web UI you
-drive every part from (introduced in Part 1) needs no LLM at all.
 
 2. Start the infrastructure:
 
@@ -90,8 +86,7 @@ step above if they don't.
 
 ## Install goose and register the extension
 
-Installing goose is optional for this workshop. Every part runs through a web UI that needs
-neither goose nor an LLM key. Install goose if you want to drive the agent with natural language
+Installing goose is optional for this workshop. Install goose if you want to drive the agent with natural language
 ("Deploy checkout to staging") and watch its tool calls resolve through SpiceDB live.
 
 If you do want the goose path:
