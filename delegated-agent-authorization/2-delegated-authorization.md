@@ -3,8 +3,11 @@
 Part 1 ended with `authz.decide()` returning `ALLOWED` for everything, so
 the agent could destroy production on request. In this section, we replace the stub with the real thing — a
 SpiceDB schema that models *who an agent acts for*, and a `decide()` that turns a permission
-question into one of three honest answers: the agent can do this, a human needs to say yes
-first, or nobody involved is allowed to do this at all.
+question into one of three answers: 
+
+- the agent can do this
+- a human needs to say yes first 
+- nobody involved is allowed to do this at all.
 
 ---
 
@@ -20,11 +23,14 @@ SpiceDB stores access relationships as a graph, where nodes represent entities (
 
 > Is this **actor** allowed to perform this **action** on this **resource**?
 
+Here's the graph you'll build in this part — objects joined by the relations you'll write, with the agent's delegated grant on `staging` highlighted:
+
+![Relationship graph](/delegated-agent-authorization/images/fig2-relationship-graph.svg)
 ---
 
 ## Write the schema
 
-In SpiceDB parlance, this actor and this resource are both Objects and this action is a Permission or Relation. Any usecase can be represented by using a schema that defines the different objects and the relations between them.
+In SpiceDB parlance, this actor and this resource are both Objects and this action is a Permission or Relation. Any usecase can be represented by using a schema that defines the different objects and the relations between them. 
 
 Open `schema.zed`. Right now it's the Part 1 stub — `environment` has no relations or
 permissions at all, so there's nothing for `decide()` to consult even if it wanted to. Replace the
@@ -50,10 +56,9 @@ Before walking through it, two bits of SpiceDB syntax. A `relation name: type` l
 relation whose *subjects* are of that type — `agent_deployer: agent` reads as "an `agent` may be
 wired up as an `agent_deployer` here," not "`agent_deployer` is an agent." And a **relation** differs
 from a **permission**: a relation is a stored fact you write into the graph (an edge), while a
-permission is computed from relations on every check (with `+`, and later `&` and `->`) — never
-stored.
+permission is computed from relations on every check (with `+`, and later `&` and `->`).
 
-Walking it:
+Let's go through each line:
 
 - `user` is an empty definition. Humans don't need relations of their own here; they're
   subjects that other things point to.
@@ -84,7 +89,7 @@ actually has them.
 
 In a ReBAC system, whenever there's a change to the state of a system (ex: something has been created, updated or deleted), a new relationship is written. Since we're starting the workshop with few assumptions, we will write those relationships to SpiceDB. These are the relationships that are defined in `bootstrap.py`:
 
-Note that each relationship write is just a simple API call. 
+Note that each relationship write is just a simple API call. Run:
 
 ```bash
 python bootstrap.py
@@ -117,15 +122,27 @@ with the real three-way decision:
 
 ```python
 async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
+    # 1. Agent holds the permission directly → autonomous action allowed
     if await check(client, "agent", agent_id, permission, "environment", environment_id):
-        return AuthzResult(Decision.ALLOWED,
-            f"agent:{agent_id} holds delegated '{permission}' on environment:{environment_id}")
+        return AuthzResult(
+            Decision.ALLOWED,
+            f"agent:{agent_id} holds delegated '{permission}' on environment:{environment_id}"
+        )
+
+    # 2. Agent lacks permission — check if the delegator (human) could do it
     delegator = await read_delegator(client, agent_id)
     if delegator and await check(client, "user", delegator, permission, "environment", environment_id):
-        return AuthzResult(Decision.NEEDS_APPROVAL,
-            f"agent:{agent_id} lacks '{permission}'; delegator user:{delegator} holds it — human approval required")
-    return AuthzResult(Decision.BLOCKED,
-        f"neither agent:{agent_id} nor its delegator may '{permission}' environment:{environment_id}")
+        return AuthzResult(
+            Decision.NEEDS_APPROVAL,
+            f"agent:{agent_id} lacks '{permission}'; "
+            f"delegator user:{delegator} holds it — human approval required"
+        )
+
+    # 3. Neither agent nor delegator may perform this action
+    return AuthzResult(
+        Decision.BLOCKED,
+        f"neither agent:{agent_id} nor its delegator may '{permission}' environment:{environment_id}"
+    )
 ```
 
 `check()` and `read_delegator()` are already provided at the top of `authz.py` — one wraps
@@ -215,9 +232,8 @@ web UI calls, gated by the same `decide()`.
 
 ## Why the check — not the prompt — is the boundary
 
-Nothing in this part told the agent, in English, "you may deploy staging but not
-production, and never destroy anything." There's no system-prompt instruction to argue with or talk
-around. The agent's tool call runs through `deploybot_server._decide_and_mutate`, which calls `decide()` before it ever touches
+Notice that there's no system-prompt instruction that says "you may deploy staging but not
+production, and never destroy anything." The agent's tool call runs through `deploybot_server._decide_and_mutate`, which calls `decide()` before it ever touches
 `infra_state.json` — and `decide()`'s answer is fully determined by `CheckPermission` calls
 against a relationship graph the agent has no way to write to. Ask the same question a thousand
 different ways, through goose or the web UI or a hand-written script, and you will get the same
