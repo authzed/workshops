@@ -1,50 +1,11 @@
 # Part 1 — Run the Agent (and Watch It Over-Reach)
 
 In this section we'll get the deploy agent running, try a few actions and catch it doing something it should
-never be allowed to do. For example: this agent can tear down production servers since there are no checks to stop it from doing so.
+never be allowed to do. For example: this agent can tear down production servers since there are no permission checks to stop it from doing so.
 
 ---
 
-## The backend
-
-`deploybot_server.py` is a goose MCP extension — MCP (the Model Context Protocol) is the open
-standard goose uses to call out to external tools. It exposes three tools:
-
-- **`list_environments`** — lists every environment and the service versions deployed to it.
-  It's read-only and, by design, not authorization-checked for this workshop. 
-- **`deploy(service, environment)`** — deploys a service to an environment.
-- **`destroy(environment)`** — tears down an entire environment. Its own docstring says
-  *"Destructive; requires elevated authority."* No rollback tool exists; destroy is a one-way
-  door.
-
-`deploy` and `destroy` are mutating, and both are gated: before either touches anything, it calls
-`authz.decide()` to get a ruling, and only proceeds on `ALLOWED`. That's the boundary this
-workshop is about. 
-
----
-
-## `decide()` is a deliberate stub
-
-Open `authz.py`. `decide()` is the one function every mutating tool call goes through, and right
-now there are no permission checks. 
-
-```python
-async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
-    # WORKSHOP STUB — Part 1.
-    # Returns ALLOWED for everything. This is exactly why
-    # the agent over-reaches in Part 1. You implement the real, SpiceDB-backed
-    # three-way decision in Part 2.
-    # TODO(Part 2): replace this stub.
-    return AuthzResult(Decision.ALLOWED, "no authorization configured (workshop stub)")
-```
-
-It takes a `client` — a live connection to SpiceDB — and ignores it. Every argument that should
-matter (which agent, which permission, which environment) is ignored too. `decide()` always
-returns `ALLOWED`. This should obviously not be the case for any production Agent. 
-
----
-
-## Watch it over-reach
+## Going Live
 
 The web UI is how you drive the agent throughout this workshop. It needs no LLM key: it turns your
 text into the same tool calls goose would, and hands them to the same gated backend. From
@@ -61,20 +22,19 @@ Open `http://127.0.0.1:8000`. Type something reasonable into the request box (or
 The UI calls `deploy(service="checkout", environment="production")`. It comes back
 **✅ ALLOWED**, and the version bumps. So far so good.
 
-Now ask it to do something no agent should be able to decide on its own:
+Now ask it to do something the agent should **not** be able to decide on its own:
 
 > Tear down the production environment.
 
 The UI calls `destroy(environment="production")`. It comes back **✅ ALLOWED**, and production environment is
-gone. The tool's own docstring says destroying "requires elevated authority" — but that's
-just a comment for humans reading the code. Nothing enforces it. The stub doesn't look at
-`permission` or `environment_id` at all, so it can't tell a deploy from a destroy any more than it
+gone. The tool's own docstring says destroying "requires elevated authority" — but there's no permission check to enforce it. 
+The stub doesn't look at `permission` or `environment_id` at all, so it can't tell a deploy from a destroy any more than it
 can tell staging from production.
 
 Nothing about the *prompt* told the agent to be reckless. Nothing about the *user's* request was
 malicious: "deploy checkout to production" and "tear down the production environment" are both
 plausible things an operator might type into a chat window, adversarially or by mistake, or an
-agent might decide to do on its own mid-task. This is the consequence of no deterministic check before performing an action.
+agent might decide to do on its own mid-task. This is the consequence of a lack of permission checks before performing an action.
 
 ---
 
@@ -93,8 +53,47 @@ And type the following and see what happens:
 > Tear down the production environment.
 
 goose calls the identical `deploy` / `destroy` tools the web UI calls, gated by the identical
-stubbed `decide()`, so you get the identical **✅ ALLOWED** both times. Same bug, driven by a real
+stubbed `decide()`, so you get the identical **✅ ALLOWED** both times. Same error caused by a real
 LLM instead of the request box.
+
+---
+
+## The backend
+
+In the backend, the agent calls deploybot. `deploybot_server.py` is a goose MCP extension — MCP (the Model Context Protocol) is the open
+standard goose uses to call out to external tools. It exposes three tools:
+
+- **`list_environments`** — lists every environment and the service versions deployed to it.
+  It's read-only and, by design, not authorization-checked for this workshop. 
+- **`deploy(service, environment)`** — deploys a service to an environment.
+- **`destroy(environment)`** — tears down an entire environment. Its own docstring says
+  *"Destructive; requires elevated authority."* No rollback tool exists; destroy is a one-way
+  door.
+
+`deploy` and `destroy` are mutating, and both are gated: before either touches anything, it calls
+`authz.decide()` to get a ruling, and only proceeds on `ALLOWED`. That's the boundary this
+workshop is about. 
+
+---
+
+## `decide()` is a deliberate stub
+
+Open `authz.py` and look for the `decide()` method. It's the one function every mutating tool call goes through, and right
+now there are no permission checks. 
+
+```python
+async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
+    # WORKSHOP STUB — Part 1.
+    # Returns ALLOWED for everything. This is exactly why
+    # the agent over-reaches in Part 1. You implement the real, SpiceDB-backed
+    # three-way decision in Part 2.
+    # TODO(Part 2): replace this stub.
+    return AuthzResult(Decision.ALLOWED, "no authorization configured (workshop stub)")
+```
+
+It takes a `client` — a live connection to SpiceDB — and ignores it. Every argument that should
+matter (which agent, which permission, which environment) is ignored too. `decide()` always
+returns `ALLOWED`. This should obviously not be the case for any production Agent. 
 
 ---
 
@@ -108,16 +107,11 @@ concerned, there's no difference between "deploy a service" and "destroy product
 just tool calls that return `ALLOWED`.
 
 This is **ambient authority**: authority that comes along for free with the environment an agent
-runs in, rather than being granted for a specific act. It's the same failure mode as a script
-running with root because it happened to be launched by root — not because anyone decided it
-should have root.
+runs in, rather than being granted for a specific act.
 
 You might be tempted to fix this by editing the tool's docstring, or telling the agent in its
-system prompt "never destroy production without approval." This is an anti-pattern. The prompt is not
-a boundary as prompts are suggestions to a language model, not a control the system enforces. 
-An authorization boundary has to live *outside* the model's judgment,
-in code that runs whether or not the agent "remembers" the rule. That boundary is what Part 2
-builds.
+system prompt "never destroy production without approval." This is an anti-pattern. An authorization boundary has to live *outside* the model's judgment,
+in code that runs whether or not the agent "remembers" the rule. That boundary is what Part 2 builds.
 
 ---
 

@@ -83,7 +83,7 @@ Codespaces gets you most of the way there. It isn't zero-config: confirm `.venv`
 `docker compose ps` both look right before moving on, and fall back to the manual Dev Containers
 step above if they don't.
 
-## Install goose and register the extension
+## Install goose and register the extension (optional)
 
 Installing goose is optional for this workshop. Install goose if you want to drive the agent with natural language
 ("Deploy checkout to staging") and watch its tool calls resolve through SpiceDB live.

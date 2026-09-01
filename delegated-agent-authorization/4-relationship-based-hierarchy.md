@@ -13,7 +13,7 @@ staging's, enforced by the graph. ReBAC makes this pattern very straightforward.
 
 ## Contingent authority — why RBAC can't express this
 
-The policy you want is: "the agent may deploy production on its own only while it can also deploy
+The idea you want is: "the agent may deploy production on its own only while it can also deploy
 staging on its own." RBAC can only ever hear the first half of that sentence: "the agent has role
 X." What you actually need is "the agent has role X *and* a second, independent fact about a
 different resource currently holds." 

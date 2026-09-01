@@ -79,17 +79,14 @@ rel("environment", "staging", "agent_deployer", "agent", AGENT_ID,
 ```
 
 `rel()` (in `relationships.py`) already accepts an `expires_at` keyword and threads it into
-`optional_expires_at`. That plumbing was there from the start, waiting for the schema to allow it.
-Now every `bootstrap.py` run grants staging autonomy for exactly `window_minutes` from *now*, not
+`optional_expires_at`. Now every `bootstrap.py` run grants staging autonomy for exactly `window_minutes` from *now*, not
 forever.
 
 ---
 
 ## Update `approve.py`
 
-The human-in-the-loop path needs the same fix. `approve.py` already takes `--minutes`
-(default 10) and ignored it. Part 2's version wrote the grant with no expiry at all. Import
-`expiry_from_now` alongside the checks it already runs, and carry it into the write:
+The human-in-the-loop path needs the same fix. In `approve.py` import `expiry_from_now` alongside the checks it already runs, and carry it into the write:
 
 ```python
 # Add this import at the top of approve.py
@@ -101,8 +98,7 @@ update = rel("environment", environment, "agent_deployer", "agent", agent_id,
 ```
 
 Now clicking **Approve prod · 10m** in the web UI writes a grant that expires 10 minutes later on
-its own. No follow-up step, nothing to remember to undo. An approval that never expires was really
-a standing grant with extra steps; this makes "approved for now" mean what it says.
+its own. There's no follow-up step or a step to undo.
 
 ---
 
@@ -143,7 +139,7 @@ doesn't wait for a TTL; they click one button and the grant is gone on the very 
 
 ## Drive it with goose (optional)
 
-If you're running the goose path, the same lever works in natural language. Click **Grant staging ·
+If you're running the goose path, it also works in natural language. Click **Grant staging ·
 30s** (or **Revoke staging**), then in a `goose session` ask it to "deploy checkout to staging."
 Before the window runs out, ✅ **ALLOWED**; after it expires — or once you've revoked —
 ⏸️ **NEEDS APPROVAL**. goose is calling the same gated `deploy` tool, so it sees exactly what the
@@ -164,8 +160,7 @@ about what "expired" means.
 Relationship expiration collapses that back to one as the expiry is evaluated *at check time*, inside the same call that's already asking "does this
 relationship exist and hold." An expired grant isn't cleaned up later. It was never a valid answer
 to begin with, the moment the clock passed `expires_at`. Garbage collection still runs in the
-background to reclaim storage, but it's a housekeeping detail, not part of the authorization
-decision. The boundary is exactly as tight as `CheckPermission` itself.
+background to reclaim storage.
 
 ---
 

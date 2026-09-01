@@ -1,8 +1,7 @@
 # Delegated Authorization for AI Agents: Build an Agent with Fine-Grained Permissions
 
 DevOps and Platform teams now work with hundreds of AI Agents in their internal systems. These
-Agents usually run with credentials that can touch everything, including your production servers.
-This could lead to problems.
+Agents usually run with credentials that can touch everything, including your production servers, which is less than ideal.
 
 This workshop teaches you how to add delegated authorization to your AI Agents, at scale.
 
@@ -13,7 +12,9 @@ scoped delegation, expiring grants, instant revocation, and hierarchical permiss
 revoking staging access automatically suspends production too, something role-based systems
 can't express cleanly.
 
-It's self-guided and hands-on, and everything runs locally with open-source tooling.
+It's self-guided and hands-on, and everything runs locally with open-source tooling. Here's a high-level diagram of the workshop.
+
+![Architecture diagram of the project](/delegated-agent-authorization/images/fig1-permission-check.svg)
 
 ---
 
@@ -22,14 +23,14 @@ It's self-guided and hands-on, and everything runs locally with open-source tool
 An agent process holds one set of credentials, and every tool call it makes runs with the full
 weight of those credentials behind it — there's no built-in notion of *this specific action, for
 this specific reason, scoped to this specific window*. That's **ambient authority**: authority
-that comes along for free with the environment an agent runs in, rather than being granted for a
+that comes along with the environment an agent runs in, rather than being granted for a
 specific act. It's the same failure mode as a script running as root because it happened to be
 launched by root, not because anyone decided it should have root.
 
-The instinct to fix this in the system prompt — "never destroy production without approval" —
-doesn't hold up. A prompt is a suggestion to a language model, not a control the system enforces;
+The instinct to fix this in the prompt (example: "never destroy production without approval") but this is an anti-pattern. 
+A prompt is a suggestion to a language model, not a control that a system enforces;
 it lives in the same channel as everything else the model reads, which means it can be argued
-with, reworded around, or forgotten three turns into a longer conversation. An authorization
+with, reworded around, or bypassed via prompt injection. An authorization
 boundary has to live *outside* the model's judgment, in code that runs whether or not the agent
 "remembers" the rule. That's what this workshop builds: a decision that's fully determined by a
 relationship graph the agent has no way to write to, so the same question gets the same answer no
@@ -42,7 +43,7 @@ matter how many different ways — or how many different agents — ask it.
 - A SpiceDB [ReBAC](https://authzed.com/blog/exploring-rebac) schema
   that models delegation directly: an `agent` acts for a `user` through one relation, `delegator`
 - A three-way decision engine, `decide()`, that turns every mutating tool call into `ALLOWED`,
-  `NEEDS_APPROVAL`, or `BLOCKED` — never a silent yes
+  `NEEDS_APPROVAL`, or `BLOCKED`
 - Time-bound grants that expire on their own, for incident-style access windows, plus instant,
   on-demand revocation for when you need to pull a grant early
 - A relationship hierarchy (`gated_by`) where revoking one environment's autonomy automatically
@@ -60,19 +61,6 @@ matter how many different ways — or how many different agents — ask it.
 
 No prior authorization background is assumed. Comfort with a terminal, Python, and Docker is
 enough.
-
-## The 90-minute module map
-
-| Module | Time | What you do |
-| --- | --- | --- |
-| [Setup](0-setup.md) | 15 min | Bring up Docker (or Codespaces), install dependencies, optionally register the goose extension |
-| [Part 1 — Run the agent](1-run-the-agent.md) | 10 min | Run the agent ungated and watch it destroy production on request |
-| [Part 2 — Delegated authorization](2-delegated-authorization.md) | 25 min | Write the ReBAC schema and implement the three-way `decide()` |
-| [Part 3 — Time-bound and revocable](3-time-bound-and-revocable.md) | 15 min | Add expiring grants for incident windows, plus instant revocation |
-| [Part 4 — Relationship-based hierarchy](4-relationship-based-hierarchy.md) | 20 min | Make production's autonomy contingent on staging's, and watch the cascade |
-| [Next steps](5-nextsteps.md) | 5 min | Zoom out to a real platform: bulk checks, on-behalf-of enforcement, scaling ReBAC |
-
-That's 90 minutes end to end, self-guided — it works equally well live or self-paced afterward.
 
 ## The full reference solution
 
