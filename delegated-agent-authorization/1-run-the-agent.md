@@ -5,19 +5,13 @@ never be allowed to do. For example: this agent can tear down production servers
 
 ---
 
-## The flow — goose calls deploybot
+## The backend
 
 `deploybot_server.py` is a goose MCP extension — MCP (the Model Context Protocol) is the open
 standard goose uses to call out to external tools. It exposes three tools:
 
 - **`list_environments`** — lists every environment and the service versions deployed to it.
-  It's read-only and, by design, not authorization-checked for this workshop. The code says so
-  directly:
-
-  ```python
-  # UNGATED in this workshop: list_environments is not authorization-checked.
-  ```
-
+  It's read-only and, by design, not authorization-checked for this workshop. 
 - **`deploy(service, environment)`** — deploys a service to an environment.
 - **`destroy(environment)`** — tears down an entire environment. Its own docstring says
   *"Destructive; requires elevated authority."* No rollback tool exists; destroy is a one-way
@@ -25,7 +19,7 @@ standard goose uses to call out to external tools. It exposes three tools:
 
 `deploy` and `destroy` are mutating, and both are gated: before either touches anything, it calls
 `authz.decide()` to get a ruling, and only proceeds on `ALLOWED`. That's the boundary this
-workshop is about. In Part 1, the boundary is a stub that never says no.
+workshop is about. 
 
 ---
 
