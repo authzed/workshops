@@ -10,6 +10,8 @@ The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP
 extension, docker-compose, the seed script, the web UI) is already there, and you'll
 write the schema and the decision engine yourself across the parts to learn each of the concepts.
 
+![What you'll build: every agent action goes through a SpiceDB permission check, decided ALLOWED, NEEDS_APPROVAL, or BLOCKED](/delegated-agent-authorization/images/fig1-permission-check.svg)
+
 ## Two ways to drive the agent
 
 You can complete every part in this workshop with just the web UI — no LLM key, no goose
