@@ -60,28 +60,19 @@ python3 -m venv .venv && source .venv/bin/activate && pip install -r requirement
 
 <!-- TODO: verify on a live Codespace before the conference -->
 
-For anyone who can't run Docker locally, Codespaces is the path. This repo's devcontainer config
-lives at `delegated-agent-authorization/starter/.devcontainer/devcontainer.json` (nested under
-`starter/`, not at the repo root), which most Codespaces-creation flows don't auto-detect. Be
-explicit about which folder you're opening:
+No local Docker? Use Codespaces. The devcontainer config lives under `starter/`
+(`delegated-agent-authorization/starter/.devcontainer/devcontainer.json`), not the repo root, so
+most Codespaces flows won't auto-detect it.
 
-1. On the repo page, click **Code ▸ Codespaces ▸ Create codespace on main**. Because the
-   devcontainer config isn't at the repo root, this may open a plain Codespace at the repo root
-   with no devcontainer applied, rather than the Python image this workshop expects.
-2. Once the Codespace is up, check whether `delegated-agent-authorization/starter/.venv` already
-   exists. If it does, the devcontainer ran and did its job — skip to step 4.
-3. If it doesn't, the devcontainer wasn't picked up automatically. In VS Code, open the Command
-   Palette and run **Dev Containers: Reopen in Container**, pointing it at
-   `delegated-agent-authorization/starter` (or open that folder directly and let VS Code prompt
-   you to reopen in its container). That runs the same `postCreateCommand` — creating `.venv`,
-   installing dependencies, and running `docker compose up -d --wait` — so the `.venv/bin/python`
-   path the goose step below relies on exists.
-4. Once dependencies are installed and infra is up, `cd delegated-agent-authorization/starter` (if
-   you're not already there) and copy `.env.example` to `.env` as in Option A.
+1. **Code ▸ Codespaces ▸ Create codespace on main.** This may open a plain Codespace at the repo
+   root without the devcontainer applied.
+2. If `delegated-agent-authorization/starter/.venv` exists, the devcontainer ran — skip to step 4.
+3. If not, open the Command Palette → **Dev Containers: Reopen in Container** on
+   `delegated-agent-authorization/starter`. Its `postCreateCommand` creates `.venv`, installs
+   dependencies, and runs `docker compose up -d --wait`.
+4. `cd delegated-agent-authorization/starter` and copy `.env.example` to `.env` as in Option A.
 
-Codespaces gets you most of the way there. It isn't zero-config: confirm `.venv` and
-`docker compose ps` both look right before moving on, and fall back to the manual Dev Containers
-step above if they don't.
+Before moving on, confirm `.venv` and `docker compose ps` both look right.
 
 ## Install goose and register the extension (optional)
 

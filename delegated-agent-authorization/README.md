@@ -20,21 +20,12 @@ It's self-guided and hands-on, and everything runs locally with open-source tool
 
 ## Why this matters
 
-An agent process holds one set of credentials, and every tool call it makes runs with the full
-weight of those credentials behind it — there's no built-in notion of *this specific action, for
-this specific reason, scoped to this specific window*. That's **ambient authority**: authority
-that comes along with the environment an agent runs in, rather than being granted for a
-specific act. It's the same failure mode as a script running as root because it happened to be
-launched by root, not because anyone decided it should have root.
-
-The instinct to fix this in the prompt (example: "never destroy production without approval") but this is an anti-pattern. 
-A prompt is a suggestion to a language model, not a control that a system enforces;
-it lives in the same channel as everything else the model reads, which means it can be argued
-with, reworded around, or bypassed via prompt injection. An authorization
-boundary has to live *outside* the model's judgment, in code that runs whether or not the agent
-"remembers" the rule. That's what this workshop builds: a decision that's fully determined by a
-relationship graph the agent has no way to write to, so the same question gets the same answer no
-matter how many different ways — or how many different agents — ask it.
+An agent process holds one set of credentials, and every tool call runs with the full weight of
+those behind it — there's no built-in notion of *this specific action, for this specific reason,
+scoped to this specific window*. That's **ambient authority**, and you can't fix it in the prompt:
+a prompt is a suggestion to a model, not a control the system enforces. An authorization boundary
+has to live *outside* the model's judgment — in code that runs whether or not the agent "remembers"
+the rule. That's what this workshop builds.
 
 ## What you'll build
 

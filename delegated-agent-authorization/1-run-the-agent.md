@@ -60,19 +60,15 @@ LLM instead of the request box.
 
 ## The backend
 
-In the backend, the agent calls deploybot. `deploybot_server.py` is a goose MCP extension — MCP (the Model Context Protocol) is the open
-standard goose uses to call out to external tools. It exposes three tools:
+`deploybot_server.py` is a goose MCP extension (MCP — the Model Context Protocol — is how goose
+calls external tools). It exposes three tools:
 
-- **`list_environments`** — lists every environment and the service versions deployed to it.
-  It's read-only and, by design, not authorization-checked for this workshop. 
+- **`list_environments`** — read-only; not authorization-checked in this workshop.
 - **`deploy(service, environment)`** — deploys a service to an environment.
-- **`destroy(environment)`** — tears down an entire environment. Its own docstring says
-  *"Destructive; requires elevated authority."* No rollback tool exists; destroy is a one-way
-  door.
+- **`destroy(environment)`** — tears down an entire environment; a one-way door.
 
-`deploy` and `destroy` are mutating, and both are gated: before either touches anything, it calls
-`authz.decide()` to get a ruling, and only proceeds on `ALLOWED`. That's the boundary this
-workshop is about. 
+`deploy` and `destroy` are mutating: before either touches anything it calls `authz.decide()` and
+only proceeds on `ALLOWED`. That's the boundary this workshop is about.
 
 ---
 
@@ -91,27 +87,22 @@ async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
     return AuthzResult(Decision.ALLOWED, "no authorization configured (workshop stub)")
 ```
 
-It takes a `client` — a live connection to SpiceDB — and ignores it. Every argument that should
-matter (which agent, which permission, which environment) is ignored too. `decide()` always
-returns `ALLOWED`. This should obviously not be the case for any production Agent. 
+It takes a live SpiceDB `client` and ignores it — along with which agent, permission, and
+environment are involved. `decide()` always returns `ALLOWED`. That's the bug.
 
 ---
 
 ## Why this happens: ambient authority
 
-The agent process holds one set of credentials - the `SPICEDB_TOKEN` and `AGENT_SUBJECT` in its
-environment. Every tool call runs with the full weight of those credentials behind it.
-There's no notion of *this specific action, for this specific reason, scoped to this specific
-window*. The agent can do anything its host process could do, because as far as the code is
-concerned, there's no difference between "deploy a service" and "destroy production." Both are
-just tool calls that return `ALLOWED`.
+The agent runs with one set of credentials, and every tool call carries their full weight — there's
+no notion of *this specific action, for this specific reason, scoped to this specific window*. As
+far as the code is concerned there's no difference between "deploy a service" and "destroy
+production"; both are just calls that return `ALLOWED`. This is **ambient authority**: authority that
+comes free with the environment an agent runs in, rather than being granted for a specific act.
 
-This is **ambient authority**: authority that comes along for free with the environment an agent
-runs in, rather than being granted for a specific act.
-
-You might be tempted to fix this by editing the tool's docstring, or telling the agent in its
-system prompt "never destroy production without approval." This is an anti-pattern. An authorization boundary has to live *outside* the model's judgment,
-in code that runs whether or not the agent "remembers" the rule. That boundary is what Part 2 builds.
+You can't fix this in the prompt — a prompt is a suggestion to a model, not a control the system
+enforces. The boundary has to live *outside* the model's judgment, in code that runs whether or not
+the agent "remembers" the rule. That's what Part 2 builds.
 
 ---
 

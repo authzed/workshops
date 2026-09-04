@@ -121,11 +121,9 @@ can watch expire live.
 Start the web UI (`python web.py`) and open `http://127.0.0.1:8000`. Click **Grant staging · 30s**.
 The **grants** panel shows staging's card with a live countdown and a shrinking bar. Watch it hit
 zero, then ask the agent to "deploy checkout to staging" — the one request that was unconditionally
-✅ **ALLOWED** in Part 2 — and it now comes back ⏸️ **NEEDS APPROVAL** instead, with Alice
-named as the delegator who'd have to approve it. Nothing about `decide()` changed. The agent's own
-`agent_deployer` check on staging fails because the relationship it was reading simply isn't there
-anymore, as far as SpiceDB is concerned: it expired on schedule, server-side, with nothing external
-polling for it.
+✅ **ALLOWED** in Part 2 — and it now comes back ⏸️ **NEEDS APPROVAL**, with Alice named as the
+delegator who'd have to approve it. `decide()` didn't change; the grant it was reading simply
+expired, on schedule.
 
 Now the other lever, instant revocation, for when you don't want to wait for even a 30-second window
 to run out. Click **Revoke staging**. The `agent_deployer` relationship on `staging` is deleted
@@ -139,28 +137,18 @@ doesn't wait for a TTL; they click one button and the grant is gone on the very 
 
 ## Drive it with goose (optional)
 
-If you're running the goose path, it also works in natural language. Click **Grant staging ·
-30s** (or **Revoke staging**), then in a `goose session` ask it to "deploy checkout to staging."
-Before the window runs out, ✅ **ALLOWED**; after it expires — or once you've revoked —
-⏸️ **NEEDS APPROVAL**. goose is calling the same gated `deploy` tool, so it sees exactly what the
-web UI sees.
+Click **Grant staging · 30s** (or **Revoke staging**), then ask goose to "deploy checkout to
+staging" in a `goose session` — ✅ before the window lapses, ⏸️ **NEEDS APPROVAL** after.
 
 ---
 
-## Why contingent evaluation beats a cron job
+## Why not a cron job?
 
-The obvious fix looks like this: keep the grant unexpiring, and run a cron job that deletes
-`agent_deployer` relationships older than an hour. This is an anti-pattern. 
-
-A cron-based cleanup means the grant is *actually* valid — checkable, usable, real — for however long it takes the cron job to
-notice and catch up, which is never zero. For example: someone deploys at minute 59:58 using a grant that's
-"supposed to" be gone. You've also now got a second system that has to run, has to not fail silently, and has to agree with SpiceDB
-about what "expired" means. 
-
-Relationship expiration collapses that back to one as the expiry is evaluated *at check time*, inside the same call that's already asking "does this
-relationship exist and hold." An expired grant isn't cleaned up later. It was never a valid answer
-to begin with, the moment the clock passed `expires_at`. Garbage collection still runs in the
-background to reclaim storage.
+The obvious alternative — keep the grant forever and delete it later with a cron job — is an
+anti-pattern. The grant stays *actually* valid until the job catches up (never zero: someone deploys
+at 59:58 on a grant that's "supposed to" be gone), and you've added a second system that has to
+agree with SpiceDB about what "expired" means. Relationship expiration collapses that to one: the
+expiry is evaluated at check time, so an expired grant was never a valid answer to begin with.
 
 ---
 

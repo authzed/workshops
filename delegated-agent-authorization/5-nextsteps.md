@@ -10,37 +10,22 @@ agents across many resources.
 
 ## One schema, not one authorization system per resource
 
-Nothing about `schema.zed` is specific to deploy agents. `agent { relation delegator: user }` is
-the entire idea of delegation, expressed once, as a graph edge: not a column on a `deploys` table or a separate microservice
-that re-derives on its own. If you add a new resource type to the platform such as a database or a CI pipeline, you can reuse `direct_deployer` / `agent_deployer` / `gated_by` directly or extend the same pattern by a line or two. 
-
-If you add a new agent it's just one `delegator` edge. You don't have to create a new permission system because the platform added new
-resource types. The graph just gains one more kind of node.
-
-That's the payoff of modeling authority as relationships instead of scattering `if user.role ==
-"admin"` checks through the codebase: the schema is the single place authority is defined, and
-every service that needs an answer asks the same graph the same kind of question.
+Nothing about `schema.zed` is specific to deploy agents. `agent { relation delegator: user }` is the
+entire idea of delegation, expressed once as a graph edge — not a column on a table or logic a
+second service re-derives. A new resource type (a database, a CI pipeline) reuses
+`direct_deployer` / `agent_deployer` / `gated_by` or extends the pattern by a line or two; a new
+agent is one `delegator` edge. The schema stays the single place authority is defined, instead of
+`if user.role == "admin"` checks scattered across services.
 
 ## `CheckBulkPermissions` — asking about many resources at once
 
-The `decide()` method in this workshop asks one question at a time: can this agent do *this* thing to *this*
-environment. That's the right shape for a mutating call: `deploy` and `destroy` each act on one
-resource. But an agent with a bigger surface area often needs a different question, one worth
-asking before it decides what to do next or before a UI renders a list of options: *which of
-these N resources may I touch at all?*
-
-Looping a `CheckPermission` call per resource works, but it's N round trips to answer one
-question, and nothing guarantees they're all evaluated against the same snapshot of the graph.
-SpiceDB's `CheckBulkPermissions` RPC takes a batch of `(resource, permission, subject)` tuples and
-answers all of them in a single call, against one consistent read. `deploybot`'s
-`list_environments` (deliberately left ungated in this workshop) is exactly the tool that would
-reach for this at scale: instead of "list every environment" as an unchecked read, it becomes "of
-these N environments, which does this agent hold `view` on," answered in one round trip instead of
-N. 
-
-Note: If you don't already have the candidate list, and want *every* resource a subject can reach
-rather than a filter over a known set, `LookupResources` is the streaming counterpart to reach for
-instead.
+`decide()` asks one question at a time — right for a mutating call, where `deploy` and `destroy`
+each act on one resource. But an agent with a bigger surface often needs *which of these N resources
+may I touch?* — before it acts, or before a UI renders a list. Looping `CheckPermission` per
+resource is N round trips with no shared snapshot; SpiceDB's `CheckBulkPermissions` answers a batch
+of `(resource, permission, subject)` tuples in one consistent call. `deploybot`'s `list_environments`
+(ungated here) is exactly that at scale: "of these N environments, which does this agent hold `view`
+on." (Want *every* resource a subject can reach, with no candidate list? That's `LookupResources`.)
 
 ## Scaling ReBAC with SpiceDB
 

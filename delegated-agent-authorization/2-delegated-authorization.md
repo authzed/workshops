@@ -13,13 +13,16 @@ question into one of three answers:
 
 ## Permissions are a graph, not a table
 
-In the past, the problem of authorization has been solved with techniques such as Role-Based Access Control (permissions granted through roles like “admin” or “editor.”) and Attribute-Based Access Control (decisions based on attributes such as department, geography). However, these techniques are too broad-scoped and don't scale to the requirements of modern AI applications. That's where ReBAC comes in. 
+Authorization has traditionally been solved with **Role-Based Access Control** (permissions via
+roles like "admin"/"editor") or **Attribute-Based Access Control** (decisions from attributes like
+department or geography). Both are too coarse for the delegation modern AI agents need. That's where
+ReBAC comes in.
 
-**ReBAC** is relationship-based access control. Instead of a table of roles or attributes, ReBAC models permissions as a graph: subjects,
-resources, and the relations between them, with permissions defined as graph traversals over those
-relations. This is the model popularized by Google in their 2019 whitepaper [**Zanzibar**](https://research.google/pubs/pub48190/). This is the system that authorizes Google Drive, Docs, and Calendar. In today's workshop we'll use SpiceDB - an open-source implementation of the same ideas. 
-
-SpiceDB stores access relationships as a graph, where nodes represent entities (users, agents, documents) and edges represent relationships (like “viewer,” “editor,” or “owner”). Fundamentally, authorization logic can be reduced to asking a single question:
+**ReBAC** — relationship-based access control — models permissions as a graph: subjects, resources,
+and the relations between them, with permissions defined as traversals over those relations. It's
+the model Google published as [**Zanzibar**](https://research.google/pubs/pub48190/) (the system
+behind Drive, Docs, and Calendar); SpiceDB is an open-source implementation. Every check reduces to
+one question:
 
 > Is this **actor** allowed to perform this **action** on this **resource**?
 
@@ -73,11 +76,10 @@ Let's go through each line:
     deploy. Same permission, two independent ways to earn it — that's the delegation: granting
     `agent_deployer` on an environment is what lets an *agent* deploy there without a human doing
     it directly.
-  - `permission approve = approver` is a human-only relation. Nothing gives an agent `approve`,
-    so agents can never approve their own grants.
-  - `permission destroy = destroyer` is deliberately its own relation, not folded into `deploy`.
-    Deploying a service and tearing down an entire environment are different levels of
-    consequence, so they get different permissions with different holders.
+  - `permission approve = approver` is human-only — nothing gives an agent `approve`, so it can
+    never approve its own grants.
+  - `permission destroy = destroyer` is deliberately its own relation, not folded into `deploy`:
+    tearing down an environment is a different level of consequence than deploying to one.
 
 Notice what's *not* here: nothing grants `agent_deployer` or `destroyer` to anyone yet. The schema
 defines what delegation and destruction *mean*; the relationships you write next decide who
@@ -87,9 +89,7 @@ actually has them.
 
 ## Seed the delegation graph
 
-In a ReBAC system, whenever there's a change to the state of a system (ex: something has been created, updated or deleted), a new relationship is written. Since we're starting the workshop with few assumptions, we will write those relationships to SpiceDB. These are the relationships that are defined in `bootstrap.py`:
-
-Note that each relationship write is just a simple API call. Run:
+Every state change in a ReBAC system is a relationship write. Seed the ones this workshop needs:
 
 ```bash
 python bootstrap.py
@@ -145,30 +145,12 @@ async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
     )
 ```
 
-`check()` and `read_delegator()` are already provided at the top of `authz.py` — one wraps
-`CheckPermission`, the other reads the `agent#delegator` relationship straight off the graph. The
-logic is a strict fallthrough, evaluated in this order:
-
-1. Does the agent itself hold the permission? `check(client, "agent", agent_id, permission,
-   "environment", environment_id)` asks SpiceDB the same question `deploy = direct_deployer +
-   agent_deployer` was built to answer: is there a path from `agent:goose_alice` to `deploy` on
-   `environment:staging`? For staging, yes — `ALLOWED`, and the agent never has to ask anyone.
-
-2. If not, could the human it acts for do this? `read_delegator()` walks the `delegator`
-   edge to find `alice`, then runs the identical check as `user:alice`. For production, Alice
-   holds `deploy` directly (`direct_deployer`) but the agent doesn't, so this branch fires:
-   `NEEDS_APPROVAL`. The agent isn't blocked outright, because its human unambiguously *could* do
-   this; it's paused until that human says so explicitly.
-
-3. If neither holds it, `BLOCKED`. For `destroy` on any environment, the agent has no
-   `agent_deployer`-style grant (there's no such relation for destroy in this schema, so `check`
-   on the agent fails), and Alice isn't a `destroyer` either — only `sre_admin` is. Neither side
-   of the delegation chain has the permission, so there's nothing to escalate to. `BLOCKED` is
-   final for this call; no amount of retrying changes the answer without someone writing a new
-   relationship.
-
-Three inputs, one `CheckPermission`-shaped question asked at most twice, and every branch returns
-a reason string that names exactly which relationship justified the answer.
+`check()` and `read_delegator()` are provided at the top of `authz.py`: one wraps `CheckPermission`,
+the other reads the `agent#delegator` edge. It's a strict fallthrough — the agent's own grant
+(branch 1), else its delegator's authority (branch 2 → `NEEDS_APPROVAL`), else `BLOCKED`. So staging
+is `ALLOWED` (the agent holds it), production is `NEEDS_APPROVAL` (only Alice does), and any
+`destroy` is `BLOCKED` (nobody in the chain is a `destroyer`). Every branch returns a reason string
+naming the relationship that justified it.
 
 ---
 
@@ -180,15 +162,8 @@ a reason string that names exactly which relationship justified the answer.
 python web.py
 ```
 
-Open `http://127.0.0.1:8000`. This is a small FastAPI front end. The front end holds no authorization logic of its own - what you see is exactly what SpiceDB decides. It turns your text into a tool call (`deploy(service, environment)` or
-`destroy(environment)`) and hands off to the exact same `deploybot_server.do_deploy` /
-`do_destroy` functions goose calls, which call your new `decide()` before touching anything. 
-
-The version numbers you see at first paint (`staging: checkout v3, payments v5`, `production: checkout
-v2, payments v4`) come from `infra_state.json`, checked into the starter repo as the baseline the
-UI resets to.
-
-Try the three cases:
+Open `http://127.0.0.1:8000` and try the three cases — the front end holds no authorization logic of
+its own; what you see is exactly what SpiceDB decides:
 
 - **"Deploy checkout to staging"** → ✅ **ALLOWED**. The agent's own `agent_deployer` grant
   covers it; the version bumps immediately.
@@ -215,30 +190,23 @@ That single write is the entire "approval": no new code path, no special-cased b
 `("goose_alice", "deploy", "production")` hits branch 1 straight away and returns `ALLOWED`,
 because the graph now has a direct path.
 
-### goose (optional, live-LLM path)
-
-If you registered the goose `deploybot` extension in setup:
+### goose (optional)
 
 ```bash
 goose session
 ```
 
-Drive the same three requests in natural language — "Deploy checkout to staging", "Deploy checkout
-to production", "Tear down the production environment" — and watch the identical
-✅ / ⏸️ / 🚫 verdicts come back, because goose is calling the same `deploybot_server.py` tools the
-web UI calls, gated by the same `decide()`.
+Drive the same three requests in natural language — identical ✅ / ⏸️ / 🚫 verdicts, because goose
+calls the same tools gated by the same `decide()`.
 
 ---
 
 ## Why the check — not the prompt — is the boundary
 
-Notice that there's no system-prompt instruction that says "you may deploy staging but not
-production, and never destroy anything." The agent's tool call runs through `deploybot_server._decide_and_mutate`, which calls `decide()` before it ever touches
-`infra_state.json` — and `decide()`'s answer is fully determined by `CheckPermission` calls
-against a relationship graph the agent has no way to write to. Ask the same question a thousand
-different ways, through goose or the web UI or a hand-written script, and you will get the same
-`ALLOWED` / `NEEDS_APPROVAL` / `BLOCKED` back every time, because the agent never gets to
-*compute* the answer — it only ever receives one that SpiceDB already computed. 
+There's no system-prompt rule to argue with here. `decide()`'s answer is fully determined by
+`CheckPermission` against a graph the agent can't write to — ask the same question a thousand ways,
+through goose or the web UI or a script, and you get the same verdict, because the agent never
+*computes* it, it only receives it.
 
 ---
 

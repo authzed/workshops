@@ -18,7 +18,8 @@ staging on its own." RBAC can only ever hear the first half of that sentence: "t
 X." What you actually need is "the agent has role X *and* a second, independent fact about a
 different resource currently holds." 
 
-ReBAC computes permissions based off relationships expressed in a graph. Expressing a *relation* between the staging and prod server access is just about adding a new relationship and an associated permission. All permissions checks fall into place accordingly. This is one of the strengths of ReBAC - hierarchies and nested permissions are easy to compute.
+ReBAC handles this natively: express the dependency as one relation plus a permission that walks it,
+and every check falls into place. Hierarchies and nested permissions are cheap to compute.
 
 ---
 
@@ -127,26 +128,18 @@ has changed.
 
 ## Drive it with goose (optional)
 
-If you're running the goose path, watch the cascade in natural language. With both grants live, ask
-goose to "deploy checkout to production" — ✅ **ALLOWED**. Click **Revoke staging**, then ask again:
-⏸️ **NEEDS APPROVAL**, even though you never touched production. goose deploys through the same gated
-`deploy` permission, so `gated_by` suspends its production autonomy exactly as it does for the web
-UI.
+With both grants live, ask goose to "deploy checkout to production" — ✅ **ALLOWED**. Click
+**Revoke staging**, then ask again: ⏸️ **NEEDS APPROVAL**, even though you never touched production.
 
 ---
 
-## Suspend, not erase — why this is contingent evaluation
+## Suspend, not erase
 
-Look again at what **Revoke staging** actually deleted:
-
-`environment:staging#agent_deployer@agent:goose_alice`. 
-
-That's just one relationship. The relationship
-`environment:production#agent_deployer@agent:goose_alice` — the one **Approve prod · 10m** wrote — is
-still sitting in the graph, completely untouched. `agent_deploy` on production went from `ALLOWED` to
-`NEEDS_APPROVAL` without a single write touching production's own relationships. Nothing was
-deleted there; a permission that used to evaluate `true` now evaluates `false`, because one of the
-two facts it depends on changed underneath it.
+This isn't a cascading delete. Production's own grant
+(`environment:production#agent_deployer@agent:goose_alice`, written by **Approve prod · 10m**) never
+moved — `agent_deploy` just recomputed from `true` to `false` because one of the two facts it
+depends on is gone. Re-grant staging and production comes straight back, with no writes to
+production. That's the difference between evaluating a permission and deleting a grant.
 
 ---
 
