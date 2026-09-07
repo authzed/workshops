@@ -5,12 +5,10 @@ Agents usually run with credentials that can touch everything, including your pr
 
 This workshop teaches you how to add delegated authorization to your AI Agents, at scale.
 
-We'll build a DevOps deploy agent on goose, the open-source agent from the Agentic AI Foundation,
+We'll build a DevOps deploy agent on [goose](https://goose-docs.ai/), the open-source agent from the Agentic AI Foundation,
 and give it fine-grained permissions using Relationship-Based Access Control (ReBAC). Along the
-way you'll get hands-on with the Google Zanzibar model behind it, and why it fits AI agents:
-scoped delegation, expiring grants, instant revocation, and hierarchical permissions where
-revoking staging access automatically suspends production too, something role-based systems
-can't express cleanly.
+way you'll get hands-on with the Google Zanzibar model behind it, and why it is suited for AI agents:
+scoped delegation, expiring grants, instant revocation, and hierarchical permissions.
 
 It's self-guided and hands-on, and everything runs locally with open-source tooling. Here's a high-level diagram of the workshop.
 
@@ -22,7 +20,7 @@ It's self-guided and hands-on, and everything runs locally with open-source tool
 
 An agent process holds one set of credentials, and every tool call runs with the full weight of
 those behind it — there's no built-in notion of *this specific action, for this specific reason,
-scoped to this specific window*. That's **ambient authority**, and you can't fix it in the prompt:
+scoped to this specific window*. This is called **ambient authority**, and it can't be contained in a single prompt:
 a prompt is a suggestion to a model, not a control the system enforces. An authorization boundary
 has to live *outside* the model's judgment — in code that runs whether or not the agent "remembers"
 the rule. That's what this workshop builds.
@@ -38,15 +36,15 @@ the rule. That's what this workshop builds.
 - Time-bound grants that expire on their own, for incident-style access windows, plus instant,
   on-demand revocation for when you need to pull a grant early
 - A relationship hierarchy (`gated_by`) where revoking one environment's autonomy automatically
-  suspends what depends on it — contingent evaluation, not a cascading delete
+  suspends what depends on it
 - A web UI that drives every action — request, approve, revoke, watch a grant expire live — and
   shows exactly what SpiceDB decides, so every part is confirmable without an LLM in the loop
 
 ## Prerequisites
 
 - **Docker**, or a GitHub Codespace — the repo ships a `.devcontainer/` that handles setup for you
-- **Python 3.10+**
-- **goose, plus an API key for any LLM it supports** — only needed if you want to drive the agent
+- **Python 3.11+**
+- (Optional) **goose, plus an API key for any LLM it supports** — only needed if you want to drive the agent
   in natural language. The web UI drives every part without an LLM, so goose is optional
   throughout.
 

@@ -1,8 +1,7 @@
 # Introduction
 
-In this workshop you will build a DevOps deploy Agent with fine-grained authorization: scoped grants, time-bound windows, instant
-revocation, and a permission hierarchy where revoking a base grant cascades to everything that
-depends on it. The purpose of the workshop is to understand why fine-grained authorization is required for AI Agents, 
+In this workshop you will build a DevOps deploy Agent with fine-grained authorization. 
+The learning objective of the workshop is to understand why fine-grained authorization is required for AI Agents, 
 and how it can be implemented using ReBAC. 
 
 The `starter/` folder in this repo is stubbed on purpose: the plumbing (MCP

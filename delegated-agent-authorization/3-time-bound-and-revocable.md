@@ -1,7 +1,7 @@
 # Part 3 — Time-Bound and Revocable
 
 Part 2 gave the agent a real grant: `goose_alice` is `agent_deployer` on `staging`, forever,
-until someone edits the graph by hand. That's already better than ambient authority, but typically you need 
+until someone edits the graph by hand. That's already better than ambient authority, but sometimes you may need 
 time-bound delegation. An incident responder pulled in at 2am should get staging access for the duration of the incident, not a permanent grant nobody
 remembers to revoke. Here you make that grant expire on its own, and give an operator a way to kill
 it early.

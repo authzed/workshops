@@ -60,8 +60,7 @@ LLM instead of the request box.
 
 ## The backend
 
-`deploybot_server.py` is a goose MCP extension (MCP — the Model Context Protocol — is how goose
-calls external tools). It exposes three tools:
+`deploybot_server.py` is a goose MCP extension that exposes three tools:
 
 - **`list_environments`** — read-only; not authorization-checked in this workshop.
 - **`deploy(service, environment)`** — deploys a service to an environment.
@@ -88,7 +87,7 @@ async def decide(client, agent_id, permission, environment_id) -> AuthzResult:
 ```
 
 It takes a live SpiceDB `client` and ignores it — along with which agent, permission, and
-environment are involved. `decide()` always returns `ALLOWED`. That's the bug.
+environment are involved. `decide()` always returns `ALLOWED`. That's the bug we'll fix.
 
 ---
 
@@ -100,9 +99,7 @@ far as the code is concerned there's no difference between "deploy a service" an
 production"; both are just calls that return `ALLOWED`. This is **ambient authority**: authority that
 comes free with the environment an agent runs in, rather than being granted for a specific act.
 
-You can't fix this in the prompt — a prompt is a suggestion to a model, not a control the system
-enforces. The boundary has to live *outside* the model's judgment, in code that runs whether or not
-the agent "remembers" the rule. That's what Part 2 builds.
+Let's fix this in Part 2.
 
 ---
 

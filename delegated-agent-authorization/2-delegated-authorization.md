@@ -18,7 +18,7 @@ roles like "admin"/"editor") or **Attribute-Based Access Control** (decisions fr
 department or geography). Both are too coarse for the delegation modern AI agents need. That's where
 ReBAC comes in.
 
-**ReBAC** — relationship-based access control — models permissions as a graph: subjects, resources,
+Relationship-based access control aka **ReBAC** models permissions as a graph: subjects, resources,
 and the relations between them, with permissions defined as traversals over those relations. It's
 the model Google published as [**Zanzibar**](https://research.google/pubs/pub48190/) (the system
 behind Drive, Docs, and Calendar); SpiceDB is an open-source implementation. Every check reduces to
@@ -26,9 +26,10 @@ one question:
 
 > Is this **actor** allowed to perform this **action** on this **resource**?
 
-Here's the graph you'll build in this part — objects joined by the relations you'll write, with the agent's delegated grant on `staging` highlighted:
+Here's a simplified version of the graph you'll build in this part — objects joined by the relations you'll write, with the agent's delegated grant on `staging` highlighted:
 
-![Relationship graph](/delegated-agent-authorization/images/fig2-relationship-graph.svg)
+![Relationship graph](/delegated-agent-authorization/images/fig2-relationship-graph.png)
+
 ---
 
 ## Write the schema
@@ -59,7 +60,7 @@ Before walking through it, two bits of SpiceDB syntax. A `relation name: type` l
 relation whose *subjects* are of that type — `agent_deployer: agent` reads as "an `agent` may be
 wired up as an `agent_deployer` here," not "`agent_deployer` is an agent." And a **relation** differs
 from a **permission**: a relation is a stored fact you write into the graph (an edge), while a
-permission is computed from relations on every check (with `+`, and later `&` and `->`).
+permission is computed from relations on every check.
 
 Let's go through each line:
 
@@ -162,8 +163,8 @@ naming the relationship that justified it.
 python web.py
 ```
 
-Open `http://127.0.0.1:8000` and try the three cases — the front end holds no authorization logic of
-its own; what you see is exactly what SpiceDB decides:
+Open `http://127.0.0.1:8000` and try the three cases. The front end holds no authorization logic of
+its own; what you see is exactly what SpiceDB decides (You can see the live permission check in the Docker container)
 
 - **"Deploy checkout to staging"** → ✅ **ALLOWED**. The agent's own `agent_deployer` grant
   covers it; the version bumps immediately.
@@ -201,10 +202,10 @@ calls the same tools gated by the same `decide()`.
 
 ---
 
-## Why the check — not the prompt — is the boundary
+## Why the check is the boundary (and not the prompt)
 
 There's no system-prompt rule to argue with here. `decide()`'s answer is fully determined by
-`CheckPermission` against a graph the agent can't write to — ask the same question a thousand ways,
+`CheckPermission` against a graph the agent can't write to. Ask the same question a thousand ways,
 through goose or the web UI or a script, and you get the same verdict, because the agent never
 *computes* it, it only receives it.
 
