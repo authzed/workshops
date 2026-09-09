@@ -1,0 +1,14 @@
+# grpcutil (insecure_bearer_token_credentials) ships inside the authzed wheel —
+# it is NOT a separate PyPI package, so do not list it here.
+authzed>=0.7.0
+grpcio>=1.50.0
+# mcp 2.0 renamed FastMCP -> MCPServer and changed other APIs; pin to the 1.x
+# line so `from mcp.server.fastmcp import FastMCP` (used by deploybot_server.py)
+# keeps working.
+mcp>=1.2.0,<2.0.0
+# Web demo front end (web.py). uvicorn ships with fastapi's standard extra.
+fastapi>=0.110.0
+uvicorn>=0.29.0
+python-dotenv>=1.0.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

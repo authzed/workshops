@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: spicedb
+      POSTGRES_PASSWORD: spicedb
+      POSTGRES_DB: spicedb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spicedb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  spicedb-migrate:
+    image: authzed/spicedb:latest
+    command: "migrate head"
+    environment:
+      SPICEDB_DATASTORE_ENGINE: postgres
+      SPICEDB_DATASTORE_CONN_URI: "postgres://spicedb:spicedb@postgres:5432/spicedb?sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  spicedb:
+    image: authzed/spicedb:latest
+    # Relationship expiration (used by `agent_deployer: agent with expiration`) is a
+    # built-in feature — no flag needed.
+    command: "serve"
+    environment:
+      SPICEDB_GRPC_PRESHARED_KEY: "${SPICEDB_TOKEN:-devtoken}"
+      SPICEDB_DATASTORE_ENGINE: postgres
+      SPICEDB_DATASTORE_CONN_URI: "postgres://spicedb:spicedb@postgres:5432/spicedb?sslmode=disable"
+      SPICEDB_GRPC_NO_TLS: "true"
+      SPICEDB_LOG_LEVEL: "info"
+    ports:
+      - "50051:50051"
+      - "8443:8443"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      spicedb-migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
