@@ -27,51 +27,45 @@ cd workshops/delegated-agent-authorization/starter
 
 ## Installation
 
-#### Option A - Run locally with Docker
+Everything runs from `delegated-agent-authorization/starter`. Pick an environment, then run the
+same three steps.
 
-1. Copy the example `.env` file:
+- **Local** — install Docker (Desktop or Engine) and Python 3.11+, then
+  `cd delegated-agent-authorization/starter`.
+- **GitHub Codespaces** — on the repo page, **Code ▸ Codespaces ▸ Create codespace on main**. It
+  auto-detects this workshop's devcontainer, builds a Python + Docker image, and pre-runs steps 2–3
+  for you (so those are quick no-ops in a codespace). When the terminal is ready,
+  `cd delegated-agent-authorization/starter`.
+
+  > **Codespace didn't pick up the devcontainer?** (no `.venv`, `docker` missing) — open the Command
+  > Palette → **Dev Containers: Reopen in Container** and point it at
+  > `delegated-agent-authorization/starter`.
+
+Then, from `starter/`:
+
+1. Copy the example env file:
 
 ```bash
 cp .env.example .env
 ```
 
-`.env` holds the SpiceDB connection details the app itself needs: endpoint, and preshared-token,
-and which agent identity the deploy bot acts as. 
+`.env` holds the SpiceDB connection details the app needs: endpoint, preshared token, and which
+agent identity the deploy bot acts as.
 
-2. Start the infrastructure:
+2. Start SpiceDB and its Postgres datastore:
 
 ```bash
 docker compose up -d --wait
 ```
 
-This brings up two containers, `postgres` (SpiceDB's datastore) and `spicedb`, plus a
-short-lived `spicedb-migrate` container that runs SpiceDB's own datastore migration (setting up
-its Postgres tables, not the `schema.zed` you'll write later) and exits. SpiceDB serves
-on `localhost:50051` with a preshared key of `devtoken` (not recommended for prod, obviously).
+This brings up `postgres`, a short-lived `spicedb-migrate` container (runs SpiceDB's datastore
+migration and exits), and `spicedb` on `localhost:50051` with a preshared key of `devtoken`.
 
 3. Create a virtual environment and install dependencies:
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 ```
-
-#### Option B - Run in GitHub Codespaces
-
-<!-- TODO: verify on a live Codespace before the conference -->
-
-No local Docker? Use Codespaces. The devcontainer config lives under `starter/`
-(`delegated-agent-authorization/starter/.devcontainer/devcontainer.json`), not the repo root, so
-most Codespaces flows won't auto-detect it.
-
-1. **Code ▸ Codespaces ▸ Create codespace on main.** This may open a plain Codespace at the repo
-   root without the devcontainer applied.
-2. If `delegated-agent-authorization/starter/.venv` exists, the devcontainer ran — skip to step 4.
-3. If not, open the Command Palette → **Dev Containers: Reopen in Container** on
-   `delegated-agent-authorization/starter`. Its `postCreateCommand` creates `.venv`, installs
-   dependencies, and runs `docker compose up -d --wait`.
-4. `cd delegated-agent-authorization/starter` and copy `.env.example` to `.env` as in Option A.
-
-Before moving on, confirm `.venv` and `docker compose ps` both look right.
 
 ## Install goose and register the extension (optional)
 
@@ -131,8 +125,7 @@ online. Part 1 is next, and it drives the agent from the web UI to watch it over
 
 - [ ] Cloned the repo
 - [ ] Infrastructure is up — Docker (`docker compose up -d --wait`) or Codespaces
-- [ ] `.venv` created and dependencies installed — manually in Option A, automatically by the
-      devcontainer in Option B
+- [ ] `.venv` created and dependencies installed (automatic in a Codespace via the devcontainer)
 - [ ] (Goose path only) goose installed with an LLM provider configured, and the `deploybot`
       extension registered per `goose-extension.md`
 
