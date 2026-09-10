@@ -47,3 +47,12 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  # Pin the bridge MTU to 1450 so container-to-container traffic works on GitHub
+  # Codespaces (its overlay network's effective MTU is below 1500, which otherwise
+  # makes spicedb-migrate hang connecting to postgres). Harmless on local Docker.
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: "1450"
