@@ -1,0 +1,18 @@
+# Codespaces override. Layer it on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.codespaces.yml up -d --wait
+# Host networking sidesteps Docker-in-Docker's flaky bridge, which otherwise hangs
+# spicedb-migrate connecting to postgres. The devcontainer applies this automatically
+# in Codespaces; do NOT use it on local Docker Desktop (bridge + published ports there).
+services:
+  postgres:
+    network_mode: host
+
+  spicedb-migrate:
+    network_mode: host
+    environment:
+      SPICEDB_DATASTORE_CONN_URI: "postgres://spicedb:spicedb@127.0.0.1:5432/spicedb?sslmode=disable"
+
+  spicedb:
+    network_mode: host
+    environment:
+      SPICEDB_DATASTORE_CONN_URI: "postgres://spicedb:spicedb@127.0.0.1:5432/spicedb?sslmode=disable"

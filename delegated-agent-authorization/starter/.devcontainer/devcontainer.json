@@ -2,6 +2,6 @@
   "name": "delegated-agent-authorization",
   "image": "mcr.microsoft.com/devcontainers/python:3.12",
   "features": { "ghcr.io/devcontainers/features/docker-in-docker:2": {} },
-  "postCreateCommand": "cd delegated-agent-authorization/starter && python -m venv .venv && .venv/bin/pip install -r requirements.txt",
+  "postCreateCommand": "cd delegated-agent-authorization/starter && python -m venv .venv && .venv/bin/pip install -r requirements.txt && if [ \"$CODESPACES\" = \"true\" ]; then docker compose -f docker-compose.yml -f docker-compose.codespaces.yml up -d --wait; else docker compose up -d --wait; fi",
   "forwardPorts": [8000, 50051]
 }
