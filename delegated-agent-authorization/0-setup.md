@@ -33,9 +33,11 @@ same three steps.
 - **Local** — install Docker (Desktop or Engine) and Python 3.11+, then
   `cd delegated-agent-authorization/starter`.
 - **GitHub Codespaces** — on the repo page, **Code ▸ Codespaces ▸ Create codespace on main**. It
-  auto-detects this workshop's devcontainer, builds a Python + Docker image, and pre-runs steps 2–3
-  for you (so those are quick no-ops in a codespace). When the terminal is ready,
-  `cd delegated-agent-authorization/starter`.
+  auto-detects this workshop's devcontainer and builds a Python + Docker image with dependencies
+  pre-installed (step 3 is a no-op in a codespace). When the terminal is ready,
+  `cd delegated-agent-authorization/starter`. **Before running step 2, apply the host-networking
+  edit in the Codespaces note below** — the default bridge networking hangs under Codespaces'
+  Docker-in-Docker.
 
   > **Codespace didn't pick up the devcontainer?** (no `.venv`, `docker` missing) — open the Command
   > Palette → **Dev Containers: Reopen in Container** and point it at
@@ -60,6 +62,16 @@ docker compose up -d --wait
 
 This brings up `postgres`, a short-lived `spicedb-migrate` container (runs SpiceDB's datastore
 migration and exits), and `spicedb` on `localhost:50051` with a preshared key of `devtoken`.
+
+> **On GitHub Codespaces**, edit `docker-compose.yml` for **host networking** before running this —
+> Docker-in-Docker's bridge can't reliably route container-to-container, so `spicedb-migrate` hangs
+> connecting to `postgres`. Three edits:
+> - add `network_mode: host` to all three services (`postgres`, `spicedb-migrate`, `spicedb`)
+> - in both `SPICEDB_DATASTORE_CONN_URI` values, change `@postgres:5432` to `@127.0.0.1:5432`
+>   (host networking has no Compose DNS, so `postgres` won't resolve)
+> - delete the `ports:` and `networks:` blocks — both are no-ops under host networking
+>
+> Leave the file unchanged for local Docker, where bridge networking works.
 
 3. Create a virtual environment and install dependencies:
 
