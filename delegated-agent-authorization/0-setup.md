@@ -33,9 +33,9 @@ same three steps.
 - **Local** — install Docker (Desktop or Engine) and Python 3.11+, then
   `cd delegated-agent-authorization/starter`.
 - **GitHub Codespaces** — on the repo page, **Code ▸ Codespaces ▸ Create codespace on main**. It
-  auto-detects this workshop's devcontainer, builds a Python + Docker image, and pre-runs steps 2–3
-  for you (so those are quick no-ops in a codespace). When the terminal is ready,
-  `cd delegated-agent-authorization/starter`.
+  auto-detects this workshop's devcontainer, builds a Python + Docker image, and runs steps 2–3 for
+  you — including starting the stack with the host networking Codespaces needs (so steps 2–3 are
+  no-ops in a codespace). When the terminal is ready, `cd delegated-agent-authorization/starter`.
 
   > **Codespace didn't pick up the devcontainer?** (no `.venv`, `docker` missing) — open the Command
   > Palette → **Dev Containers: Reopen in Container** and point it at
@@ -60,6 +60,10 @@ docker compose up -d --wait
 
 This brings up `postgres`, a short-lived `spicedb-migrate` container (runs SpiceDB's datastore
 migration and exits), and `spicedb` on `localhost:50051` with a preshared key of `devtoken`.
+
+> **On GitHub Codespaces** the devcontainer already started this stack for you with host networking
+> (which Docker-in-Docker needs), so you can skip this step. To restart it by hand, run
+> `docker compose -f docker-compose.yml -f docker-compose.codespaces.yml up -d --wait`.
 
 3. Create a virtual environment and install dependencies:
 
