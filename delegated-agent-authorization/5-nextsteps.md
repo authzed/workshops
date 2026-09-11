@@ -1,8 +1,7 @@
 # Next Steps
 
-We started the project with an agent that could destroy production on a whim. Now every call it
-makes resolves through a relationship graph: delegated authority, a three-way decision, expiring
-grants, and a hierarchy that suspends dependents automatically. This is what Authorization in the world of AI looks like.
+We started the project with an agent that could destroy production on a whim. Now every call it makes resolves through a relationship graph: delegated authority, a three-way decision, expiring grants, and a hierarchy that suspends dependents automatically. This is what Modern Authorization in the world of AI looks like.
+
 What's left is scaling this — how the same shape holds up once you scale to many
 agents across many resources.
 
@@ -39,6 +38,6 @@ The SpiceDB you've been running is in-memory via Docker Compose. This works for 
 
 ## Resources
 
+- **Goose Documentation**: [Goose](https://goose-docs.ai/)
 - **SpiceDB documentation**: [authzed.com/docs](https://authzed.com/docs)
-- **AuthZed Cloud**: [authzed.com/products/authzed-cloud](https://authzed.com/products/authzed-cloud)
 - **Full reference implementation**: [Source Code here](https://github.com/sohanmaheshwar/goose-spicedb-delegation)

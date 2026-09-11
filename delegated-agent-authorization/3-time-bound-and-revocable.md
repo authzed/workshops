@@ -1,25 +1,19 @@
 # Part 3 — Time-Bound and Revocable
 
-Part 2 gave the agent a real grant: `goose_alice` is `agent_deployer` on `staging`, forever,
-until someone edits the graph by hand. That's already better than ambient authority, but sometimes you may need 
-time-bound delegation. An incident responder pulled in at 2am should get staging access for the duration of the incident, not a permanent grant nobody
-remembers to revoke. Here you make that grant expire on its own, and give an operator a way to kill
-it early.
+In Part 2 we gave the agent a real grant: `goose_alice` is `agent_deployer` on `staging` . That's already better than ambient authority, but sometimes you may need time-bound delegation. For example: An incident responder pulled in at 2am should get staging access for the duration of the incident, not a permanent grant that nobody remembers to revoke. In this section, you will learn to make a grant expire on its own, and give an operator a way to revoke it early.
 
 ---
 
 ## Temporary access for incident windows
 
-The shape you want is: "this agent may deploy staging, but only for the next 60 minutes." There are two ways
-to build that:
+The shape you want is: "this agent may deploy staging, but only for the next 60 minutes." There are two ways to build that:
 
 - **A caveat**: SpiceDB lets you attach a boolean expression to a relationship (`agent_deployer:
   agent with expiry_check`) and pass in context like `now < grant_expiry` at check time. It works,
   but it's you re-deriving "is this timestamp in the past" by hand, on every check.
 
 - **Relationship expiration**: SpiceDB has a built-in `optional_expires_at` field on a
-  relationship. You write the expiry once, at grant time, and `CheckPermission` treats an expired
-  relationship as if it were never written. 
+  relationship. You write the expiry once, at grant time, and `CheckPermission` treats an expired relationship as if it were never written. 
 
 Expiration is the preferred method as it's evaluated **server-side,
 inside the same consistent snapshot as the rest of the check**. There's no window where a
@@ -53,12 +47,9 @@ definition environment {
 }
 ```
 
-The diff is one line at the top of the file and one word — `with expiration` — on the
-`agent_deployer` relation. `direct_deployer`, `approver`, and `destroyer` stay exactly as they
-were: those grants are still meant to be standing, not temporary, so nothing about them changes.
-`permission deploy = direct_deployer + agent_deployer` doesn't change either. The union doesn't
-know or care that one side of it can expire. That's the point: expiration is a property of the
-*relationship*, not a new code path `decide()` has to special-case.
+The diff is one line at the top of the file and the `with expiration` keyword on the
+`agent_deployer` relation. `direct_deployer`, `approver`, and `destroyer` stay exactly as they were: those grants are still meant to be standing, not temporary, so nothing about them changes.
+`permission deploy = direct_deployer + agent_deployer` doesn't change either. The union doesn't know or care that one side of it can expire. That's the point: expiration is a property of the *relationship*, not a new code path `decide()` has to special-case.
 
 ---
 
@@ -73,7 +64,7 @@ expects) and pass it into the staging `agent_deployer` write:
 # Add this import at the top of bootstrap.py
 from authz import expiry_from_now
 
-# Add this line in seed() method
+# Update line 39 with the expires_at keyword
 rel("environment", "staging", "agent_deployer", "agent", AGENT_ID,
     expires_at=expiry_from_now(window_minutes)),
 ```
@@ -92,13 +83,12 @@ The human-in-the-loop path needs the same fix. In `approve.py` import `expiry_fr
 # Add this import at the top of approve.py
 from authz import check, read_delegator, expiry_from_now
 
-# Add this line in the approve() method
+# Update line 22 with the expires_at keyword
 update = rel("environment", environment, "agent_deployer", "agent", agent_id,
              expires_at=expiry_from_now(minutes))
 ```
 
-Now clicking **Approve prod · 10m** in the web UI writes a grant that expires 10 minutes later on
-its own. There's no follow-up step or a step to undo.
+Now clicking **Approve prod · 10m** in the web UI writes a grant that expires 10 minutes later on its own. There's no follow-up step or a step to undo, that's the flexibility of ReBAC.
 
 ---
 
@@ -124,14 +114,6 @@ zero, then ask the agent to "deploy checkout to staging" — the one request tha
 ✅ **ALLOWED** in Part 2 — and it now comes back ⏸️ **NEEDS APPROVAL**, with Alice named as the
 delegator who'd have to approve it. `decide()` didn't change; the grant it was reading simply
 expired, on schedule.
-
-Now the other lever, instant revocation, for when you don't want to wait for even a 30-second window
-to run out. Click **Revoke staging**. The `agent_deployer` relationship on `staging` is deleted
-outright, and the staging card disappears from the panel on the next 5-second poll, because
-`/api/state`'s `ReadRelationships` no longer returns the grant. Ask the agent to deploy staging
-again and you get the identical ⏸️ **NEEDS APPROVAL**, the same outcome as letting the window lapse,
-just on your schedule instead of the clock's. An operator who sees something wrong mid-incident
-doesn't wait for a TTL; they click one button and the grant is gone on the very next check.
 
 ---
 

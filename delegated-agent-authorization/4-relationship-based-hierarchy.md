@@ -1,25 +1,16 @@
 # Part 4 — Relationship-Based Hierarchy
 
-Part 3 made every grant time-bound and revocable, but it left each environment answering
-for itself. Staging autonomy and production autonomy live as two unrelated facts in the graph —
-revoking one has no opinion about the other. That's not how a real deploy pipeline works. 
+In Part 3 we made every grant time-bound and revocable, but it left each environment answering for itself. Right now staging and production live as two unrelated facts in the graph — revoking one has no opinion about the other. That's not how most real deploy pipelines work. 
 
-If the whole point of staging is to catch a bad build before it reaches production, then an agent that's
-lost its staging privileges has lost the thing that made its production privileges trustworthy in
-the first place. Here you make that dependency real: production's autonomy is *contingent* on
-staging's, enforced by the graph. ReBAC makes this pattern very straightforward.
+If the whole point of staging is to catch a bad build before it reaches production, then an agent that's lost its staging privileges has lost the thing that made its production privileges trustworthy in the first place. Here you make that dependency real: production's autonomy is *contingent* on staging's, enforced by the graph. ReBAC makes this pattern very straightforward.
 
 ---
 
 ## Contingent authority — why RBAC can't express this
 
-The idea you want is: "the agent may deploy production on its own only while it can also deploy
-staging on its own." RBAC can only ever hear the first half of that sentence: "the agent has role
-X." What you actually need is "the agent has role X *and* a second, independent fact about a
-different resource currently holds." 
+The idea you want is: "the agent may deploy production on its own only while it can also deploy staging on its own." RBAC can only ever hear the first half of that sentence: "the agent has role X." What you actually need is "the agent has role X *and* a second, independent fact about a different resource currently holds." 
 
-ReBAC handles this natively: express the dependency as one relation plus a permission that walks it,
-and every check falls into place. Hierarchies and nested permissions are cheap to compute.
+ReBAC handles this natively: express the dependency as one relation plus a permission that walks it, and every check falls into place. Hierarchies and nested permissions are cheap to compute.
 
 ---
 
@@ -96,13 +87,19 @@ about `direct_deployer`, `approver`, or `destroyer` changes — the gate is scop
 agent's delegated path, `agent_deploy`, which is exactly the piece `deploy` now includes instead of
 the bare `agent_deployer` relation.
 
+Before, the two environments were unrelated facts — Alice reaches each directly, but nothing connects them to each other:
+
+![Relationship graph before gated_by — user:alice links to the agent and both environments, with staging and production unconnected](/delegated-agent-authorization/images/part4a.png)
+
+After the seed, `production` carries a `gated_by` edge to `staging`. The hierarchy is now part of the graph, and `agent_deploy` on production walks that edge on every check:
+
+![Relationship graph after gated_by — production now has a gated_by edge pointing at staging](/delegated-agent-authorization/images/part4b.png)
+
 ---
 
 ## See the cascade
 
-Start the web UI (`python web.py`) and grant the agent both environments the way Parts 2 and 3
-taught you. Staging is already autonomous from the seed; click **Approve prod · 10m** to give
-production its own `agent_deployer` write. 
+Start the web UI (`python web.py`) and grant the agent both environments the way Parts 2 and 3 taught you. Staging is already autonomous from the seed; click **Approve prod · 10m** to give production its own `agent_deployer` write. 
 
 Confirm both are live, in the web UI or by asking goose to deploy each
 environment: staging ✅ **ALLOWED** from its standing grant, production ✅ **ALLOWED** from the
@@ -117,12 +114,10 @@ production. And yet: ask for "deploy checkout to production" again, and it comes
 ⏸️ **NEEDS APPROVAL** — the same verdict as if someone had revoked production directly, except
 nobody did. `agent_deploy` on production still needs `gated_by->agent_deployer`, that arrow still
 points at staging, and staging's `agent_deployer` relationship is gone, so the intersection goes
-empty, and `deploy` falls back to the delegator check, same as any other lost grant. One delete,
-two environments affected, because the second one was never independent to begin with.
+empty, and `deploy` falls back to the delegator check, same as any other lost grant. One delete, two environments affected, because the second one was never independent to begin with.
 
 The web UI shows this precisely: production's grant card stays on screen but turns dashed, tagged
-**"suspended · gated by staging"** — the relationship itself is untouched, only what it computes to
-has changed. 
+**"suspended · gated by staging"** — the relationship itself is untouched, only what it computes to has changed. 
 
 ---
 
