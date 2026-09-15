@@ -5,7 +5,6 @@
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   "forwardPorts": [19530, 50051],
-  "postCreateCommand": "cp -n .env.example .env || true && pip install -r requirements.txt && docker compose up -d",
   "customizations": {
     "vscode": {
       "extensions": ["ms-python.python"]

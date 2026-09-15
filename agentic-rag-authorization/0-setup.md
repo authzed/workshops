@@ -4,42 +4,56 @@ This workshop is in two parts. First, we build an Agentic RAG pipeline with a mo
 
 ## Get the code
 
+Get a shell in the `starter/` folder one of two ways, then follow the shared install steps.
+
+**Locally** (needs Docker Desktop):
+
 ```bash
 git clone https://github.com/authzed/workshops.git
 cd workshops/agentic-rag-authorization/starter
 ```
 
-## Option A - Run locally with Docker
+**GitHub Codespaces** (no local Docker needed): on the repo page, click **Code ▸ Codespaces ▸ Create codespace on main**. The devcontainer provisions Docker + Python; when the terminal is ready:
 
-Copy the example `.env` file and drop in your model key:
+```bash
+cd agentic-rag-authorization/starter
+```
+
+> **Codespace didn't pick up the devcontainer?** (no `docker`, missing tools) — open the Command Palette → **Dev Containers: Reopen in Container** and point it at `agentic-rag-authorization/starter`.
+
+## Installation
+
+From `starter/`, the steps are identical for both paths — **only the `docker compose` command in step 2 differs.**
+
+### 1. Configure your chat-model key
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and set `LLM_API_KEY` to your key. The chat model is provider-agnostic — leave `LLM_BASE_URL` blank for OpenAI, or point it at any OpenAI-compatible provider (Anthropic/Claude, Groq, a local Ollama, or your company's endpoint) and set `LLM_MODEL` to match. See the comments in `.env.example` for examples. Embeddings run **locally** via fastembed, so they need no API key. Everything else such as the Milvus URI, SpiceDB endpoint, and preshared-token is already wired up to match `docker-compose.yml`.
+Open `.env` and set `LLM_API_KEY`. The chat model is provider-agnostic — leave `LLM_BASE_URL` blank for OpenAI, or point it at any OpenAI-compatible provider (Anthropic/Claude, Groq, a local Ollama, or your company's endpoint) and set `LLM_MODEL` to match; see the comments in `.env.example`. Embeddings run **locally** via fastembed, so they need no key. The Milvus URI, SpiceDB endpoint, and preshared token already match the compose files.
 
-Start the infrastructure:
+### 2. Start the infrastructure
+
+**Local Docker Desktop:**
 
 ```bash
-docker compose up -d
+docker compose up -d --wait
 ```
 
-This brings up four containers: three for the Milvus stack (`milvus-etcd`, `milvus-minio`, `milvus-standalone`) and one for SpiceDB. SpiceDB runs in-memory with a preshared key of `devtoken`, not recommended for prod ofc.
+**Codespaces** — Docker-in-Docker's bridge network is unreliable, so layer on the host-networking override:
 
-Create a virtual environment and install dependencies:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.codespaces.yml up -d --wait
+```
+
+Either command brings up four containers: the Milvus stack (`milvus-etcd`, `milvus-minio`, `milvus-standalone`) and SpiceDB (in-memory, preshared key `devtoken` — not for prod).
+
+### 3. Create a virtual environment and install dependencies
 
 ```bash
 python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 ```
-
-## Option B - Run in GitHub Codespaces
-
-For anyone who can't run Docker locally, Codespaces is the path. The repo ships with a `.devcontainer/` config that handles everything automatically.
-
-1. On the repo page, click **Code ▸ Codespaces ▸ Create codespace on main**
-2. The devcontainer will run `docker compose up -d` and install dependencies on startup
-3. Once the Codespace is ready, open `.env` and add your `LLM_API_KEY` (and, if you're not using OpenAI, `LLM_BASE_URL` + `LLM_MODEL`)
 
 ## Load the data
 

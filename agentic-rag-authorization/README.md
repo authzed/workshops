@@ -24,7 +24,7 @@ Fine-grained authorization in Agentic RAG is best achieved with **Relationship-b
 ### Prerequisites
 
 - **Docker** (or a GitHub account if you'd prefer to use Codespaces)
-- **Python 3.10+**
+- **Python 3.11+**
 - An **API key for a chat model** — OpenAI, or any OpenAI-compatible provider
 
 Embeddings run locally via fastembed, so there's no key needed there. The chat model that writes the final answer is provider-agnostic — set `LLM_API_KEY`, `LLM_MODEL`, and (for anything but OpenAI) `LLM_BASE_URL` in `.env` to use OpenAI, Anthropic, Groq, a local Ollama, or your company's endpoint. See `.env.example` for examples.

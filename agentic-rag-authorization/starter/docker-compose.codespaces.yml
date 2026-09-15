@@ -1,0 +1,22 @@
+# Codespaces override. Layer it on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.codespaces.yml up -d --wait
+# Host networking sidesteps Docker-in-Docker's flaky bridge, which otherwise stops
+# the Milvus stack (etcd/minio/standalone) from reaching each other by service name.
+# The devcontainer applies this automatically in Codespaces; do NOT use it on local
+# Docker Desktop (bridge + published ports there). Under host networking every service
+# is on localhost, so Milvus talks to etcd/minio via 127.0.0.1 instead of DNS names.
+services:
+  etcd:
+    network_mode: host
+
+  minio:
+    network_mode: host
+
+  standalone:
+    network_mode: host
+    environment:
+      ETCD_ENDPOINTS: "127.0.0.1:2379"
+      MINIO_ADDRESS: "127.0.0.1:9000"
+
+  spicedb:
+    network_mode: host
