@@ -1,16 +1,15 @@
 [project]
-name = "agentic-rag-weaviate"
+name = "secure-rag-pipelines"
 version = "0.1.0"
-description = "Agentic RAG with fine-grained authorization using Weaviate and SpiceDB"
-requires-python = ">=3.10"
+description = "Secure RAG pipelines with pre/post-filter authorization using Qdrant and SpiceDB"
+requires-python = ">=3.11"
 dependencies = [
     "langchain>=0.1.0",
     "langchain-openai>=0.1.0",
     "fastembed>=0.3.0",
     "langgraph>=0.0.20",
-    "langchain-spicedb>=0.1.0",
-    "weaviate-client>=4.4.0",
-    "authzed>=0.7.0",
+    "qdrant-client>=1.12,<2",
+    "authzed>=1.0,<2",
     "python-dotenv>=1.0.0",
 ]
 
@@ -26,7 +25,10 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_backend"
 
 [tool.setuptools]
-packages = ["agentic_rag", "agentic_rag.nodes", "agentic_rag.tools"]
+packages = ["agentic_rag", "agentic_rag.nodes"]
 
 [tool.setuptools.package-data]
 agentic_rag = ["py.typed"]
+
+[tool.pytest.ini_options]
+markers = ["integration: requires docker compose infra + setup_environment"]

@@ -12,9 +12,8 @@ load_dotenv()
 class Config:
     """Configuration for agentic RAG system."""
 
-    # Milvus
-    milvus_uri: str
-    milvus_token: str
+    # Qdrant (vector store)
+    qdrant_url: str
 
     # SpiceDB
     spicedb_endpoint: str
@@ -37,8 +36,7 @@ class Config:
     def from_env(cls):
         """Load configuration from environment variables."""
         return cls(
-            milvus_uri=os.getenv("MILVUS_URI", "http://localhost:19530"),
-            milvus_token=os.getenv("MILVUS_TOKEN", ""),
+            qdrant_url=os.getenv("QDRANT_URL", "http://localhost:6333"),
             spicedb_endpoint=os.getenv("SPICEDB_ENDPOINT", "localhost:50051"),
             spicedb_token=os.getenv("SPICEDB_TOKEN", "devtoken"),
             llm_api_key=os.getenv("LLM_API_KEY", ""),

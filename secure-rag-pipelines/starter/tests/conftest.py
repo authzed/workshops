@@ -1,14 +1,16 @@
-"""Test fixtures for agentic RAG tests."""
+"""Test fixtures for secure RAG tests."""
 
+import os
 import pytest
-from pymilvus import MilvusClient
 from agentic_rag.grpc_helpers import create_insecure_spicedb_client
 
 
 @pytest.fixture
-def milvus_client():
-    """Create MilvusClient for tests."""
-    return MilvusClient(uri="http://localhost:19530")
+def qdrant_client():
+    """Create a QdrantClient for tests (imported lazily so collection never needs the driver)."""
+    from qdrant_client import QdrantClient
+
+    return QdrantClient(url=os.getenv("QDRANT_URL", "http://localhost:6333"))
 
 
 @pytest.fixture
@@ -23,6 +25,8 @@ def sample_state():
     return {
         "query": "Test query",
         "subject_id": "alice",
+        "filter_mode": "post",
+        "allowed_doc_ids": None,
         "max_attempts": 3,
         "retrieval_attempt": 0,
         "messages": [],

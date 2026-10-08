@@ -5,19 +5,19 @@ from unittest.mock import patch
 from agentic_rag.config import Config
 
 
-def test_config_loads_milvus_uri():
+def test_config_loads_qdrant_url():
     env = {
-        "MILVUS_URI": "http://milvus-host:19530",
+        "QDRANT_URL": "http://qdrant-host:6333",
         "LLM_API_KEY": "sk-test",
         "SPICEDB_TOKEN": "tok",
         "SPICEDB_ENDPOINT": "localhost:50051",
     }
     with patch.dict(os.environ, env, clear=True):
         config = Config.from_env()
-    assert config.milvus_uri == "http://milvus-host:19530"
+    assert config.qdrant_url == "http://qdrant-host:6333"
 
 
-def test_config_milvus_defaults():
+def test_config_qdrant_default():
     env = {
         "LLM_API_KEY": "sk-test",
         "SPICEDB_TOKEN": "tok",
@@ -25,8 +25,15 @@ def test_config_milvus_defaults():
     }
     with patch.dict(os.environ, env, clear=True):
         config = Config.from_env()
-    assert config.milvus_uri == "http://localhost:19530"
-    assert config.milvus_token == ""
+    assert config.qdrant_url == "http://localhost:6333"
+
+
+def test_config_has_qdrant_url():
+    env = {"QDRANT_URL": "http://example:6333", "LLM_API_KEY": "sk-test"}
+    with patch.dict(os.environ, env, clear=True):
+        cfg = Config.from_env()
+    assert cfg.qdrant_url == "http://example:6333"
+    assert not hasattr(cfg, "milvus_uri")
 
 
 def test_config_has_no_weaviate_fields():
