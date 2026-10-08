@@ -1,19 +1,25 @@
-"""Retrieval node - retrieve documents from Milvus using semantic vector search."""
+"""Retrieval node - retrieve documents from Qdrant using semantic vector search."""
 
 from langchain_core.messages import SystemMessage
 from langchain_core.documents import Document
+from qdrant_client.models import Filter, FieldCondition, MatchAny
 
 from ..state import AgenticRAGState
 from ..config import get_config
 from ..logging_config import get_logger
-from ..milvus_client import get_milvus_client
+from ..qdrant_client import get_qdrant_client
 from ..node_helpers import embed, log_node_execution
 
 logger = get_logger("nodes.retrieval")
 
 
 def retrieval_node(state: AgenticRAGState) -> dict:
-    """Retrieve documents from Milvus based on semantic similarity to the query."""
+    """Retrieve documents from Qdrant based on semantic similarity to the query.
+
+    In pre-filter mode, ``state['allowed_doc_ids']`` restricts the search to the
+    documents the subject may view (a Qdrant payload filter on ``doc_id``); an
+    empty allow-list means the subject can see nothing, so we retrieve nothing.
+    """
     config = get_config()
 
     with log_node_execution(
@@ -22,28 +28,45 @@ def retrieval_node(state: AgenticRAGState) -> dict:
         {"query": state["query"], "subject_id": state["subject_id"]},
     ):
         try:
-            milvus_client = get_milvus_client(config.milvus_uri, config.milvus_token)
+            allowed = state.get("allowed_doc_ids")
+            if allowed is not None and len(allowed) == 0:
+                # Pre-filter resolved to zero viewable docs — retrieve nothing.
+                return {
+                    "retrieved_documents": [],
+                    "retrieval_attempt": state["retrieval_attempt"] + 1,
+                    "messages": [
+                        SystemMessage(content="Retrieved 0 documents (no accessible docs)")
+                    ],
+                }
+
+            client = get_qdrant_client(config.qdrant_url)
             query_embedding = embed(state["query"])
 
-            results = milvus_client.search(
+            query_filter = None
+            if allowed:
+                query_filter = Filter(
+                    must=[FieldCondition(key="doc_id", match=MatchAny(any=allowed))]
+                )
+
+            response = client.query_points(
                 collection_name="Documents",
-                data=[query_embedding],
-                anns_field="embedding",
+                query=query_embedding,
                 limit=5,
-                output_fields=["doc_id", "title", "content", "department", "classification"],
+                with_payload=True,
+                query_filter=query_filter,
             )
 
             documents = [
                 Document(
-                    page_content=hit["entity"]["content"],
+                    page_content=p.payload["content"],
                     metadata={
-                        "doc_id": hit["entity"]["doc_id"],
-                        "title": hit["entity"]["title"],
-                        "department": hit["entity"]["department"],
-                        "classification": hit["entity"]["classification"],
+                        "doc_id": p.payload["doc_id"],
+                        "title": p.payload["title"],
+                        "department": p.payload["department"],
+                        "classification": p.payload["classification"],
                     },
                 )
-                for hit in results[0]
+                for p in response.points
             ]
 
             logger.info(
@@ -58,7 +81,7 @@ def retrieval_node(state: AgenticRAGState) -> dict:
                 "retrieved_documents": documents,
                 "retrieval_attempt": state["retrieval_attempt"] + 1,
                 "messages": [
-                    SystemMessage(content=f"Retrieved {len(documents)} documents from Milvus")
+                    SystemMessage(content=f"Retrieved {len(documents)} documents from Qdrant")
                 ],
             }
 
