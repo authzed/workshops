@@ -10,17 +10,28 @@ load_dotenv()
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agentic_rag.grpc_helpers import create_insecure_spicedb_client
-from authzed.api.v1 import CheckPermissionRequest, ObjectReference, SubjectReference
+from authzed.api.v1 import (
+    CheckPermissionRequest,
+    ObjectReference,
+    SubjectReference,
+    Consistency,
+)
 
 
 def check_permission(client, user, doc_id):
-    """Check if user can view document."""
+    """Check if user can view document.
+
+    Uses fully_consistent so this gate reflects the relationships setup just
+    wrote — otherwise a check run immediately after setup can race the writes
+    (default minimize_latency may read a snapshot taken before them).
+    """
     request = CheckPermissionRequest(
         resource=ObjectReference(object_type="document", object_id=doc_id),
         permission="view",
         subject=SubjectReference(
             object=ObjectReference(object_type="user", object_id=user)
         ),
+        consistency=Consistency(fully_consistent=True),
     )
     response = client.CheckPermission(request)
     return response.permissionship == 2  # HAS_PERMISSION
