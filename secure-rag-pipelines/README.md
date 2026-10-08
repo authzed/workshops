@@ -1,37 +1,61 @@
-## Secure Your RAG Pipelines With Fine Grained Authorization (Pre-Filter & Post-Filter)
+# Secure Your RAG Pipelines with Fine-Grained Authorization (Pre-Filter & Post-Filter)
 
-This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in RAG pipelines. You will learn two techniques
+This workshop gives you hands-on experience securing a RAG pipeline with SpiceDB. You build an agentic RAG system over a corpus of documents owned by many different users, watch it leak data across departments, then lock it down two ways and learn when to use each:
 
-1. How to pre-filter a vector database queries with a list of authorized object IDs
-2. How to retrieve relevant documents and then check for permissions using post-filter
+1. **Post-filter** — retrieve documents, then check permissions on each with `CheckPermission`
+2. **Pre-filter** — ask SpiceDB which documents a user may see with `LookupResources` *before* you retrieve, and pass that set as a filter into the vector search
 
-Using fine-grained authorization in RAG improves security and efficiency. This workshop uses OpenAI, Pinecone, Langchain, Jupyter Notebook and SpiceDB.
+You'll also pick up two smaller SpiceDB features: bulk permission checks and self-expiring grants.
 
-### Why is this important? 
+The stack: **SpiceDB** for authorization, **Qdrant** (open-source) for the vector store, local **fastembed** embeddings (no key), and an OpenAI-compatible chat model for generation — all running locally via Docker, with a web UI.
 
-Building enterprise-ready AI requires ensuring users can only augment prompts with data they're authorized to access. Fine-grained authorization in Retrieval-Augmented Generation (RAG) can be achieved with Relationship-based Access Control (ReBAC). ReBAC enables decisions based on relationships between objects, offering more precise control compared to traditional models like RBAC and ABAC.
+### Why this matters
 
-The pre-requisites for the workshop: 
+TL;DR: **AI can't secure AI.**
 
+Enterprise AI has one non-negotiable: a user can only ever augment a prompt with data they're allowed to see. You can't delegate that to the model, because probabilistic systems hallucinate, misinterpret, and guess. Authorization has to be deterministic, and it has to live *outside* the model — in code that runs whether or not the model "remembers" the rule.
 
-- Access to a SpiceDB instance and API key
-- A Pinecone account and API key
-- An OpenAI account and API key
-- Jupyter Notebook and Python installed
+Fine-grained authorization in RAG is best achieved with **Relationship-Based Access Control (ReBAC)**: decisions based on relationships between objects (who owns what, who belongs to which team, what role grants what access). This is more precise and composable than RBAC or ABAC.
 
+### What you'll build
 
-## Architecture Diagram
+![post-filter](/secure-rag-pipelines/images/post-filter.png)
 
-Here is a high-level architecture diagram of a typical RAG pipeline. Notice the lack of authorization
-![architecture diagram](/secure-rag-pipelines/images/RAG_pipelines.png)
+![pre-filter](/secure-rag-pipelines/images/pre-filter.png)
 
-Check out this conference talk that explains all of the concepts in this workshop
+- Run a LangGraph agentic RAG pipeline — `prefilter → retrieve → authorize → generate` — over a 50-document, multi-department corpus, with a web UI
+- Watch the naive version leak documents across departments
+- Implement **post-filter** authorization (`CheckPermission`) so the agent can only ever answer from documents the user may see
+- Implement **pre-filter** authorization (`LookupResources` → Qdrant payload filter), compare it against post-filter live with a UI toggle, and learn which to reach for
+- Collapse the per-document loop into one `CheckBulkPermissions` call, and grant a contractor time-boxed access that expires on its own
+
+It builds on an agentic RAG core (the retry loop is retained), taught here with a pre-filter focus. The sibling [agentic-rag-authorization](https://github.com/authzed/workshops/tree/main/agentic-rag-authorization) workshop is a post-filter deep-dive on Milvus.
+
+### Prerequisites
+
+- **Docker** (or a GitHub account for Codespaces)
+- **Python 3.11+**
+- An **API key for a chat model** — OpenAI, or any OpenAI-compatible provider
+
+Embeddings run locally via fastembed, so there's no key needed there. The chat model is provider-agnostic — set `LLM_API_KEY`, `LLM_MODEL`, and (for anything but OpenAI) `LLM_BASE_URL` in `.env`. SpiceDB and Qdrant both run locally via Docker Compose — no additional accounts or cloud services.
+
+### Watch the talk
+
+This conference talk walks through the concepts behind the workshop:
 
 [![DevConf talk](/secure-rag-pipelines/images/youtube.png)](https://youtu.be/aeace8MDlhk "Secure RAG Pipelines")
 
-**Last Updated**: Oct 15, 2025
+---
+
+**Last Updated**: Oct 8, 2026
 
 ### Workshop Modules
 
-0. [Setup](https://github.com/authzed/workshops/blob/main/secure-rag-pipelines/00-setup.md)
-1. [Secure Your RAG Pipelines With Fine Grained Authorization](https://github.com/authzed/workshops/blob/main/secure-rag-pipelines/01-rag.ipynb)
+0. [Setup](0-setup.md)
+1. [Part 1 — Run the RAG (and watch it leak)](1-run-the-rag.md)
+2. [Part 2 — Secure it with post-filter](2-post-filter.md)
+3. [Part 3 — Pre-filter with LookupResources](3-pre-filter.md)
+4. [Part 4 — Smaller features (bulk checks + expiring grants)](4-smaller-features.md)
+5. [Next steps](5-nextsteps.md)
+
+Let's get started with [Setup](0-setup.md).
