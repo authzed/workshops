@@ -8,7 +8,8 @@ load_dotenv()
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pymilvus import MilvusClient, DataType
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct
 from authzed.api.v1 import (
     WriteSchemaRequest,
     WriteRelationshipsRequest,
@@ -169,35 +170,21 @@ def setup_spicedb():
     print(f"    - Public access: 5 documents accessible to all users")
 
 
-def setup_milvus():
-    """Setup Milvus with sample documents using local fastembed embeddings."""
-    print("\nSetting up Milvus...")
+def setup_qdrant():
+    """Setup Qdrant with sample documents using local fastembed embeddings."""
+    print("\nSetting up Qdrant...")
 
-    milvus_uri = os.getenv("MILVUS_URI", "http://localhost:19530")
+    qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
+    client = QdrantClient(url=qdrant_url)
 
-    client = MilvusClient(uri=milvus_uri)
-
-    if client.has_collection("Documents"):
-        client.drop_collection("Documents")
+    if client.collection_exists("Documents"):
+        client.delete_collection("Documents")
         print("  ✅ Dropped existing Documents collection")
 
-    schema = client.create_schema(auto_id=False, enable_dynamic_field=False)
-    schema.add_field("doc_id", DataType.VARCHAR, max_length=256, is_primary=True)
-    schema.add_field("title", DataType.VARCHAR, max_length=512)
-    schema.add_field("content", DataType.VARCHAR, max_length=65535)
-    schema.add_field("department", DataType.VARCHAR, max_length=128)
-    schema.add_field("classification", DataType.VARCHAR, max_length=128)
-    schema.add_field("embedding", DataType.FLOAT_VECTOR, dim=384)
-
-    index_params = client.prepare_index_params()
-    index_params.add_index(
-        field_name="embedding",
-        metric_type="COSINE",
-        index_type="IVF_FLAT",
-        params={"nlist": 128},
+    client.create_collection(
+        collection_name="Documents",
+        vectors_config=VectorParams(size=384, distance=Distance.COSINE),
     )
-
-    client.create_collection("Documents", schema=schema, index_params=index_params)
     print("  ✅ Documents collection created")
 
     documents = load_all_documents()
@@ -210,20 +197,23 @@ def setup_milvus():
     embedder = get_embedder()
     embeddings = list(embedder.embed([doc["content"] for doc in documents]))
 
-    rows = [
-        {
-            "doc_id": doc["doc_id"],
-            "title": doc["title"],
-            "content": doc["content"],
-            "department": doc["department"],
-            "classification": doc["classification"],
-            "embedding": embedding.tolist(),
-        }
-        for doc, embedding in zip(documents, embeddings)
+    points = [
+        PointStruct(
+            id=i,
+            vector=embedding.tolist(),
+            payload={
+                "doc_id": doc["doc_id"],
+                "title": doc["title"],
+                "content": doc["content"],
+                "department": doc["department"],
+                "classification": doc["classification"],
+            },
+        )
+        for i, (doc, embedding) in enumerate(zip(documents, embeddings))
     ]
 
-    client.insert("Documents", rows)
-    print(f"  ✅ Inserted {len(rows)} documents with embeddings")
+    client.upsert(collection_name="Documents", points=points)
+    print(f"  ✅ Inserted {len(points)} documents with embeddings")
 
     dept_counts = {}
     for doc in documents:
@@ -242,7 +232,7 @@ def main():
     print("=" * 60)
 
     setup_spicedb()
-    setup_milvus()
+    setup_qdrant()
 
     print("\n" + "=" * 60)
     print("✅ Setup complete!")
