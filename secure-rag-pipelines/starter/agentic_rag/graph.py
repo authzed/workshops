@@ -3,6 +3,7 @@
 from langgraph.graph import StateGraph, END
 from .state import AgenticRAGState
 from .nodes import (
+    prefilter_node,
     retrieval_node,
     authorization_node,
     reasoning_node,
@@ -71,13 +72,15 @@ def build_agentic_rag_graph():
     workflow = StateGraph(AgenticRAGState)
 
     # Add nodes
+    workflow.add_node("prefilter", prefilter_node)  # ALWAYS runs (no-op in post mode)
     workflow.add_node("retrieve", retrieval_node)
     workflow.add_node("authorize", authorization_node)  # ALWAYS runs
     workflow.add_node("reason", reasoning_node)
     workflow.add_node("generate", generation_node)
 
-    # Define flow - start directly at retrieval
-    workflow.set_entry_point("retrieve")
+    # Define flow - pre-filter resolves allowed ids, then retrieve
+    workflow.set_entry_point("prefilter")
+    workflow.add_edge("prefilter", "retrieve")
     workflow.add_edge("retrieve", "authorize")  # Deterministic auth
 
     # Conditional: after auth, either reason or generate
@@ -105,7 +108,7 @@ def build_agentic_rag_graph():
     return workflow.compile()
 
 
-def run_agentic_rag(query: str, subject_id: str, max_attempts: int = 1) -> dict:
+def run_agentic_rag(query: str, subject_id: str, max_attempts: int = 1, filter_mode: str = "post") -> dict:
     """
     Run the agentic RAG graph with input validation (synchronous).
 
@@ -134,6 +137,8 @@ def run_agentic_rag(query: str, subject_id: str, max_attempts: int = 1) -> dict:
     initial_state = {
         "query": query,
         "subject_id": subject_id,
+        "filter_mode": filter_mode,
+        "allowed_doc_ids": None,
         "max_attempts": max_attempts,
         "retrieved_documents": [],
         "authorized_documents": [],
@@ -149,7 +154,7 @@ def run_agentic_rag(query: str, subject_id: str, max_attempts: int = 1) -> dict:
     return result
 
 
-async def run_agentic_rag_async(query: str, subject_id: str, max_attempts: int = 1) -> dict:
+async def run_agentic_rag_async(query: str, subject_id: str, max_attempts: int = 1, filter_mode: str = "post") -> dict:
     """
     Run the agentic RAG graph with input validation (asynchronous).
 
@@ -177,6 +182,8 @@ async def run_agentic_rag_async(query: str, subject_id: str, max_attempts: int =
     initial_state = {
         "query": query,
         "subject_id": subject_id,
+        "filter_mode": filter_mode,
+        "allowed_doc_ids": None,
         "max_attempts": max_attempts,
         "retrieved_documents": [],
         "authorized_documents": [],

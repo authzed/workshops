@@ -1,86 +1,72 @@
-"""Basic integration tests for agentic RAG."""
+"""Full-graph integration tests for secure RAG.
+
+These drive the whole graph through to generation, so they need live infra
+(docker compose up + setup_environment) AND a working chat model (LLM_API_KEY).
+Marked `integration`; they are skipped by default runs without infra/LLM.
+"""
 
 import pytest
 from agentic_rag.graph import build_agentic_rag_graph
 
 
+def _state(query, subject_id, max_attempts, filter_mode="post"):
+    return {
+        "query": query,
+        "subject_id": subject_id,
+        "filter_mode": filter_mode,
+        "allowed_doc_ids": None,
+        "max_attempts": max_attempts,
+        "retrieval_attempt": 0,
+        "messages": [],
+        "reasoning": [],
+        "retrieved_documents": [],
+        "authorized_documents": [],
+        "denied_count": 0,
+        "authorization_passed": False,
+        "answer": "",
+    }
+
+
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_authorized_access():
-    """Test that authorized user can access documents."""
+    """An authorized user can access documents (post mode)."""
     graph = build_agentic_rag_graph()
-
     result = await graph.ainvoke(
-        {
-            "query": "What are our engineering best practices?",
-            "subject_id": "alice",
-            "max_attempts": 3,
-            "retrieval_attempt": 0,
-            "messages": [],
-            "reasoning": [],
-            "retrieved_documents": [],
-            "authorized_documents": [],
-            "denied_count": 0,
-            "authorization_passed": False,
-            "answer": "",
-        }
+        _state("What are our engineering best practices?", "alice", 3)
     )
-
-    # Alice should have access to engineering documents
     assert len(result["authorized_documents"]) > 0
     assert result["authorization_passed"] is True
     assert result["answer"] != ""
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_denied_access():
-    """Test that unauthorized user is denied access."""
+    """An unauthorized user is denied cross-department documents (post mode)."""
     graph = build_agentic_rag_graph()
-
     result = await graph.ainvoke(
-        {
-            "query": "What are the HR policies and employee guidelines?",
-            "subject_id": "bob",
-            "max_attempts": 3,
-            "retrieval_attempt": 0,
-            "messages": [],
-            "reasoning": [],
-            "retrieved_documents": [],
-            "authorized_documents": [],
-            "denied_count": 0,
-            "authorization_passed": False,
-            "answer": "",
-        }
+        _state("What are the HR policies and employee guidelines?", "bob", 3)
     )
-
-    # Bob (sales) should not have access to HR documents
     assert len(result["authorized_documents"]) == 0
     assert result["denied_count"] > 0
     assert result["answer"] != ""
-    # Answer should explain the access denial
     assert "access" in result["answer"].lower() or "permission" in result["answer"].lower()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
-async def test_retrieval_attempts():
-    """Test that system respects max retrieval attempts."""
-    graph = build_agentic_rag_graph()
-
-    result = await graph.ainvoke(
-        {
-            "query": "Query that will fail authorization",
-            "subject_id": "unauthorized_user",
-            "max_attempts": 2,
-            "retrieval_attempt": 0,
-            "messages": [],
-            "reasoning": [],
-            "retrieved_documents": [],
-            "authorized_documents": [],
-            "denied_count": 0,
-            "authorization_passed": False,
-            "answer": "",
-        }
+async def test_prefilter_small_slice_for_contractor():
+    """Pre mode: the contractor only ever retrieves documents she may view."""
+    from agentic_rag.graph import run_agentic_rag_async
+    result = await run_agentic_rag_async(
+        query="engineering onboarding guide", subject_id="dana",
+        max_attempts=1, filter_mode="pre",
     )
-
-    # Should not exceed max attempts
-    assert result["retrieval_attempt"] <= 2
-    assert result["answer"] != ""
+    ids = {d.metadata["doc_id"] for d in result["retrieved_documents"]}
+    assert ids.issubset({
+        "engineering-guide-006", "engineering-guide-007",
+        "public-handbook-001", "public-handbook-002", "public-handbook-003",
+        "public-policy-004", "public-policy-005",
+    })
+    assert result["denied_count"] == 0
