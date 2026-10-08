@@ -281,8 +281,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🔐 Agentic RAG Authorization Demo</h1>
-            <p>Demonstrating fine-grained authorization with SpiceDB</p>
+            <h1>🔐 Secure RAG Pipelines — Authorization Demo</h1>
+            <p>Pre-filter vs post-filter authorization with SpiceDB + Qdrant</p>
         </header>
 
         <div class="card">
@@ -307,6 +307,15 @@
                 <select id="exampleQueries" class="btn-secondary">
                     <option value="">-- Try an example --</option>
                 </select>
+            </div>
+            <div class="form-group" style="margin-top: 1rem;">
+                <label>Authorization mode:</label>
+                <label style="font-weight: normal; margin-right: 1rem;">
+                    <input type="radio" name="filterMode" value="post" checked> Post-filter (check after retrieval)
+                </label>
+                <label style="font-weight: normal;">
+                    <input type="radio" name="filterMode" value="pre"> Pre-filter (LookupResources before retrieval)
+                </label>
             </div>
         </div>
 
@@ -379,6 +388,7 @@
         async function submitQuery() {
             const query = document.getElementById('queryInput').value.trim();
             const subject_id = document.getElementById('userSelect').value;
+            const filter_mode = document.querySelector('input[name="filterMode"]:checked').value;
 
             if (!query) {
                 alert('Please enter a query');
@@ -403,7 +413,7 @@
                 const response = await fetch(`${API_BASE}/query`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query, subject_id })
+                    body: JSON.stringify({ query, subject_id, filter_mode })
                 });
 
                 const result = await response.json();
@@ -433,6 +443,7 @@
                 <div class="stat-item">❌ <strong>Denied:</strong> ${data.stats.denied_count}</div>
                 <div class="stat-item">🔄 <strong>Attempts:</strong> ${data.stats.retrieval_attempts}</div>
                 <div class="stat-item">⏱️ <strong>Time:</strong> ${data.stats.execution_time_ms}ms</div>
+                ${data.stats.allowed_ids_count != null ? `<div class="stat-item">🔎 <strong>Pre-allowed:</strong> ${data.stats.allowed_ids_count}</div>` : ''}
             `;
             document.getElementById('stats').innerHTML = statsHTML;
 

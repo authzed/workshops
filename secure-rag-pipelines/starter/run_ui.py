@@ -18,17 +18,22 @@ def check_services():
         print("     Copy .env.example to .env and configure it")
         return False
 
-    # Check Milvus
+    # Check Qdrant
     try:
         from agentic_rag.config import get_config
-        from agentic_rag.milvus_client import get_milvus_client
+        from agentic_rag.qdrant_client import get_qdrant_client
 
         config = get_config()
-        milvus_client = get_milvus_client(config.milvus_uri, config.milvus_token)
-        print("  ✅ Milvus connected")
+        qdrant = get_qdrant_client(config.qdrant_url)
+        if qdrant.collection_exists("Documents") and qdrant.count("Documents").count > 0:
+            print("  ✅ Qdrant connected, documents loaded")
+        else:
+            print("  ⚠️  Documents collection missing/empty in Qdrant")
+            print("     Run: python examples/setup_environment.py")
+            return False
     except Exception as e:
-        print(f"  ❌ Milvus not available: {e}")
-        print("     Run: docker-compose up -d")
+        print(f"  ❌ Qdrant not available: {e}")
+        print("     Run: docker compose up -d --wait")
         return False
 
     # Check SpiceDB
@@ -48,28 +53,6 @@ def check_services():
         print("     Set it in .env file")
         return False
     print(f"  ✅ Chat model configured ({config.llm_model})")
-
-    # Check if documents are loaded
-    try:
-        if milvus_client.has_collection("Documents"):
-            results = milvus_client.query(
-                collection_name="Documents",
-                filter='doc_id != ""',
-                output_fields=["doc_id"],
-                limit=1,
-            )
-            if results:
-                print("  ✅ Documents loaded in Milvus")
-            else:
-                print("  ⚠️  No documents found in Milvus")
-                print("     Run: python examples/setup_environment.py")
-                return False
-        else:
-            print("  ⚠️  Documents collection does not exist in Milvus")
-            print("     Run: python examples/setup_environment.py")
-            return False
-    except Exception as e:
-        print(f"  ⚠️  Could not verify documents: {e}")
 
     return True
 
