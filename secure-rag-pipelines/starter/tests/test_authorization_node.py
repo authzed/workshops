@@ -6,8 +6,8 @@ from unittest.mock import patch, MagicMock
 from langchain_core.documents import Document
 
 # Shipped starter ships the authorization node as a leaking stub. These tests
-# describe the Part 2 solution — unskip them to verify your implementation.
-pytestmark = pytest.mark.skip(reason="Enforcement implemented by the attendee in Part 2 — unskip to verify your solution")
+# describe the Part 2 solution; unskip them to verify your implementation.
+pytestmark = pytest.mark.skip(reason="Enforcement implemented by the attendee in Part 2; unskip to verify your solution")
 
 
 def _docs():

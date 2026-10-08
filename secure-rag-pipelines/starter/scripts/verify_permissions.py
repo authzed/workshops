@@ -22,7 +22,7 @@ def check_permission(client, user, doc_id):
     """Check if user can view document.
 
     Uses fully_consistent so this gate reflects the relationships setup just
-    wrote — otherwise a check run immediately after setup can race the writes
+    wrote. Otherwise a check run immediately after setup can race the writes
     (default minimize_latency may read a snapshot taken before them).
     """
     request = CheckPermissionRequest(

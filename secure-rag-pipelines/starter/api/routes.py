@@ -25,7 +25,7 @@ USERS: List[User] = [
     User(id="bob", name="Bob", department="Sales"),
     User(id="hr_manager", name="HR Manager", department="HR"),
     User(id="finance_manager", name="Finance Manager", department="Finance"),
-    User(id="dana", name="Dana (Contractor)", department="— (contractor)"),
+    User(id="dana", name="Dana (Contractor)", department="None (contractor)"),
 ]
 
 
@@ -38,14 +38,14 @@ async def get_users():
 @router.get("/health")
 async def health_check():
     """Check health of backend services."""
-    # TODO: Actually check Milvus + SpiceDB connectivity
+    # TODO: Actually check Qdrant + SpiceDB connectivity
     # For now, return optimistic health status
     return {
         "status": "healthy",
         "services": {
-            "milvus": "connected",
+            "qdrant": "connected",
             "spicedb": "connected",
-            "openai": "configured",
+            "chat_model": "configured",
         },
     }
 

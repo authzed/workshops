@@ -1,9 +1,9 @@
-"""Authorization node — the deterministic security boundary.
+"""Authorization node: the deterministic security boundary.
 
 WORKSHOP STUB
 -------------
 Right now this node lets EVERYTHING through. It does no real permission
-check, so every document retrieval returns is passed straight to the LLM —
+check, so every document retrieval returns is passed straight to the LLM,
 including documents the user is not allowed to see. That is the data leak you
 will observe in Part 1, and fix in Part 2.
 """
@@ -24,7 +24,7 @@ async def authorization_node(state: AgenticRAGState) -> dict:
     retrieved = state["retrieved_documents"]
 
     # TODO(Part 2): Replace this pass-through with a real SpiceDB check.
-    # As written, every retrieved document is treated as authorized — the bug.
+    # As written, every retrieved document is treated as authorized. That's the bug.
     authorized = retrieved
     denied_count = 0
 
@@ -34,7 +34,7 @@ async def authorization_node(state: AgenticRAGState) -> dict:
         "authorization_passed": len(authorized) > 0,
         "messages": [
             SystemMessage(
-                content=f"Authorization: {len(authorized)}/{len(retrieved)} documents authorized (STUB — no checks)"
+                content=f"Authorization: {len(authorized)}/{len(retrieved)} documents authorized (STUB, no checks)"
             )
         ],
     }

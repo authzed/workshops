@@ -55,19 +55,20 @@ def should_reason_or_generate(state: AgenticRAGState) -> str:
 def build_agentic_rag_graph():
     """Build the agentic RAG graph with deterministic authorization.
 
-    Simplified Flow:
-    1. Retrieval: Fetch documents from Milvus
-    2. Authorization: Deterministic permission check (security boundary)
-    3. Conditional:
-       - If authorized docs exist: Generate answer
-       - If no authorized docs AND max_attempts > 1: Reason about retry strategy
-       - If no authorized docs AND max_attempts == 1: Generate answer (with explanation)
-    4. After reasoning (only with max_attempts > 1):
-       - If attempts remain: Retry retrieval
-       - Otherwise: Generate answer explaining constraints
+    Flow:
+    1. Pre-filter: in pre mode, resolve allowed doc ids via LookupResources (no-op in post mode)
+    2. Retrieval: fetch documents from Qdrant (applying the pre-filter allow-list if present)
+    3. Authorization: deterministic permission check (the security boundary in post mode)
+    4. Conditional:
+       - If authorized docs exist: generate answer
+       - If no authorized docs AND max_attempts > 1: reason about retry strategy
+       - If no authorized docs AND max_attempts == 1: generate answer (with explanation)
+    5. After reasoning (only with max_attempts > 1):
+       - If attempts remain: retry retrieval
+       - Otherwise: generate answer explaining constraints
 
-    Note: With max_attempts=1 (default), the flow is just 3 nodes:
-    Retrieve → Authorize → Generate
+    Note: With max_attempts=1 (default), the flow is four nodes:
+    Prefilter -> Retrieve -> Authorize -> Generate
     """
     workflow = StateGraph(AgenticRAGState)
 

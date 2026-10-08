@@ -1,14 +1,10 @@
-# Part 2 — Secure it with post-filter
+# Part 2: Secure it with post-filter
 
-We'll make one code change to turn the leaking pipeline from Part 1 into one that enforces real access control. This is a check the agent can't skip, and no prompt-engineering trick gets past it.
-
-**You need deterministic security checks in a probabilistic world.**
-
----
+One code change turns the leaking pipeline from Part 1 into one that enforces real access control. It's a check the agent can't skip, and no clever prompt gets around it. That's the point: in a probabilistic world, you still need a deterministic security check.
 
 ## The model is already loaded
 
-When you ran `setup_environment.py` in setup, it wrote a SpiceDB schema into your local instance (`data/schema.zed`):
+When you ran `setup_environment.py`, it wrote a SpiceDB schema into your local instance. Here's `data/schema.zed`:
 
 ```zed
 definition user {}
@@ -27,15 +23,13 @@ definition document {
 }
 ```
 
-In plain terms: a user can `view` a document if they're a direct `viewer` or its `owner`. The interesting part is that `viewer` can be satisfied two ways — a specific user, or every `member` of a department (`department#member`). This is the power of **ReBAC**: Relationship-Based Access Control. Bob is a member of the sales department, so he inherits viewer access to every document that grants `viewer` to `department:sales#member`.
+In plain terms: you can `view` a document if you're a direct `viewer` or the `owner`. The interesting bit is that `viewer` is satisfied two ways, a specific user *or* every `member` of a department (`department#member`). That's what ReBAC buys you. Bob is a member of the sales department, so he inherits viewer access to every document that grants `viewer` to `department:sales#member`, and nothing else.
 
-The access patterns this creates: department-based (every member sees their department's docs), cross-department (three docs shared for collaboration), individual exceptions (one-off grants), public (five docs granted to everyone), and the contractor `dana` (two engineering guides + public). The full set of writes is in `examples/setup_environment.py`.
-
----
+That one line buys you a handful of access patterns: department members see their department's docs, three documents are shared across departments for collaboration, a few users get one-off exceptions, five public docs go to everyone, and the contractor `dana` gets exactly two engineering guides plus the public set. The full list of writes is in `examples/setup_environment.py`.
 
 ## How a permission check works
 
-SpiceDB answers one question at a time: *does this subject have this permission on this resource?*
+SpiceDB answers one question at a time: can this subject do this thing to this resource?
 
 ```python
 from authzed.api.v1 import CheckPermissionRequest, ObjectReference, SubjectReference
@@ -51,16 +45,14 @@ response = client.CheckPermission(request)
 allowed = response.permissionship == 2  # HAS_PERMISSION
 ```
 
-`permissionship == 2` means `LOOKUP_PERMISSIONSHIP_HAS_PERMISSION` — SpiceDB traversed the relationship graph and found a path from the subject to the permission. Anything else is a denial. To see this against all 23 cases in the workshop's permission matrix, run `python scripts/verify_permissions.py`.
-
----
+`permissionship == 2` is `LOOKUP_PERMISSIONSHIP_HAS_PERMISSION`: SpiceDB walked the relationship graph and found a path from the subject to the permission. Anything else is a no. Run `python scripts/verify_permissions.py` to see it answer all 23 cases in the workshop's permission matrix.
 
 ## Implement the authorization node
 
-Open `agentic_rag/nodes/authorization_node.py`. Right now it has the two TODO lines that make `authorized = retrieved` and `denied_count = 0` — the bug from Part 1. Replace the **entire file** with this:
+Open `agentic_rag/nodes/authorization_node.py`. Right now it has those two TODO lines that set `authorized = retrieved` and `denied_count = 0`, the bug from Part 1. Replace the whole file with this:
 
 ```python
-"""Authorization node — the deterministic security boundary."""
+"""Authorization node: the deterministic security boundary."""
 
 from langchain_core.messages import SystemMessage
 from authzed.api.v1 import (
@@ -143,37 +135,29 @@ async def authorization_node(state: AgenticRAGState) -> dict:
     }
 ```
 
-The `pre` branch is a pass-through we'll rely on in Part 3 (there the prefilter already restricted retrieval, so re-checking here would be redundant work). The `post` path is the one that matters now: it calls `CheckPermission` once per retrieved document — at most 5 calls.
-
----
+The `pre` branch is a pass-through we'll lean on in Part 3, where the prefilter already narrowed retrieval and re-checking here would be wasted work. The `post` path is the one that matters today: one `CheckPermission` per retrieved document, at most 5 calls.
 
 ## Re-run the same query
 
-The UI server runs with auto-reload, so the moment you save `authorization_node.py` it picks up your change. (If you'd stopped it, start it again from `starter/` with `python run_ui.py`.)
+The UI server auto-reloads, so the moment you save `authorization_node.py` your change is live. (Stopped it? Start it again from `starter/` with `python run_ui.py`.)
 
-Back in the browser, with the mode still on **Post-filter**, run the exact same query — **Bob (Sales)**, *What are our microservices architecture patterns?* — and submit.
+Back in the browser, mode still on **Post-filter**, run the same query: **Bob (Sales)**, *What are our microservices architecture patterns?* Submit.
 
-Watch what moves. Before, `engineering-architecture-002` sat under **Authorized** with Denied at 0. Now that same document drops into **Denied Documents**, tagged *"User 'bob' does not have permission to access this document"*, and the denied count climbs above zero. The **Answer** shifts too: the LLM is working only with what bob is allowed to read.
+Watch what moves. Before, `engineering-architecture-002` sat under Authorized with Denied at 0. Now it drops into **Denied Documents**, tagged *"User 'bob' does not have permission to access this document"*, and the denied count climbs. The **Answer** changes too, because the LLM only ever gets what bob is allowed to read. `engineering-architecture-001` usually stays under Authorized for bob, by the way, that's the cross-department doc shared with sales. The system isn't being stingy. It's being exact.
 
-`engineering-architecture-001`, by contrast, will typically stay under **Authorized** for bob — that's the cross-department document explicitly shared with sales.
+## Put the check in the node, not the prompt
 
----
+The authorization node doesn't interpret anything. It doesn't reason, and it doesn't fall for a clever query. It runs a binary check against SpiceDB for every document, and SpiceDB either finds a path or it doesn't. It's a node the graph always runs, with no branch that skips it, so the LLM only ever receives documents that already cleared the check. It can't leak what it never saw.
 
-## The node is the right place, not the prompt
+Go ahead and try to trick it. Tell the pipeline Bob just joined engineering. The checks still hold, because they're reading relationships in SpiceDB, not sentences in a prompt. Access control in a system prompt is an anti-pattern: a prompt is a suggestion, and prompt injection is a thing.
 
-The authorization node is deterministic. It doesn't interpret or reason, and it doesn't get confused by a clever query. It runs a binary check against SpiceDB for every document, and SpiceDB either finds the permission path or it doesn't. It's a node in a graph the agent always executes — there's no branch that skips it, so the LLM only ever receives documents that already cleared the check. It *cannot* leak what it *never saw*.
-
-Try to trick it: tell the pipeline that Bob joined Engineering. The checks are still enforced deterministically and your data is safe. Putting access control in a system prompt is an anti-pattern — a prompt can be bypassed by prompt injection.
-
-One cost worth noting: this node calls `CheckPermission` once per document. Five docs, five round trips. We collapse that into a single call in Part 4.
-
----
+One cost to flag: this node makes one call per document. Five docs, five round trips. Fifty docs, fifty. We fix that in Part 4.
 
 ## Completion Milestone: Part 2
 
 - [ ] Replaced the pass-through stub with the real SpiceDB `CheckPermission` loop
 - [ ] The `bob` / microservices query now moves `engineering-architecture-002` into Denied Documents
-- [ ] Confirmed legitimate access (department, cross-department, exceptions, public) still works
-- [ ] Can explain why enforcing access in the node — not the prompt — is the correct design
+- [ ] Confirmed legitimate access still works (department, cross-department, exceptions, public)
+- [ ] Can explain why enforcing in the node, not the prompt, is the correct design
 
-Next: [Part 3 — Pre-filter with LookupResources](3-pre-filter.md).
+Next: [Part 3: Pre-filter with LookupResources](3-pre-filter.md).

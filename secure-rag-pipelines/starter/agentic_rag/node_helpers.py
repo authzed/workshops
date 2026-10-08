@@ -9,7 +9,7 @@ from fastembed import TextEmbedding
 from .config import get_config
 
 # Local embedding model: runs on CPU, no API key, downloads weights once (~50MB)
-# and caches them. 384-dim output — keep the Milvus collection's `dim` in sync.
+# and caches them. 384-dim output; keep the Qdrant collection's vector size in sync.
 EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 _embedder: TextEmbedding | None = None
 
@@ -18,7 +18,7 @@ def get_llm() -> ChatOpenAI:
     """Get the configured chat model (provider-agnostic).
 
     Uses the OpenAI-compatible interface, so it works with OpenAI, Anthropic,
-    Azure, Groq, Together, local vLLM/Ollama, or any corporate endpoint — set
+    Azure, Groq, Together, local vLLM/Ollama, or any corporate endpoint. Set
     LLM_MODEL, LLM_API_KEY, and (for anything but OpenAI) LLM_BASE_URL in .env.
 
     Returns:

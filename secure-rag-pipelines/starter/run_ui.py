@@ -44,7 +44,7 @@ def check_services():
         print("  ✅ SpiceDB connected")
     except Exception as e:
         print(f"  ❌ SpiceDB not available: {e}")
-        print("     Run: docker-compose up -d")
+        print("     Run: docker compose up -d --wait")
         return False
 
     # Check chat model key

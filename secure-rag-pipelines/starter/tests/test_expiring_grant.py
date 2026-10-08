@@ -47,7 +47,7 @@ def test_temp_grant_is_honored_then_expires():
         os.getenv("SPICEDB_ENDPOINT", "localhost:50051"),
         os.getenv("SPICEDB_TOKEN", "devtoken"),
     )
-    # NEW relation (temp_viewer) — WriteSchema succeeds without a datastore reset.
+    # NEW relation (temp_viewer), so WriteSchema succeeds without a datastore reset.
     client.WriteSchema(WriteSchemaRequest(schema=SCHEMA_WITH_EXPIRATION))
 
     def advance_clock():

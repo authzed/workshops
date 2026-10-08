@@ -25,3 +25,13 @@ def test_query_accepts_filter_mode_and_reports_allowed_count():
     body = r.json()
     assert body["success"] is True
     assert body["data"]["stats"]["allowed_ids_count"] == 2
+
+
+def test_health_reports_qdrant_not_milvus():
+    from api.main import app
+    client = TestClient(app)
+    r = client.get("/api/health")
+    assert r.status_code == 200
+    services = r.json()["services"]
+    assert "qdrant" in services
+    assert "milvus" not in services

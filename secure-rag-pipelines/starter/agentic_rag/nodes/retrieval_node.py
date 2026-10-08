@@ -30,7 +30,7 @@ def retrieval_node(state: AgenticRAGState) -> dict:
         try:
             allowed = state.get("allowed_doc_ids")
             if allowed is not None and len(allowed) == 0:
-                # Pre-filter resolved to zero viewable docs — retrieve nothing.
+                # Pre-filter resolved to zero viewable docs, so retrieve nothing.
                 return {
                     "retrieved_documents": [],
                     "retrieval_attempt": state["retrieval_attempt"] + 1,

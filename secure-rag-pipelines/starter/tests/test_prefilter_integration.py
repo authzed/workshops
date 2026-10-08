@@ -1,6 +1,6 @@
 """Integration test for the pre-filter path against live SpiceDB + Qdrant.
 
-No LLM required — this drives prefilter_node + retrieval_node directly, which is
+No LLM required; this drives prefilter_node + retrieval_node directly, which is
 where the deterministic authorization behaviour lives. Requires docker infra up
 and setup_environment to have run.
 """
@@ -14,7 +14,7 @@ DANA_ALLOWED = {
 }
 
 
-@pytest.mark.skip(reason="prefilter LookupResources implemented by the attendee in Part 3 — unskip to verify your solution")
+@pytest.mark.skip(reason="prefilter LookupResources implemented by the attendee in Part 3; unskip to verify your solution")
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_prefilter_resolves_contractor_slice():
@@ -41,7 +41,7 @@ def test_retrieval_respects_prefilter_slice():
 
 @pytest.mark.integration
 def test_post_mode_retrieval_is_unfiltered():
-    """Post mode (allowed_doc_ids=None) can surface docs dana may NOT see — that is
+    """Post mode (allowed_doc_ids=None) can surface docs dana may NOT see, which is
     exactly why post mode needs the authorize check afterwards."""
     from agentic_rag.nodes.retrieval_node import retrieval_node
     state = {

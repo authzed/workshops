@@ -1,4 +1,4 @@
-"""Initialize Milvus and SpiceDB with sample data."""
+"""Initialize Qdrant and SpiceDB with sample data."""
 
 import sys
 import os
@@ -185,7 +185,7 @@ def setup_spicedb():
     print(f"    - Cross-department: 3 collaboration documents")
     print(f"    - Individual exceptions: 3 special access grants")
     print(f"    - Public access: 5 documents accessible to all users")
-    print("    - dana: contractor — 2 engineering guides + public only")
+    print("    - dana: contractor, 2 engineering guides + public only")
 
 
 def setup_qdrant():

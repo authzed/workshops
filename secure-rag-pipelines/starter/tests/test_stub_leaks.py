@@ -2,7 +2,7 @@
 
 This is the Part 1 bug, pinned as a test so a well-meaning edit can't silently
 "fix" the starter (which would remove the whole point of Parts 1-2). No infra or
-LLM needed — it calls the node directly.
+LLM needed; it calls the node directly.
 """
 
 import pytest
@@ -16,7 +16,7 @@ async def test_authorization_stub_authorizes_everything():
         Document(page_content="x", metadata={"doc_id": "engineering-architecture-002", "title": "T"}),
         Document(page_content="y", metadata={"doc_id": "hr-policy-001", "title": "T2"}),
     ]
-    # bob is in sales and may see neither doc — but the stub does no check.
+    # bob is in sales and may see neither doc, but the stub does no check.
     out = await authorization_node(
         {"subject_id": "bob", "filter_mode": "post", "retrieved_documents": docs}
     )
