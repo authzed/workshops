@@ -61,6 +61,7 @@ async def execute_query(request: QueryRequest) -> APIResponse:
             query=request.query,
             subject_id=request.subject_id,
             max_attempts=request.max_attempts,
+            filter_mode=request.filter_mode,
         )
 
         execution_time_ms = int((time.time() - start_time) * 1000)
@@ -107,6 +108,11 @@ async def execute_query(request: QueryRequest) -> APIResponse:
                 denied_count=result["denied_count"],
                 retrieval_attempts=result["retrieval_attempt"],
                 execution_time_ms=execution_time_ms,
+                allowed_ids_count=(
+                    len(result["allowed_doc_ids"])
+                    if result.get("allowed_doc_ids") is not None
+                    else None
+                ),
             ),
         )
 
