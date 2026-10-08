@@ -87,7 +87,7 @@ def setup_spicedb():
         dept = doc['department']
 
         if dept == "public":
-            for user in ["alice", "bob", "hr_manager", "finance_manager"]:
+            for user in ["alice", "bob", "hr_manager", "finance_manager", "dana"]:
                 updates.append(
                     RelationshipUpdate(
                         operation=RelationshipUpdate.Operation.OPERATION_TOUCH,
@@ -156,6 +156,23 @@ def setup_spicedb():
             )
         )
 
+    # Contractor: dana is in no department and gets a tiny, explicit slice of the
+    # corpus. This makes the pre-filter "small slice of a large corpus" story vivid.
+    contractor_docs = ["engineering-guide-006", "engineering-guide-007"]
+    for doc_id in contractor_docs:
+        updates.append(
+            RelationshipUpdate(
+                operation=RelationshipUpdate.Operation.OPERATION_TOUCH,
+                relationship=Relationship(
+                    resource=ObjectReference(object_type="document", object_id=doc_id),
+                    relation="viewer",
+                    subject=SubjectReference(
+                        object=ObjectReference(object_type="user", object_id="dana")
+                    ),
+                ),
+            )
+        )
+
     client.WriteRelationships(WriteRelationshipsRequest(updates=updates))
     print(f"  ✅ {len(updates)} relationships configured")
     print("  Users and Departments:")
@@ -168,6 +185,7 @@ def setup_spicedb():
     print(f"    - Cross-department: 3 collaboration documents")
     print(f"    - Individual exceptions: 3 special access grants")
     print(f"    - Public access: 5 documents accessible to all users")
+    print("    - dana: contractor — 2 engineering guides + public only")
 
 
 def setup_qdrant():

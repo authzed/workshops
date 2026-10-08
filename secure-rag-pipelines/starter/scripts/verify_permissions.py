@@ -62,6 +62,13 @@ def main():
         ("Alice accesses sales proposal (exception)", "alice", "sales-proposal-001", True),
         ("Finance manager accesses HR policy 2 (exception)", "finance_manager", "hr-policy-002", True),
         ("Bob accesses engineering guide (exception)", "bob", "engineering-guide-006", True),
+
+        # Contractor (small-slice) access
+        ("Dana accesses contractor doc 006", "dana", "engineering-guide-006", True),
+        ("Dana accesses contractor doc 007", "dana", "engineering-guide-007", True),
+        ("Dana accesses public doc", "dana", "public-handbook-001", True),
+        ("Dana denied other engineering doc", "dana", "engineering-architecture-001", False),
+        ("Dana denied sales doc", "dana", "sales-proposal-001", False),
     ]
 
     passed = 0

@@ -10,6 +10,7 @@ This document describes the permission patterns used in the agentic RAG demo.
 | bob | sales | All 10 sales documents |
 | hr_manager | hr | All 10 HR documents |
 | finance_manager | finance | All 10 finance documents |
+| dana | — (contractor) | Only 2 engineering guides + public docs |
 
 ## Permission Patterns
 
@@ -71,7 +72,18 @@ All users can access public documents:
 - public-policy-004
 - public-policy-005
 
-All 4 users (alice, bob, hr_manager, finance_manager) have viewer permission.
+All users (alice, bob, hr_manager, finance_manager, dana) have viewer permission.
+
+### 5. Contractor (small-slice) access
+
+`dana` is a **contractor** who belongs to no department. Dana has an explicit
+`viewer` grant on just two documents — `engineering-guide-006` and
+`engineering-guide-007` — plus the 5 public docs. That's ~7 of 50 documents.
+
+This tiny slice is what makes the **pre-filter** pattern vivid: when dana asks a
+question, `LookupResources` returns only those ids, so the vector search only ever
+touches documents dana may see — there is no retrieve-then-discard waste. Dana is
+also the subject of the Part 4 expiring-grant demo.
 
 ## Testing Permissions
 

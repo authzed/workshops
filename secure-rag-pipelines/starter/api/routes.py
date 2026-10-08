@@ -25,6 +25,7 @@ USERS: List[User] = [
     User(id="bob", name="Bob", department="Sales"),
     User(id="hr_manager", name="HR Manager", department="HR"),
     User(id="finance_manager", name="Finance Manager", department="Finance"),
+    User(id="dana", name="Dana (Contractor)", department="— (contractor)"),
 ]
 
 
