@@ -1,6 +1,6 @@
 """State schema for agentic RAG with authorization."""
 
-from typing import TypedDict, Annotated, List
+from typing import TypedDict, Annotated, List, Optional
 from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage
 import operator
@@ -19,6 +19,12 @@ class AgenticRAGState(TypedDict):
     # Input
     query: str
     subject_id: str
+
+    # Authorization mode: "post" (CheckPermission after retrieval) or "pre"
+    # (LookupResources -> filter before retrieval)
+    filter_mode: str
+    # Pre-filter: document ids the subject may view (None in post mode)
+    allowed_doc_ids: Optional[List[str]]
 
     # Configuration
     max_attempts: int
