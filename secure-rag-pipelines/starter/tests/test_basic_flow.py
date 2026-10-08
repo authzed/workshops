@@ -8,6 +8,10 @@ Marked `integration`; they are skipped by default runs without infra/LLM.
 import pytest
 from agentic_rag.graph import build_agentic_rag_graph
 
+# Shipped starter leaks (stubs) and these drive the whole graph (needs an LLM).
+# Unskip after you implement Part 2 (post-filter) and Part 3 (pre-filter).
+pytestmark = pytest.mark.skip(reason="Full-graph enforcement implemented by the attendee in Parts 2-3 and needs an LLM — unskip after filling the stubs")
+
 
 def _state(query, subject_id, max_attempts, filter_mode="post"):
     return {

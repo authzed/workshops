@@ -16,6 +16,7 @@ async def test_prefilter_post_mode_returns_none():
     assert out["allowed_doc_ids"] is None
 
 
+@pytest.mark.skip(reason="LookupResources implemented by the attendee in Part 3 — unskip to verify your solution")
 @pytest.mark.asyncio
 async def test_prefilter_pre_mode_collects_resource_ids():
     from agentic_rag.nodes.prefilter_node import prefilter_node

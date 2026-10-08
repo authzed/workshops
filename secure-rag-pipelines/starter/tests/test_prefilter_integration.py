@@ -14,6 +14,7 @@ DANA_ALLOWED = {
 }
 
 
+@pytest.mark.skip(reason="prefilter LookupResources implemented by the attendee in Part 3 — unskip to verify your solution")
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_prefilter_resolves_contractor_slice():
