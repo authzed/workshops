@@ -8,11 +8,10 @@ This workshop teaches you to add a deterministic authorization boundary to an ag
 #### 2. Delegated Authorization for AI Agents
 This workshop teaches you to give AI agents fine-grained, delegated permissions instead of broad ambient credentials. You'll build a DevOps deploy agent on goose and model delegation with SpiceDB using Relationship-Based Access Control (ReBAC) — scoped delegation, time-bound grants that expire on their own, instant revocation, and hierarchical permissions. Uses SpiceDB, goose, Python, and Docker. [Link](https://github.com/authzed/workshops/tree/main/delegated-agent-authorization)
 
-#### 3. Secure Your RAG Pipelines With Fine Grained Authorization
-This workshop gives you hands-on knowledge on using SpiceDB to safeguard sensitive data in your RAG pipelines. There are different branches for this workshop:
+#### 3. Secure Your RAG Pipelines With Fine-Grained Authorization (Pre-Filter & Post-Filter)
+This hands-on workshop teaches two ways to stop a RAG pipeline from leaking documents across users. You'll run an agentic RAG over a multi-department corpus, watch it leak, then lock it down with post-filter (CheckPermission after retrieval) and pre-filter (LookupResources before retrieval), comparing the two live with a UI toggle. It closes with bulk permission checks and self-expiring grants. Uses SpiceDB, Qdrant, local fastembed embeddings, a provider-agnostic chat model, LangGraph, and Docker. [Link](https://github.com/authzed/workshops/tree/main/secure-rag-pipelines)
 
-- (recommended) Using the OpenAI API, Pinecone, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/main/secure-rag-pipelines)
-- Using the Deepseek R1 LLM (via OpenRouter), Pinecone, OpenAI Embeddings, a local Jupyter Notebook instance and SpiceDB. [Link](https://github.com/authzed/workshops/tree/deepseek/secure-rag-pipelines)
+An older notebook-based variant using DeepSeek R1 (via OpenRouter), Pinecone, and OpenAI embeddings lives on a separate branch. [Link](https://github.com/authzed/workshops/tree/deepseek/secure-rag-pipelines)
 
 #### 4. Update A Web View Based on Permissions
 This workshop will illustrate how you can update a view based on what permissions the user has. The workshop uses a NextJS template by Vercel for an admin dashboard, written in TypeScript. [Link](https://github.com/authzed/workshops/tree/main/update-views-authorization)
