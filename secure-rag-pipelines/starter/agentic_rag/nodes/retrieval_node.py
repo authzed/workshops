@@ -54,6 +54,7 @@ def retrieval_node(state: AgenticRAGState) -> dict:
                 limit=5,
                 with_payload=True,
                 query_filter=query_filter,
+                score_threshold=config.score_threshold,
             )
 
             documents = [

@@ -62,6 +62,19 @@ def test_retrieval_applies_payload_filter(sample_state):
     assert set(qfilter.must[0].match.any) == {"engineering-guide-006", "engineering-guide-007"}
 
 
+def test_retrieval_applies_score_threshold(sample_state):
+    from agentic_rag.nodes.retrieval_node import retrieval_node
+    with patch("agentic_rag.nodes.retrieval_node.get_qdrant_client") as gc, \
+         patch("agentic_rag.nodes.retrieval_node.embed") as emb:
+        emb.return_value = [0.1] * 384
+        client = MagicMock()
+        client.query_points.return_value = SimpleNamespace(points=[_point()])
+        gc.return_value = client
+        retrieval_node(sample_state)
+    # A relevance floor is applied so low-score padding docs aren't retrieved.
+    assert client.query_points.call_args.kwargs["score_threshold"] == 0.6
+
+
 def test_retrieval_empty_allowed_list_returns_nothing(sample_state):
     from agentic_rag.nodes.retrieval_node import retrieval_node
     sample_state["allowed_doc_ids"] = []

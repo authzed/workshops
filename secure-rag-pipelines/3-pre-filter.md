@@ -101,6 +101,8 @@ query_filter = Filter(
 
 Notice the filter keys off the payload field `doc_id`, not the Qdrant point id (point ids are integers; the human-readable id rides along in the payload). A structured, typed filter like this reads better than a stringly-typed query expression, and it's harder to get subtly wrong. One edge case is handled for you: if `allowed_doc_ids` comes back empty (the subject can see nothing), retrieval returns zero documents instead of quietly running an unfiltered search.
 
+One thing to watch with pre-filter: it fills its k retrieval slots from the allowed set, so when a user has only one or two genuinely relevant documents, the leftover slots get padded with low-relevance docs they happen to be allowed to see, and that noise dilutes the answer. Retrieval guards against it with a relevance floor (`SCORE_THRESHOLD`, default 0.6): documents scoring below it aren't retrieved at all. Ask alice to "show me sales proposals" and you'll see why it matters, she has exactly one, so pre-filter returns that proposal plus one closely-related guide rather than padding the context with unrelated engineering memos. Tune the floor to your own corpus and embedding model.
+
 ## Re-run as Dana, then compare
 
 Save the file (auto-reload picks it up). Mode on **Pre-filter**, run a query as **Dana**. Now only her documents are retrieved, the search never surfaces anything outside her slice, **Denied** is **0** because there was nothing to throw away, and a new stat appears: **Pre-allowed**, the number of ids `LookupResources` returned.

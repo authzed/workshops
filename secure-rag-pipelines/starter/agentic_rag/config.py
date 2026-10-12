@@ -29,6 +29,11 @@ class Config:
     # Agent behavior
     max_retrieval_attempts: int = 1
 
+    # Retrieval relevance floor: drop documents scoring below this (cosine) so a
+    # query doesn't pad the context with low-relevance docs. Matters most in
+    # pre-filter mode, where retrieval must fill k slots from the allowed set.
+    score_threshold: float = 0.6
+
     # Logging
     log_level: str = "INFO"
 
@@ -43,6 +48,7 @@ class Config:
             llm_model=os.getenv("LLM_MODEL", "gpt-4"),
             llm_base_url=os.getenv("LLM_BASE_URL", ""),
             max_retrieval_attempts=int(os.getenv("MAX_RETRIEVAL_ATTEMPTS", "1")),
+            score_threshold=float(os.getenv("SCORE_THRESHOLD", "0.6")),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
         )
 
