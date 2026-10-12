@@ -1,24 +1,21 @@
-## AuthZed Workshops
+# AuthZed Workshops
 
-Here's the hub for all self-guided AuthZed workshops.  
+Self-guided, hands-on workshops for fine-grained authorization with [SpiceDB](https://authzed.com/spicedb). Each one runs locally, builds something real, and ends with working code. Pick one and start.
 
-#### 1. Building Authorization for Agentic RAG Systems
-This workshop teaches you to add a deterministic authorization boundary to an agentic RAG system. You'll run a LangGraph-based agentic RAG, watch semantic search leak documents across departments, then implement a SpiceDB permission check the agent can't bypass. Uses SpiceDB, Milvus, LangGraph, OpenAI, and Docker Compose. [Link](https://github.com/authzed/workshops/tree/main/agentic-rag-authorization)
+| Workshop | What you build | Stack |
+| --- | --- | --- |
+| **[Building Authorization for Agentic RAG Systems](https://github.com/authzed/workshops/tree/main/agentic-rag-authorization)** | Watch an agentic RAG leak documents across departments, then add a SpiceDB permission check the agent can't bypass. | SpiceDB, Milvus, LangGraph, OpenAI, Docker |
+| **[Delegated Authorization for AI Agents](https://github.com/authzed/workshops/tree/main/delegated-agent-authorization)** | Give a DevOps deploy agent scoped, delegated permissions: time-bound grants that expire on their own, instant revocation, and a permission hierarchy. | SpiceDB, goose, Python, Docker |
+| **[Secure Your RAG Pipelines (Pre-Filter & Post-Filter)](https://github.com/authzed/workshops/tree/main/secure-rag-pipelines)** | Stop a RAG pipeline leaking two ways, post-filter and pre-filter, compared live with a toggle, then add bulk checks and self-expiring grants. | SpiceDB, Qdrant, fastembed, LangGraph, Docker |
+| **[Update a Web View Based on Permissions](https://github.com/authzed/workshops/tree/main/update-views-authorization)** | Render an admin dashboard whose UI changes with the viewer's permissions. | SpiceDB, Next.js, TypeScript |
+| **[Zero to Permissions System in 10 Minutes with MCP](https://github.com/authzed/workshops/tree/main/mcp-assisted-authorization)** | Build and reason about an authorization model using AuthZed's Model Context Protocol (MCP) servers. | SpiceDB, AuthZed, MCP |
 
-#### 2. Delegated Authorization for AI Agents
-This workshop teaches you to give AI agents fine-grained, delegated permissions instead of broad ambient credentials. You'll build a DevOps deploy agent on goose and model delegation with SpiceDB using Relationship-Based Access Control (ReBAC): scoped delegation, time-bound grants that expire on their own, instant revocation, and hierarchical permissions. Uses SpiceDB, goose, Python, and Docker. [Link](https://github.com/authzed/workshops/tree/main/delegated-agent-authorization)
+> **Secure Your RAG Pipelines** also has an older notebook-based variant (DeepSeek R1 via OpenRouter, Pinecone, OpenAI embeddings) on a [separate branch](https://github.com/authzed/workshops/tree/deepseek/secure-rag-pipelines).
 
-#### 3. Secure Your RAG Pipelines With Fine-Grained Authorization (Pre-Filter & Post-Filter)
-This hands-on workshop teaches two ways to stop a RAG pipeline from leaking documents across users. You'll run an agentic RAG over a multi-department corpus, watch it leak, then lock it down with post-filter (CheckPermission after retrieval) and pre-filter (LookupResources before retrieval), comparing the two live with a UI toggle. It closes with bulk permission checks and self-expiring grants. Uses SpiceDB, Qdrant, local fastembed embeddings, a provider-agnostic chat model, LangGraph, and Docker. [Link](https://github.com/authzed/workshops/tree/main/secure-rag-pipelines)
+## New to SpiceDB?
 
-An older notebook-based variant using DeepSeek R1 (via OpenRouter), Pinecone, and OpenAI embeddings lives on a separate branch. [Link](https://github.com/authzed/workshops/tree/deepseek/secure-rag-pipelines)
-
-#### 4. Update A Web View Based on Permissions
-This workshop will illustrate how you can update a view based on what permissions the user has. The workshop uses a NextJS template by Vercel for an admin dashboard, written in TypeScript. [Link](https://github.com/authzed/workshops/tree/main/update-views-authorization)
-
-#### 5. From Zero to Permissions System in 10 Minutes using AuthZed MCP Servers
-This workshop teaches you how to build and reason about authorization systems using **AuthZed** and **SpiceDB**, powered by **Model Context Protocol (MCP)** servers.  [Link](https://github.com/authzed/workshops/tree/main/mcp-assisted-authorization)
+Start with **Secure Your RAG Pipelines** or **Building Authorization for Agentic RAG Systems**. Both open with a working app that leaks data, so you see the problem before you fix it. No prior authorization background is assumed; comfort with a terminal, Python, and Docker is enough.
 
 ## Contributing
 
-1. To update or contribute to a workshop, make a [pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) with a detailed description of all changes made.
+To update or contribute to a workshop, open a [pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) with a clear description of your changes.
