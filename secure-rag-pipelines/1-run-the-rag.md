@@ -4,6 +4,8 @@ The goal for this part is small and a little mischievous: get the agent running,
 
 ## Four nodes
 
+![The LangGraph pipeline: Application, then the Pre-filter, Retrieval, Authorization, and Generation nodes in sequence](/secure-rag-pipelines/images/graph-nodes.png)
+
 The agent is a LangGraph state machine in `agentic_rag/graph.py`. It runs four nodes in order:
 
 1. **`prefilter`** (`agentic_rag/nodes/prefilter_node.py`). In pre-filter mode, it asks SpiceDB which documents the user may see before anything is retrieved. In post-filter mode it does nothing. It's a stub in Part 1, so right now it does nothing either way.

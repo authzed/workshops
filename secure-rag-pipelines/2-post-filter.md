@@ -2,6 +2,8 @@
 
 One code change turns the leaking pipeline from Part 1 into one that enforces real access control. It's a check the agent can't skip, and no clever prompt gets around it. That's the point: in a probabilistic world, you still need a deterministic security check.
 
+![Post-filter flow: the application embeds the query and retrieves from the vector DB, then checks each retrieved document against SpiceDB with CheckPermission before generating the answer](/secure-rag-pipelines/images/post-filter-flow.png)
+
 ## The model is already loaded
 
 When you ran `setup_environment.py`, it wrote a SpiceDB schema into your local instance. Here's `data/schema.zed`:

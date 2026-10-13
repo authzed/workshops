@@ -6,6 +6,8 @@ Dana's a contractor. She can read exactly two engineering guides plus the public
 
 Pre-filter flips the order. Ask SpiceDB which documents Dana may see first, then search only inside that set. The vector store never even considers a document she can't read.
 
+![Pre-filter flow: the application asks SpiceDB with LookupResources which documents the user may view, sends the embedded query to the vector DB with that id filter, then generates the answer](/secure-rag-pipelines/images/pre-filter-flow.png)
+
 ## LookupResources asks the other question
 
 Post-filter asks SpiceDB the same question once per document: can Dana see this one? Pre-filter asks a single, different question: which documents of this type can Dana see at all? That's `LookupResources`:
