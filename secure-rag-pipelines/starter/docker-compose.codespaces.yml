@@ -1,0 +1,10 @@
+# Codespaces override. Layer it on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.codespaces.yml up -d --wait
+# Host networking sidesteps Docker-in-Docker's flaky bridge. Do NOT use it on local
+# Docker Desktop. Under host networking every service is on localhost.
+services:
+  qdrant:
+    network_mode: host
+
+  spicedb:
+    network_mode: host
