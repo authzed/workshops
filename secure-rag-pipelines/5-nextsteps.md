@@ -18,6 +18,16 @@ Reach for post-filter when most users see most of the corpus. It's simpler, and 
 
 Nothing stops you from doing both, or switching per subject based on how much they can see.
 
+## Three RAG-authorization patterns worth exploring
+
+The workshop keeps retrieval deliberately simple. Three patterns show up the moment you take this to a real corpus.
+
+**Over-fetch to recover post-filter recall.** You saw post-filter under-retrieve: ask Bob for microservices patterns and four of his five slots go to documents he can't see, leaving the LLM one document to work with. The fix is to over-fetch, retrieve `k x N` candidates, run the permission check, then keep the first `k` that survive. You trade a bigger retrieval and more permission checks for a full context window. `CheckBulkPermissions` keeps the extra checks to one round trip, so it's cheaper than it sounds. Pre-filter sidesteps the problem entirely, which is part of why it exists.
+
+**Compose the permission filter with metadata filters.** Authorization isn't the only thing you filter on. You'll also want "only this department," "only the last 90 days," "only `confidential` and below." Because the pre-filter is already a Qdrant `Filter`, you just add more `FieldCondition`s next to the `doc_id` allow-list, and the vector search honors all of them at once. Access control composes with ordinary business rules instead of fighting them.
+
+**Authorize at the chunk, not the document.** Real documents get split into chunks before embedding, and a single document often mixes a public summary with a confidential appendix. Carry a resource id onto each chunk (its own object, or the parent document's id) and run the permission check per chunk. The pipeline you built doesn't change shape; only the granularity of the `doc_id` you check does. This is where ReBAC earns its keep, because a chunk can inherit its document's grants through one relationship instead of being re-shared by hand.
+
 ## Go to production
 
 The SpiceDB here runs in-memory via Docker Compose. Fine for a workshop, wrong for production, where you want a durable datastore (and, as Part 4 showed, one whose revision tracks wall-clock so expiration just works without a nudge). Three ways to get there:

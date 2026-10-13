@@ -1,6 +1,6 @@
 # Part 4: Smaller features
 
-Two short, standalone features to round things out. First, collapse that per-document loop into a single call. Then, grants that clean up after themselves.
+A few short, standalone features to round things out: collapse that per-document loop into a single call, grants that clean up after themselves, pulling a grant on demand, and answering "who can see this?" for an audit.
 
 ## (a) One call for many documents: CheckBulkPermissions
 
@@ -154,11 +154,69 @@ tick(); print("after expiry:", can_view())         # False, expired and excluded
 
 In production you'd drop the `tick()`; the datastore's clock moves on its own. The lesson lands the same either way: expiry is evaluated inside the permission check, so an expired grant was never a valid answer to begin with. No cron job can say that.
 
+## (c) Pull a grant right now: on-demand revocation
+
+Expiration is revocation you schedule in advance. Sometimes you need it *now*: a contractor is offboarded, a document gets reclassified, someone fat-fingered a share. That's a `DeleteRelationships` call. `examples/revoke_grant.py` deletes a direct viewer grant:
+
+```python
+from authzed.api.v1 import (
+    WriteRelationshipsRequest, RelationshipUpdate, Relationship,
+    ObjectReference, SubjectReference,
+)
+
+# ... inside revoke_view(user, doc_id):
+RelationshipUpdate(
+    operation=RelationshipUpdate.Operation.OPERATION_DELETE,
+    relationship=Relationship(
+        resource=ObjectReference(object_type="document", object_id=doc_id),
+        relation="viewer",
+        subject=SubjectReference(object=ObjectReference(object_type="user", object_id=user)),
+    ),
+)
+```
+
+Try it on Dana. In the UI (Pre-filter mode) she has a Pre-allowed count of 7, and `engineering-guide-006` is one of them. Revoke it:
+
+```bash
+python -c "from examples.revoke_grant import revoke_view; revoke_view('dana', 'engineering-guide-006')"
+```
+
+Re-run her query. Pre-allowed drops to 6 and `engineering-guide-006` is gone from her results. Note what you *didn't* have to do: there's no tick here, unlike the expiry demo. The delete is itself a write, so it moves the datastore's revision forward and the very next check sees it. On-demand revocation is instant on any datastore. (Re-run `python examples/setup_environment.py` to give Dana her grant back.)
+
+To revoke department-based access instead of a one-off grant, you'd delete the membership relationship (`department:engineering#member@user:...`) rather than a document viewer. Same call, different relationship.
+
+## (d) Who can see this document? LookupSubjects
+
+The pre-filter answered "which documents can this user see?" with `LookupResources`. Flip it: "who can see *this* document?" That's `LookupSubjects`, and it's the question an access review, or an audit after a leak, actually asks. `examples/who_can_view.py`:
+
+```python
+from authzed.api.v1 import LookupSubjectsRequest, ObjectReference
+
+for resp in client.LookupSubjects(
+    LookupSubjectsRequest(
+        resource=ObjectReference(object_type="document", object_id=doc_id),
+        permission="view",
+        subject_object_type="user",
+    )
+):
+    print(resp.subject.subject_object_id)
+```
+
+Run it against a cross-department document:
+
+```bash
+python examples/who_can_view.py hr-policy-001
+```
+
+You'll get `finance_manager` and `hr_manager`: the HR department plus finance, which has `hr-policy-001` shared with it for budget planning. SpiceDB walked every relationship path that lands on `view`, including the ones through department membership, so you don't have to reason about the graph by hand. In a RAG system this is how you answer the uncomfortable post-incident question, "exactly who could the assistant have served this document to?", and how you sanity-check a sensitive document's audience before you ever embed it.
+
 ## Completion Milestone: Part 4
 
 - [ ] Replaced the post-filter loop with a single `CheckBulkPermissions` call and confirmed identical results
 - [ ] Added `use expiration` and a `temp_viewer: user with expiration` relation, then re-applied the schema
 - [ ] Granted Dana a temporary view and watched it lapse (ticking the clock on the in-memory datastore)
 - [ ] Can explain why expiry evaluated inside `CheckPermission` beats a cron job that deletes old relationships
+- [ ] Revoked a grant on demand with `DeleteRelationships` and saw Dana's pre-filter set shrink immediately
+- [ ] Listed every user who can view a document with `LookupSubjects`
 
 Next: [Next steps](5-nextsteps.md).
