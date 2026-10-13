@@ -30,7 +30,7 @@ The workshop keeps retrieval deliberately simple. Three patterns show up the mom
 
 ## Go to production
 
-The SpiceDB here runs in-memory via Docker Compose. Fine for a workshop, wrong for production, where you want a durable datastore (and, as Part 4 showed, one whose revision tracks wall-clock so expiration just works without a nudge). Three ways to get there:
+The SpiceDB here runs in-memory via Docker Compose. Fine for a workshop, wrong for production, where you want a durable datastore (and, as Part 4 showed, one whose revision tracks wall-clock so expiration just works without a nudge). It's also where you'd handle read-your-writes properly: capture the `ZedToken` returned by a write and pass it as `at_least_as_fresh` on the next check, so a just-granted document is immediately retrievable without reaching for `fully_consistent` on the hot path. Three ways to get there:
 
 - **SpiceDB, self-hosted (open source).** Run it yourself, on your own infrastructure.
 - **[AuthZed Cloud](https://authzed.com/products/authzed-cloud).** Managed, self-service, pay-as-you-go SpiceDB, with enterprise features like audit logging.
