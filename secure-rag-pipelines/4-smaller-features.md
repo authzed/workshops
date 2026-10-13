@@ -43,7 +43,7 @@ Each entry in `resp.pairs` carries both the original request (`pair.request.reso
 
 ## (b) Grants that expire on their own: relationship expiration
 
-Access is often temporary. A contractor for a week. An auditor who needs one document for a day. You could grant it and set a reminder to revoke it later with a cron job, but now you've got a second system that has to agree with SpiceDB about when "later" is, plus a window where the grant is still live after it should be gone. Someone always deploys at 59:58.
+Access is often temporary. Example: A contractor for a week or an DevOps Agent only for the duration of an incident. You could grant it and set a reminder to revoke it later with a cron job, but now you've got a second system that has to agree with SpiceDB about when "later" is, plus a window where the grant is still live after it should be gone.
 
 SpiceDB has a cleaner answer: pin an expiry to the relationship itself. An expired relationship is treated as if it were never written, evaluated server-side inside the same permission check. Nothing external has to poll for it, and there's no window.
 
@@ -110,53 +110,13 @@ python -c "from examples.expiring_grant import grant_temp_view; grant_temp_view(
 
 There's no revoke step to remember and nothing to undo. The grant stops existing on schedule. That's the flexibility ReBAC gives you.
 
-### One honest caveat about the in-memory datastore
+### A note about the in-memory datastore
 
 SpiceDB evaluates expiration at the revision your check reads. Persistent datastores (Postgres, CockroachDB, Spanner) move that revision forward with wall-clock time, so an expired grant vanishes on its own the moment you re-check. The in-memory datastore this workshop runs only moves its revision forward when something is *written*. So a read-only "poll until it expires" loop can keep seeing a grant past its expiry until the next write nudges the clock.
 
-You can watch the real behavior deterministically with a fully-consistent check and a tiny write to tick the clock:
-
-```python
-import time
-from authzed.api.v1 import (
-    CheckPermissionRequest, WriteRelationshipsRequest, RelationshipUpdate,
-    Relationship, ObjectReference, SubjectReference, Consistency,
-)
-from agentic_rag.grpc_helpers import get_spicedb_client
-from examples.expiring_grant import grant_temp_view
-
-c = get_spicedb_client("localhost:50051", "devtoken")
-
-def can_view():
-    r = c.CheckPermission(CheckPermissionRequest(
-        resource=ObjectReference(object_type="document", object_id="engineering-architecture-001"),
-        permission="view",
-        subject=SubjectReference(object=ObjectReference(object_type="user", object_id="dana")),
-        consistency=Consistency(fully_consistent=True),
-    ))
-    return r.permissionship == 2
-
-def tick():  # any write moves the in-memory datastore's clock forward
-    c.WriteRelationships(WriteRelationshipsRequest(updates=[RelationshipUpdate(
-        operation=RelationshipUpdate.Operation.OPERATION_TOUCH,
-        relationship=Relationship(
-            resource=ObjectReference(object_type="document", object_id="public-handbook-001"),
-            relation="viewer",
-            subject=SubjectReference(object=ObjectReference(object_type="user", object_id="alice")),
-        ),
-    )]))
-
-grant_temp_view("dana", "engineering-architecture-001", 3)
-tick(); print("right after grant:", can_view())   # True
-time.sleep(4)
-tick(); print("after expiry:", can_view())         # False, expired and excluded
-```
-
-In production you'd drop the `tick()`; the datastore's clock moves on its own. The lesson lands the same either way: expiry is evaluated inside the permission check, so an expired grant was never a valid answer to begin with. No cron job can say that.
-
 ## (c) Pull a grant right now: on-demand revocation
 
-Expiration is revocation you schedule in advance. Sometimes you need it *now*: a contractor is offboarded, a document gets reclassified, someone fat-fingered a share. That's a `DeleteRelationships` call. `examples/revoke_grant.py` deletes a direct viewer grant:
+Permissions can also be revoked for users or agents. In `examples/revoke_grant.py` check the `DeleteRelationships` call that deletes a direct viewer grant:
 
 ```python
 from authzed.api.v1 import (
@@ -175,7 +135,7 @@ RelationshipUpdate(
 )
 ```
 
-Try it on Dana. In the UI (Pre-filter mode) she has a Pre-allowed count of 7, and `engineering-guide-006` is one of them. Revoke it:
+Try it on Dana. In the UI (Pre-filter mode) she has a Pre-allowed count of 7, and `engineering-guide-006` is one of them. Revoke it in the terminal:
 
 ```bash
 python -c "from examples.revoke_grant import revoke_view; revoke_view('dana', 'engineering-guide-006')"

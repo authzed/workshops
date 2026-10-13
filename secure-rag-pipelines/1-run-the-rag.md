@@ -1,12 +1,14 @@
 # Part 1: Run the RAG (and watch it leak)
 
-The goal for this part is small and a little mischievous: get the agent running, then catch it handing back documents the user has no business seeing.
+The goal for this part is to get the agent running, then catch it handing back documents the user has no business seeing.
 
 ## Four nodes
 
+![The LangGraph pipeline: Application, then the Pre-filter, Retrieval, Authorization, and Generation nodes in sequence](/secure-rag-pipelines/images/graph-nodes.png)
+
 The agent is a LangGraph state machine in `agentic_rag/graph.py`. It runs four nodes in order:
 
-1. **`prefilter`** (`agentic_rag/nodes/prefilter_node.py`). In pre-filter mode, it asks SpiceDB which documents the user may see before anything is retrieved. In post-filter mode it does nothing. It's a stub in Part 1, so right now it does nothing either way.
+1. **`prefilter`** (`agentic_rag/nodes/prefilter_node.py`). In pre-filter mode, it asks SpiceDB which documents the user may see before anything is retrieved. In post-filter mode **it does nothing**. It's a stub in Part 1, so right now it does nothing either way.
 2. **`retrieve`** (`agentic_rag/nodes/retrieval_node.py`). Embeds your query locally with fastembed and runs a vector search against Qdrant, returning the top 5 matches. If the prefilter handed it an allow-list, it applies that as a Qdrant payload filter.
 3. **`authorize`** (`agentic_rag/nodes/authorization_node.py`). The post-filter security boundary. Every retrieved document passes through here before the LLM sees it. Also a stub in Part 1: it waves everything through.
 4. **`generate`** (`agentic_rag/nodes/generation_node.py`). Asks the chat model for an answer grounded strictly in the authorized documents.
@@ -63,11 +65,11 @@ Look at the results. Engineering documents, things like `engineering-architectur
 
 The exact `doc_id`s depend on your live Qdrant data, but the shape holds: engineering architecture documents rank high against that query, retrieval surfaces them, and the authorization node waves every one through.
 
-This is a breach.
+This is a data breach.
 
 ## Retrieval doesn't know what a permission is
 
-Here's the thing: semantic search ranks documents by how close they are to your query, not by who's allowed to read them. Ask about microservices architecture and you'll pull engineering architecture docs every time, whether you're an engineer, a sales rep, or a stranger off the street.
+Here's the thing: semantic search ranks documents by how close they are to your query, not by who's allowed to read them. Typically RAG pipelines have very coarse-grained permissions that filter by fields like Role or Manager. For modern enterprise requirements this is insufficient. That's where Relationship-Based Access Control (ReBAC) and the Zanzibar Model comes in. SpiceDB is the open source implementation of Google Zanzibar.
 
 In post-filter mode, the authorization node is the one place access control can actually happen. Right now it does nothing, and that's why every query leaks.
 

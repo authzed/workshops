@@ -1,8 +1,8 @@
 # Setup
 
-Here's the plan for the workshop. First you build an agentic RAG pipeline over a mock corpus. It leaks data across users, which is the point. Then you lock it down two ways, post-filter and pre-filter, and finish with a couple of smaller SpiceDB features. The `starter/` folder holds a stub of the working code, meant only for this workshop.
+Here's what we'll build in the workshop. First you build an agentic RAG pipeline over a mock knowledge base. It leaks data across users, which is the point. Then you lock it down two ways, post-filter and pre-filter, and finish with a couple of smaller features. The `starter/` folder holds a stub of the working code, meant only for this workshop.
 
-The pieces: **Qdrant** (open source) for the vector store, **SpiceDB** for authorization, local **fastembed** for embeddings (no key), and a provider-agnostic chat model for the answer.
+We'll only use open source tools for this: **Qdrant** (open source) for the vector store, **SpiceDB** for authorization, local **fastembed** for embeddings (no key), and a provider-agnostic chat model for the answer. 
 
 ## Get the code
 
@@ -33,7 +33,7 @@ From `starter/`, the steps are the same for both paths. Only the `docker compose
 cp .env.example .env
 ```
 
-Open `.env` and set `LLM_API_KEY`. The chat model is provider-agnostic: leave `LLM_BASE_URL` blank for OpenAI, or point it at any OpenAI-compatible provider (Anthropic/Claude, Groq, a local Ollama, your company's gateway) and set `LLM_MODEL` to match. See the comments in `.env.example`. Embeddings run locally through fastembed, so they need no key. The Qdrant URL and SpiceDB endpoint and token already match the compose files.
+Open `.env` and set `LLM_API_KEY`. The chat model is provider-agnostic: leave `LLM_BASE_URL` blank for OpenAI, or point it at any OpenAI-compatible provider (Anthropic/Claude, Mistral, a local Ollama, your company's gateway) and set `LLM_MODEL` to match. See the comments in `.env.example`. Embeddings run locally through fastembed, so they need no key. The Qdrant URL and SpiceDB endpoint and token already match the compose files.
 
 ### 2. Start the infrastructure
 
@@ -43,13 +43,13 @@ Open `.env` and set `LLM_API_KEY`. The chat model is provider-agnostic: leave `L
 docker compose up -d --wait
 ```
 
-**Codespaces** (Docker-in-Docker's bridge network is flaky, so layer on the host-networking override):
+**Codespaces**:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.codespaces.yml up -d --wait
 ```
 
-Either command brings up two containers: **Qdrant** (the vector store, ports 6333 and 6334) and **SpiceDB** (in-memory, preshared key `devtoken`, not for prod). That's the whole stack. One vector-store container, not Milvus's three.
+Either command brings up two containers: **Qdrant** (the vector store, ports 6333 and 6334) and **SpiceDB** (in-memory, preshared key `devtoken`, not for prod).
 
 ### 3. Create a virtual environment and install dependencies
 
@@ -66,7 +66,7 @@ python examples/setup_environment.py
 Two things happen here:
 
 - **Qdrant setup** embeds all 50 sample documents locally with fastembed (`bge-small-en-v1.5`, 384-dim; the model downloads once on first run) and upserts them into a vector collection. Each document's `doc_id` lives in the point *payload* (Qdrant point ids are integers), which is what the pre-filter matches on later.
-- **SpiceDB setup** loads the authorization schema and writes the relationships: department memberships, document viewers, cross-department access, individual exceptions, and the contractor `dana`.
+- **SpiceDB setup** loads the authorization schema and writes the relationships: department memberships, document viewers, cross-department access, individual exceptions, and the contractor `dana`. The complicated permission model we're building [is here](https://github.com/authzed/workshops/blob/workshop/secure-rag-pipelines-refactor/secure-rag-pipelines/starter/data/PERMISSIONS.md) 
 
 The tail of the output should read:
 
