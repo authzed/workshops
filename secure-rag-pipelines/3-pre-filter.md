@@ -1,8 +1,8 @@
 # Part 3: Pre-filter with LookupResources
 
-Post-filter works. It also has a shape problem, and Dana is where you see it.
+The previous section showed how you can use the post-filter technique, but let's also learn the inverse which is a pre-filter. 
 
-Dana's a contractor. She can read exactly two engineering guides plus the public docs, roughly 7 of the 50. In post-filter mode, when Dana asks a question we retrieve the top 5 matches and *then* throw away the ones she can't see. If her question lands near documents she has no access to, we fetch 5 and bin all 5. A wasted round trip, and the LLM gets nothing to work with.
+Here's a usecase: Dana's a contractor. She can read exactly two engineering guides plus the public docs, roughly 7 of the 50. In post-filter mode, when Dana asks a question we retrieve the top 5 matches and *then* throw away the ones she can't see. If her question lands near documents she has no access to, we fetch 5 and bin all 5. A wasted round trip, and the LLM gets nothing to work with.
 
 Pre-filter flips the order. Ask SpiceDB which documents Dana may see first, then search only inside that set. The vector store never even considers a document she can't read.
 
@@ -109,13 +109,11 @@ One thing to watch with pre-filter: it fills its k retrieval slots from the allo
 
 Save the file (auto-reload picks it up). Mode on **Pre-filter**, run a query as **Dana**. Now only her documents are retrieved, the search never surfaces anything outside her slice, **Denied** is **0** because there was nothing to throw away, and a new stat appears: **Pre-allowed**, the number of ids `LookupResources` returned.
 
-Now flip between **Post-filter** and **Pre-filter** on the same Dana query and watch the difference. Post-filter fetches 5, keeps a couple, denies the rest. Pre-filter fetches only what's allowed and denies nothing. Same answer, two different roads to it.
-
 ## Which one should you use?
 
-Both are correct. They differ in where the work lands, so steel-man each before you pick.
+It Depends™️
 
-Pre-filter puts the work up front: one `LookupResources` call (whose cost grows with how many documents the subject can see), and it needs a vector store that supports filtered queries, which Qdrant does. It wins when a subject can see only a sliver of a big corpus, the contractor with 3 documents out of 10,000. You never retrieve-then-discard.
+Pre-filter puts the work up front: one `LookupResources` call (whose cost grows with how many documents the subject can see), and it needs a vector store that supports filtered queries, which Qdrant does. It wins when a subject can see only a sliver of a big corpus, the contractor with 3 documents out of 10,000.
 
 Post-filter is simpler and puts the check at the tail: one `CheckPermission` per retrieved document. It wins when most users can see most of the corpus, with a few exceptions carved out.
 

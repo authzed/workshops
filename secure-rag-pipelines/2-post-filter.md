@@ -1,6 +1,8 @@
 # Part 2: Secure it with post-filter
 
-One code change turns the leaking pipeline from Part 1 into one that enforces real access control. It's a check the agent can't skip, and no clever prompt gets around it. That's the point: in a probabilistic world, you still need a deterministic security check.
+Let's add access control to this RAG pipeline so that there's no information leakage.
+
+Here's an important note: This is a check the agent can't skip, and no clever prompt gets around it. That's the point: in the probabilistic world of Generative AI, you still need a **deterministic security check**.
 
 ![Post-filter flow: the application embeds the query and retrieves from the vector DB, then checks each retrieved document against SpiceDB with CheckPermission before generating the answer](/secure-rag-pipelines/images/post-filter-flow.png)
 
@@ -31,7 +33,7 @@ That one line buys you a handful of access patterns: department members see thei
 
 ## How a permission check works
 
-SpiceDB answers one question at a time: can this subject do this thing to this resource?
+SpiceDB answers one question at a time: can this `subject` do this `thing` to this `resource`?
 
 ```python
 from authzed.api.v1 import CheckPermissionRequest, ObjectReference, SubjectReference
@@ -149,11 +151,11 @@ Watch what moves. Before, `engineering-architecture-002` sat under Authorized wi
 
 ## Put the check in the node, not the prompt
 
-The authorization node doesn't interpret anything. It doesn't reason, and it doesn't fall for a clever query. It runs a binary check against SpiceDB for every document, and SpiceDB either finds a path or it doesn't. It's a node the graph always runs, with no branch that skips it, so the LLM only ever receives documents that already cleared the check. It can't leak what it never saw.
+The authorization node doesn't interpret anything. It doesn't reason, and it doesn't fall for prompt engineering. It runs a binary check against SpiceDB for every document, and SpiceDB either finds a path or it doesn't. It's a node the graph always runs, with no branch that skips it, so the LLM only ever receives documents that already cleared the check.
 
 Go ahead and try to trick it. Tell the pipeline Bob just joined engineering. The checks still hold, because they're reading relationships in SpiceDB, not sentences in a prompt. Access control in a system prompt is an anti-pattern: a prompt is a suggestion, and prompt injection is a thing.
 
-One cost to flag: this node makes one call per document. Five docs, five round trips. Fifty docs, fifty. We fix that in Part 4.
+One cost to flag: this node makes one call per document. Five docs, five round trips. We'll fix that in Part 4.
 
 ## Completion Milestone: Part 2
 
