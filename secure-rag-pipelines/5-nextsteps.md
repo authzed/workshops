@@ -30,6 +30,8 @@ The SpiceDB here runs in-memory via Docker Compose but in any 'live' system you 
 - **[AuthZed Cloud](https://authzed.com/products/authzed-cloud).** Managed, self-service, pay-as-you-go SpiceDB, with enterprise features like audit logging.
 - **[AuthZed Dedicated](https://authzed.com/products/authzed-dedicated).** A private, single-tenant deployment in the cloud provider and regions you choose.
 
+Next, stop telling users what they can't see. The workshop's `/query` endpoint returns the ID and title of every denied document because it makes the demo easy to follow. In production, that's a leak of its own: a title like "Q3 layoffs plan" says plenty without anyone opening the document. Return only the documents the user is allowed to see, and keep the denied IDs in your server-side logs for auditing.
+
 One more production note. This workshop embeds locally with fastembed so there's nothing to sign up for. In production you'd often reach for a hosted embedding model (OpenAI `text-embedding-3-small`, Mistral, etc). Embeddings are decoupled from both the vector store and the chat model, so it's a one-function change in `embed()`. Keep the index and the queries on the same model, and match the Qdrant collection's vector size to its output dimension. Qdrant itself scales from this single container to a managed cluster ([Qdrant Cloud](https://qdrant.tech/)) with the same client code, or swap it for pgvector or Weaviate; the pre-filter only needs an "id in set" filter.
 
 ## Homework
