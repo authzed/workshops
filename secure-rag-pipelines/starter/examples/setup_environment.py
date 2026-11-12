@@ -9,7 +9,7 @@ load_dotenv()
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, VectorParams, PointStruct, PayloadSchemaType
 from authzed.api.v1 import (
     WriteSchemaRequest,
     WriteRelationshipsRequest,
@@ -205,6 +205,17 @@ def setup_qdrant():
     )
     print("  ✅ Documents collection created")
 
+    # Index the payload fields the filters use (doc_id for the pre-filter,
+    # classification for metadata filters). Create them before uploading points
+    # so Qdrant builds filter-aware links into its vector index.
+    for field in ["doc_id", "classification"]:
+        client.create_payload_index(
+            collection_name="Documents",
+            field_name=field,
+            field_schema=PayloadSchemaType.KEYWORD,
+        )
+    print("  ✅ Payload indexes created on doc_id and classification")
+
     documents = load_all_documents()
     print(f"  ✅ Loaded {len(documents)} documents from data/documents/")
 
@@ -230,8 +241,16 @@ def setup_qdrant():
         for i, (doc, embedding) in enumerate(zip(documents, embeddings))
     ]
 
-    client.upsert(collection_name="Documents", points=points)
-    print(f"  ✅ Inserted {len(points)} documents with embeddings")
+    # upload_points batches the writes and retries failed batches;
+    # wait=True returns only once Qdrant has applied them.
+    client.upload_points(
+        collection_name="Documents",
+        points=points,
+        batch_size=64,
+        max_retries=3,
+        wait=True,
+    )
+    print(f"  ✅ Uploaded {len(points)} documents with embeddings")
 
     dept_counts = {}
     for doc in documents:

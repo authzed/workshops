@@ -65,7 +65,7 @@ python examples/setup_environment.py
 
 Two things happen here:
 
-- **Qdrant setup** embeds all 50 sample documents locally with fastembed (`bge-small-en-v1.5`, 384-dim; the model downloads once on first run) and upserts them into a vector collection. Each document's `doc_id` lives in the point *payload* (Qdrant point ids are integers), which is what the pre-filter matches on later.
+- **Qdrant setup** embeds all 50 sample documents locally with fastembed (`bge-small-en-v1.5`, 384-dim; the model downloads once on first run) and uploads them into a vector collection with `upload_points`, which batches the writes and retries any batch that fails. Each document's `doc_id` lives in the point *payload* (Qdrant point ids are integers), which is what the pre-filter matches on later. Before uploading, the script creates [payload indexes](https://qdrant.tech/documentation/manage-data/indexing/#payload-index) on `doc_id` (for the pre-filter in Part 3) and `classification` (for metadata filters like the ones in Next steps), so filtering on them stays fast.
 - **SpiceDB setup** loads the authorization schema and writes the relationships: department memberships, document viewers, cross-department access, individual exceptions, and the contractor `dana`. The complicated permission model we're building [is here](https://github.com/authzed/workshops/blob/workshop/secure-rag-pipelines-refactor/secure-rag-pipelines/starter/data/PERMISSIONS.md) 
 
 The tail of the output should read:
