@@ -30,6 +30,12 @@ The SpiceDB here runs in-memory via Docker Compose but in any 'live' system you 
 - **[AuthZed Cloud](https://authzed.com/products/authzed-cloud).** Managed, self-service, pay-as-you-go SpiceDB, with enterprise features like audit logging.
 - **[AuthZed Dedicated](https://authzed.com/products/authzed-dedicated).** A private, single-tenant deployment in the cloud provider and regions you choose.
 
+The same applies to Qdrant. This workshop runs the open source engine in a single Docker container, and the same client code works against every deployment option:
+
+- **Qdrant, self-hosted (open source).** Run it yourself, on your own infrastructure.
+- **[Qdrant Cloud](https://qdrant.tech/cloud/).** Managed clusters on AWS, GCP, or Azure. Start with a free 1 GB cluster, no credit card required.
+- **[Hybrid Cloud](https://qdrant.tech/hybrid-cloud/).** Qdrant runs in your own Kubernetes cluster, and you manage it through Qdrant Cloud. Your data stays inside your network.
+- **[Private Cloud](https://qdrant.tech/private-cloud/).** Qdrant runs fully on your own infrastructure, including air-gapped environments.
 Next, stop telling users what they can't see. The workshop's `/query` endpoint returns the ID and title of every denied document because it makes the demo easy to follow. In production, that's a leak of its own: a title like "Q3 layoffs plan" says plenty without anyone opening the document. Return only the documents the user is allowed to see, and keep the denied IDs in your server-side logs for auditing.
 
 One more production note. This workshop embeds locally with fastembed so there's nothing to sign up for. In production you'd often reach for a hosted embedding model (OpenAI `text-embedding-3-small`, Mistral, etc). Embeddings are decoupled from both the vector store and the chat model, so it's a one-function change in `embed()`. Keep the index and the queries on the same model, and match the Qdrant collection's vector size to its output dimension. Qdrant itself scales from this single container to a managed cluster ([Qdrant Cloud](https://qdrant.tech/)) with the same client code, or swap it for pgvector or Weaviate; the pre-filter only needs an "id in set" filter.
